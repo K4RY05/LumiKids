@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="@color/c_three" />
+    </item>
+
+    <item
+        android:drawable="@drawable/ondav1"
+        android:gravity="top|fill_horizontal"
+        android:height="200dp" />
+
+    <item
+        android:drawable="@drawable/ondav2"
+        android:gravity="bottom|fill_horizontal"
+        android:height="220dp" />
+</layer-list>

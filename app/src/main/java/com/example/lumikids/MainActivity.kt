@@ -14,7 +14,8 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         // 2. Cargas el diseño (SOLO UNA VEZ)
-        setContentView(R.layout.activity_main)
+       // setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_login)
 
         // 3. Configuras los márgenes para la barra de estado
         // IMPORTANTE: Asegúrate de que el ID exista en el XML (ver Paso 2)
