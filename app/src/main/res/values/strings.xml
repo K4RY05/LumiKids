@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">LumiKids</string>
 
+    <string name="login_email">Correo</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_button">Iniciar sesión</string>
+    <string name="login_no_account">¿No tienes una cuenta?</string>
+    <string name="login_register">Regístrate</string>
+
 </resources>
