@@ -14,4 +14,7 @@
     <string name="register_confirm_password">Confirma la contraseña</string>
     <string name="register_continue">Continuar</string>
 
+    <string name="terms_text">Terminos</string>
+
+
 </resources>

@@ -5,7 +5,10 @@ import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -14,6 +17,8 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var ivTogglePass: ImageButton
     private lateinit var ivTogglePass2: ImageButton
+
+    private lateinit var btnContinue: Button
 
     private var isPasswordVisible = false
     private var isPasswordVisible2 = false
@@ -28,12 +33,21 @@ class RegisterActivity : AppCompatActivity() {
         ivTogglePass = findViewById(R.id.ivTogglePass)
         ivTogglePass2 = findViewById(R.id.ivTogglePass2)
 
+        btnContinue = findViewById(R.id.btnContinue)
+
         ivTogglePass.setOnClickListener {
             togglePassword()
         }
 
         ivTogglePass2.setOnClickListener {
             togglePassword2()
+        }
+
+        // 👉 ESTE ES EL CLICK DEL BOTÓN
+        btnContinue.setOnClickListener {
+           // Toast.makeText(this, "Botón presionado", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, TermsActivity::class.java)
+            startActivity(intent)
         }
     }
 

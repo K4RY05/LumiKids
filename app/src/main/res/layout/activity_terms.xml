@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/c_two">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="180dp">
+
+        <ImageView
+            android:id="@+id/bgTop"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_cloud_top"
+            android:contentDescription="@null"/>
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="LumiKids"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"/>
+
+    </RelativeLayout>
+
+    <!-- Nube inferior -->
+
+    <!-- Tarjeta superior -->
+
+    <ImageView
+        android:id="@+id/bgBottom"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="-15dp"
+        android:layout_marginBottom="-37dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_cloud_bottom" />
+
+    <LinearLayout
+        android:id="@+id/cardTerms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/header"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="-30dp"
+        android:background="@drawable/rounded_white_bg"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/tvTermsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Términos y condiciones del servicio"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"/>
+
+
+        <LinearLayout
+            android:layout_width="330dp"
+            android:layout_height="287dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/rounded_light_blue_bg"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollTerms"
+                android:layout_width="289dp"
+                android:layout_height="257dp"
+                android:fillViewport="true"
+                android:scrollbars="vertical">
+
+                <TextView
+                    android:id="@+id/tvTermsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:text="@string/terms_text"
+                    android:textColor="@color/black"
+                    android:textSize="13sp" />
+
+            </androidx.core.widget.NestedScrollView>
+
+        </LinearLayout>
+
+        <!-- Check -->
+        <CheckBox
+            android:id="@+id/cbAccept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/black"
+            android:text="Acepto las Condiciones del servicio y la Política de privacidad de LumiKids."
+            android:textSize="12sp"/>
+
+        <!-- Botón -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnFinish"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="18dp"
+            android:text="Finalizar"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:background="@drawable/button_bg"
+            android:backgroundTint="@null"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

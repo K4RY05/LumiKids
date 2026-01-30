@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:background="@color/c_two">
 
-    <!-- ===== HEADER AZUL (NUBE + TÍTULO) ===== -->
     <RelativeLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
@@ -35,11 +34,12 @@
         android:id="@+id/bgBottom"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_alignParentStart="true"
+        android:layout_alignParentStart="false"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="-15dp"
         android:layout_marginBottom="-31dp"
         android:scaleType="centerCrop"
+        android:importantForAccessibility="no"
         android:src="@drawable/ic_cloud_bottom"
         android:contentDescription="@null" />
 
@@ -180,16 +180,17 @@
         </RelativeLayout>
 
         <!-- Botón -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnContinue"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="28dp"
             android:background="@drawable/button_bg"
-            android:backgroundTint="@null"
             android:text="@string/register_continue"
             android:textColor="@android:color/white"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:backgroundTint="@null"/>
+
 
     </LinearLayout>
 

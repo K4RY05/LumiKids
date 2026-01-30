@@ -34,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // 👁️ MOSTRAR / OCULTAR CONTRASEÑA (IGUAL QUE REGISTER)
+
     private fun setupPasswordToggle() {
         binding.ivTogglePassword.setOnClickListener {
             togglePasswordVisibility()
