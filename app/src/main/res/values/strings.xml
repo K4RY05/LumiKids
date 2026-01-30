@@ -7,4 +7,11 @@
     <string name="login_no_account">¿No tienes una cuenta?</string>
     <string name="login_register">Regístrate</string>
 
+
+    <string name="register_username">Nombre de usuario</string>
+    <string name="register_email">Ingresa un correo electrónico</string>
+    <string name="register_password">Ingresa una contraseña</string>
+    <string name="register_confirm_password">Confirma la contraseña</string>
+    <string name="register_continue">Continuar</string>
+
 </resources>

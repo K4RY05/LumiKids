@@ -1,6 +1,9 @@
 package com.example.lumikids
 
+import android.content.Intent
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +12,7 @@ import com.example.lumikids.databinding.ActivityLoginBinding
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,12 +21,43 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupListeners()
+        setupPasswordToggle()
     }
 
     private fun setupListeners() {
         binding.btnLogin.setOnClickListener {
             validarLogin()
         }
+
+        binding.tvSignUp.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
+        }
+    }
+
+    // 👁️ MOSTRAR / OCULTAR CONTRASEÑA (IGUAL QUE REGISTER)
+    private fun setupPasswordToggle() {
+        binding.ivTogglePassword.setOnClickListener {
+            togglePasswordVisibility()
+        }
+    }
+
+    private fun togglePasswordVisibility() {
+        if (isPasswordVisible) {
+            // Ocultar contraseña
+            binding.etPassword.transformationMethod =
+                PasswordTransformationMethod.getInstance()
+            binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
+        } else {
+            // Mostrar contraseña
+            binding.etPassword.transformationMethod =
+                HideReturnsTransformationMethod.getInstance()
+            binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
+        }
+
+        // Mantener cursor al final
+        binding.etPassword.setSelection(binding.etPassword.text.length)
+
+        isPasswordVisible = !isPasswordVisible
     }
 
     private fun validarLogin() {
@@ -31,7 +66,6 @@ class LoginActivity : AppCompatActivity() {
 
         // Limpiar errores previos
         binding.tilEmail.error = null
-        binding.tilPassword.error = null
 
         var isValid = true
 
@@ -44,10 +78,10 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if (password.isEmpty()) {
-            binding.tilPassword.error = "La contraseña es obligatoria"
+            Toast.makeText(this, "La contraseña es obligatoria", Toast.LENGTH_SHORT).show()
             isValid = false
         } else if (password.length < 6) {
-            binding.tilPassword.error = "Mínimo 6 caracteres"
+            Toast.makeText(this, "Mínimo 6 caracteres", Toast.LENGTH_SHORT).show()
             isValid = false
         }
 

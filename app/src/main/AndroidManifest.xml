@@ -11,7 +11,11 @@
         android:roundIcon="@mipmap/ic_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids">
+
         <activity android:name=".MainActivity" />
+        <activity android:name=".LoginActivity"  />
+        <activity android:name=".RegisterActivity"  />
+        
         <activity
             android:name=".SplashActivity"
             android:exported="true">
