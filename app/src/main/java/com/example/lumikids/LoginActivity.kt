@@ -5,75 +5,91 @@ import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.lumikids.databinding.ActivityLoginBinding
+import com.google.android.material.textfield.TextInputLayout
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
+
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var ivTogglePassword: ImageView
+    private lateinit var btnLogin: Button
+    private lateinit var tvSignUp: TextView
+    private lateinit var tilEmail: TextInputLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        // PRIMERO el layout
+        setContentView(R.layout.activity_login)
+
+        // DESPUÉS los findViewById
+        etEmail = findViewById(R.id.etEmail)
+        etPassword = findViewById(R.id.etPassword)
+        ivTogglePassword = findViewById(R.id.ivTogglePassword)
+        btnLogin = findViewById(R.id.btnLogin)
+        tvSignUp = findViewById(R.id.tvSignUp)
+        tilEmail = findViewById(R.id.tilEmail)
 
         setupListeners()
         setupPasswordToggle()
     }
 
     private fun setupListeners() {
-        binding.btnLogin.setOnClickListener {
+        btnLogin.setOnClickListener {
             validarLogin()
         }
 
-        binding.tvSignUp.setOnClickListener {
+        tvSignUp.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
-
     private fun setupPasswordToggle() {
-        binding.ivTogglePassword.setOnClickListener {
+        ivTogglePassword.setOnClickListener {
             togglePasswordVisibility()
         }
     }
 
     private fun togglePasswordVisibility() {
         if (isPasswordVisible) {
-            // Ocultar contraseña
-            binding.etPassword.transformationMethod =
+            etPassword.transformationMethod =
                 PasswordTransformationMethod.getInstance()
-            binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
+            ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
         } else {
-            // Mostrar contraseña
-            binding.etPassword.transformationMethod =
+            etPassword.transformationMethod =
                 HideReturnsTransformationMethod.getInstance()
-            binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
+            ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
         }
 
-        // Mantener cursor al final
-        binding.etPassword.setSelection(binding.etPassword.text.length)
+        etPassword.setSelection(
+            etPassword.text?.length ?: 0
+        )
 
         isPasswordVisible = !isPasswordVisible
     }
 
     private fun validarLogin() {
-        val email = binding.etEmail.text.toString().trim()
-        val password = binding.etPassword.text.toString().trim()
+        val email = etEmail.text.toString().trim()
+        val password = etPassword.text.toString().trim()
 
-        // Limpiar errores previos
-        binding.tilEmail.error = null
+        // limpiar error previo
+        tilEmail.error = null
 
         var isValid = true
 
         if (email.isEmpty()) {
-            binding.tilEmail.error = "El correo es obligatorio"
+            tilEmail.error = "El correo es obligatorio"
             isValid = false
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.tilEmail.error = "Correo no válido"
+            tilEmail.error = "Correo no válido"
             isValid = false
         }
 
@@ -85,7 +101,6 @@ class LoginActivity : AppCompatActivity() {
             isValid = false
         }
 
-        // Feedback SOLO FRONTEND
         if (isValid) {
             Toast.makeText(
                 this,
