@@ -18,7 +18,7 @@
             android:layout_alignParentEnd="true"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_cloud_top"
-            android:contentDescription="@null"/>
+            android:contentDescription="@null" />
 
         <TextView
             android:id="@+id/tvTitle"
@@ -28,14 +28,11 @@
             android:text="LumiKids"
             android:textColor="@color/white"
             android:textSize="32sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
     </RelativeLayout>
 
     <!-- Nube inferior -->
-
-    <!-- Tarjeta superior -->
-
     <ImageView
         android:id="@+id/bgBottom"
         android:layout_width="150dp"
@@ -47,6 +44,7 @@
         android:scaleType="centerCrop"
         android:src="@drawable/ic_cloud_bottom" />
 
+    <!-- Tarjeta principal -->
     <LinearLayout
         android:id="@+id/cardTerms"
         android:layout_width="match_parent"
@@ -67,21 +65,21 @@
             android:text="Términos y condiciones del servicio"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="@color/black"/>
+            android:textColor="@color/black" />
 
-
+        <!-- Contenedor azul -->
         <LinearLayout
-            android:layout_width="330dp"
-            android:layout_height="287dp"
+            android:layout_width="match_parent"
+            android:layout_height="260dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/rounded_light_blue_bg"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="16dp">
 
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/scrollTerms"
-                android:layout_width="289dp"
-                android:layout_height="257dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:fillViewport="true"
                 android:scrollbars="vertical">
 
@@ -90,7 +88,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="4dp"
-                    android:text="@string/terms_text"
                     android:textColor="@color/black"
                     android:textSize="13sp" />
 
@@ -99,6 +96,7 @@
         </LinearLayout>
 
         <!-- Check -->
+
         <CheckBox
             android:id="@+id/cbAccept"
             android:layout_width="wrap_content"
@@ -114,11 +112,11 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="18dp"
-            android:text="Finalizar"
+            android:text="FINALIZAR"
             android:textStyle="bold"
             android:textColor="@color/black"
             android:background="@drawable/button_bg"
-            android:backgroundTint="@null"/>
+            android:backgroundTint="@null" />
 
     </LinearLayout>
 
