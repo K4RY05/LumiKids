@@ -1,8 +1,9 @@
-package com.example.lumikids
+package com.example.lumikids.ui
 
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lumikids.R
 import java.io.BufferedReader
 import java.io.InputStreamReader
 

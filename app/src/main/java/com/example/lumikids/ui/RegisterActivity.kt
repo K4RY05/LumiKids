@@ -1,4 +1,4 @@
-package com.example.lumikids
+package com.example.lumikids.ui
 
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
@@ -6,9 +6,9 @@ import android.text.method.PasswordTransformationMethod
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
+import com.example.lumikids.R
 
 class RegisterActivity : AppCompatActivity() {
 

@@ -1,10 +1,12 @@
-package com.example.lumikids
+package com.example.lumikids.ui
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lumikids.ui.LoginActivity
+import com.example.lumikids.R
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +16,7 @@ class SplashActivity : AppCompatActivity() {
         val sunImage = findViewById<ImageView>(R.id.ivSun)
 
         sunImage.alpha = 0f
-        sunImage.animate().alpha(1f).setDuration(1500).start()
+        sunImage.animate().alpha(1f).setDuration(1000).start()
         supportActionBar?.hide()
         Handler(Looper.getMainLooper()).postDelayed({
 
@@ -22,6 +24,6 @@ class SplashActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
 
-        }, 5000)
+        }, 3000)
     }
 }
