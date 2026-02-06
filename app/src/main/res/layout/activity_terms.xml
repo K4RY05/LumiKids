@@ -53,7 +53,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="-30dp"
-        android:background="@drawable/rounded_white_bg"
+        android:background="@drawable/rounded_blue_bg"
         android:orientation="vertical"
         android:padding="20dp">
 
@@ -72,7 +72,7 @@
             android:layout_width="match_parent"
             android:layout_height="260dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/rounded_light_blue_bg"
+            android:background="@drawable/rounded_white_bg"
             android:orientation="vertical"
             android:padding="16dp">
 
