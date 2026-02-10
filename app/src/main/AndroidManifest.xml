@@ -13,14 +13,18 @@
         android:theme="@style/Theme.LumiKids">
 
         <activity android:name=".MainActivity" />
-        <activity android:name=".LoginActivity"  />
-        <activity android:name=".RegisterActivity"  />
-        <activity android:name=".TermsActivity"  />
+        <activity android:name=".LoginActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".RegisterActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".TermsActivity"
+            android:screenOrientation="portrait" />
         <activity android:name=".HomeActivity"
             android:screenOrientation="landscape"/>
 
         <activity
             android:name=".SplashActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

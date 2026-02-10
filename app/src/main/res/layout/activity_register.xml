@@ -49,32 +49,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/header"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="-40dp"
+
+        android:maxWidth="420dp"
+        android:layout_centerHorizontal="true"
+
         android:background="@drawable/rounded_blue_bg"
         android:orientation="vertical"
         android:padding="24dp">
+
 
         <!-- Nombre usuario -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:labelFor="@id/etUsername"
             android:text="@string/register_username"
             android:textColor="@color/black"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:labelFor="@id/etUsername" />
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/etUsername"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="6dp"
-            android:background="@drawable/edittext_bg"
-            android:inputType="textPersonName"
             android:autofillHints="username"
+            android:background="@drawable/edittext_bg"
             android:hint="@string/register_username"
+            android:inputType="textPersonName"
             android:padding="12dp"
             android:textColor="@color/c_two" />
 
@@ -92,10 +98,10 @@
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/edittext_bg"
-            android:inputType="textEmailAddress"
             android:autofillHints="emailAddress"
+            android:background="@drawable/edittext_bg"
             android:hint="@string/register_email"
+            android:inputType="textEmailAddress"
             android:padding="12dp"
             android:textColor="@color/c_two" />
 
@@ -118,10 +124,10 @@
                 android:id="@+id/etPass"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/edittext_bg"
-                android:inputType="textPassword"
                 android:autofillHints="password"
+                android:background="@drawable/edittext_bg"
                 android:hint="@string/register_password"
+                android:inputType="textPassword"
                 android:padding="12dp"
                 android:paddingEnd="48dp"
                 android:textColor="@color/c_two" />
@@ -132,11 +138,11 @@
                 android:layout_height="48dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="@null"
-                android:padding="12dp"
                 android:layout_marginEnd="4dp"
-                android:src="@drawable/ic_eye_closed"
-                android:contentDescription="@string/register_password" />
+                android:background="@null"
+                android:contentDescription="@string/register_password"
+                android:padding="12dp"
+                android:src="@drawable/ic_eye_closed" />
 
         </RelativeLayout>
 
@@ -161,8 +167,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/edittext_bg"
-                android:inputType="textPassword"
                 android:hint="@string/register_confirm_password"
+                android:inputType="textPassword"
                 android:padding="12dp"
                 android:paddingEnd="48dp"
                 android:textColor="@color/c_two" />
@@ -174,9 +180,9 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@null"
+                android:contentDescription="@string/register_confirm_password"
                 android:padding="12dp"
-                android:src="@drawable/ic_eye_closed"
-                android:contentDescription="@string/register_confirm_password" />
+                android:src="@drawable/ic_eye_closed" />
         </RelativeLayout>
 
         <!-- Botón -->
@@ -186,10 +192,10 @@
             android:layout_height="50dp"
             android:layout_marginTop="28dp"
             android:background="@drawable/button_bg"
+            android:backgroundTint="@null"
             android:text="@string/register_continue"
             android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:backgroundTint="@null"/>
+            android:textStyle="bold" />
 
 
     </LinearLayout>
