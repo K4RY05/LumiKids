@@ -34,19 +34,18 @@
         <!-- TÍTULO  -->
         <TextView
             android:id="@+id/tvTitle"
-            android:layout_width="473dp"
-            android:layout_height="53dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
 
             android:layout_centerVertical="true"
             android:layout_marginStart="12dp"
-            android:layout_marginEnd="9dp"
+            android:layout_marginEnd="4dp"
 
             android:layout_toStartOf="@id/ivProfile"
             android:layout_toEndOf="@id/ivLogo"
 
-            android:autoSizeMaxTextSize="50sp"
-
-            android:autoSizeMinTextSize="25sp"
+            android:autoSizeMaxTextSize="@dimen/title_size"
+            android:autoSizeMinTextSize="22sp"
             android:autoSizeStepGranularity="2sp"
             android:autoSizeTextType="uniform"
 
@@ -54,9 +53,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:text="LumiKids"
-
             android:textColor="@color/c_one"
             android:textStyle="bold" />
+
 
         <ImageView
             android:id="@+id/ivProfile"
