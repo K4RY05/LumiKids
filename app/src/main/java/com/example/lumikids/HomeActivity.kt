@@ -5,6 +5,8 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
+import android.content.Intent
+
 class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,6 +22,10 @@ class HomeActivity : AppCompatActivity() {
 
         btnMinijuegos.setOnClickListener {
             Toast.makeText(this, "Presionaste Minijuegos", Toast.LENGTH_SHORT).show()
+
+            val intent = Intent(this, ThemeGameActivity::class.java)
+            startActivity(intent)
         }
+
     }
 }

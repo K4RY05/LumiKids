@@ -43,7 +43,6 @@ class RegisterActivity : AppCompatActivity() {
             togglePassword2()
         }
 
-        // 👉 ESTE ES EL CLICK DEL BOTÓN
         btnContinue.setOnClickListener {
            // Toast.makeText(this, "Botón presionado", Toast.LENGTH_SHORT).show()
             val intent = Intent(this, TermsActivity::class.java)

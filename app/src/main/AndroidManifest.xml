@@ -13,6 +13,7 @@
         android:theme="@style/Theme.LumiKids">
 
         <activity android:name=".MainActivity" />
+
         <activity android:name=".LoginActivity"
             android:screenOrientation="portrait" />
         <activity android:name=".RegisterActivity"
@@ -20,6 +21,11 @@
         <activity android:name=".TermsActivity"
             android:screenOrientation="portrait" />
         <activity android:name=".HomeActivity"
+            android:screenOrientation="landscape"/>
+
+        <activity android:name=".ThemeGameActivity"
+            android:screenOrientation="landscape"/>
+        <activity android:name=".GameTypeActivity"
             android:screenOrientation="landscape"/>
 
         <activity
