@@ -7,6 +7,8 @@ import com.example.lumikids.R
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+import android.content.Intent
+import android.widget.Button
 class TermsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,6 +17,15 @@ class TermsActivity : AppCompatActivity() {
 
         val tvTerms = findViewById<TextView>(R.id.tvTermsText)
         tvTerms.text = readRawTextFile(R.raw.terms)
+
+
+        val btnFinish = findViewById<Button>(R.id.btnFinish)
+
+        btnFinish.setOnClickListener {
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun readRawTextFile(resId: Int): String {
