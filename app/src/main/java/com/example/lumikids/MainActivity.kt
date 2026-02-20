@@ -9,15 +9,8 @@ import androidx.core.view.WindowInsetsCompat
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 1. Esto va primero
         enableEdgeToEdge()
-
-        // 2. Cargas el diseño (SOLO UNA VEZ)
       setContentView(R.layout.activity_main)
-       // setContentView(R.layout.activity_login)
-
-        // 3. Configuras los márgenes para la barra de estado
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)

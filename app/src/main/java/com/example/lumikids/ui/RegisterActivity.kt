@@ -1,83 +1,100 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
-import android.text.method.HideReturnsTransformationMethod
-import android.text.method.PasswordTransformationMethod
+import android.util.Patterns
 import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import android.content.Intent
+import androidx.appcompat.widget.AppCompatButton
 import com.example.lumikids.R
+import com.example.lumikids.network.AuthApi
+import com.example.lumikids.network.RegisterRequest
+import com.example.lumikids.network.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
-
-    private lateinit var etPass: EditText
-    private lateinit var etPass2: EditText
-
-    private lateinit var ivTogglePass: ImageButton
-    private lateinit var ivTogglePass2: ImageButton
-
-    private lateinit var btnContinue: Button
-
-    private var isPasswordVisible = false
-    private var isPasswordVisible2 = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        etPass = findViewById(R.id.etPass)
-        etPass2 = findViewById(R.id.etPass2)
+        val etUsuario = findViewById<EditText>(R.id.etUsername)
+        val etCorreo = findViewById<EditText>(R.id.etEmail)
+        val etPass = findViewById<EditText>(R.id.etPass)
+        val etPassConfirm = findViewById<EditText>(R.id.etPass2)
+        val btnContinuar = findViewById<AppCompatButton>(R.id.btnContinue)
 
-        ivTogglePass = findViewById(R.id.ivTogglePass)
-        ivTogglePass2 = findViewById(R.id.ivTogglePass2)
+        btnContinuar.setOnClickListener {
 
-        btnContinue = findViewById(R.id.btnContinue)
+            val usuario = etUsuario.text.toString().trim()
+            val correo = etCorreo.text.toString().trim()
+            val pass = etPass.text.toString()
+            val passConfirm = etPassConfirm.text.toString()
 
-        ivTogglePass.setOnClickListener {
-            togglePassword()
-        }
 
-        ivTogglePass2.setOnClickListener {
-            togglePassword2()
-        }
+            if (usuario.isEmpty() || correo.isEmpty() || pass.isEmpty() || passConfirm.isEmpty()) {
+                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-        // 👉 ESTE ES EL CLICK DEL BOTÓN
-        btnContinue.setOnClickListener {
-           // Toast.makeText(this, "Botón presionado", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, TermsActivity::class.java)
-            startActivity(intent)
+            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+                Toast.makeText(this, "Ingresa un correo electrónico válido", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (pass != passConfirm) {
+                Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            registrarUsuario(usuario, correo, pass)
         }
     }
 
-    private fun togglePassword() {
-        if (isPasswordVisible) {
-            etPass.transformationMethod =
-                PasswordTransformationMethod.getInstance()
-            ivTogglePass.setImageResource(R.drawable.ic_eye_closed)
-        } else {
-            etPass.transformationMethod =
-                HideReturnsTransformationMethod.getInstance()
-            ivTogglePass.setImageResource(R.drawable.ic_eye_open)
-        }
+    private fun registrarUsuario(nombre: String, email: String, password: String) {
 
-        etPass.setSelection(etPass.text.length)
-        isPasswordVisible = !isPasswordVisible
-    }
+        val api = RetrofitClient.instance.create(AuthApi::class.java)
 
-    private fun togglePassword2() {
-        if (isPasswordVisible2) {
-            etPass2.transformationMethod =
-                PasswordTransformationMethod.getInstance()
-            ivTogglePass2.setImageResource(R.drawable.ic_eye_closed)
-        } else {
-            etPass2.transformationMethod =
-                HideReturnsTransformationMethod.getInstance()
-            ivTogglePass2.setImageResource(R.drawable.ic_eye_open)
-        }
+        val request = RegisterRequest(
+            name = nombre,
+            email = email,
+            password = password
+        )
 
-        etPass2.setSelection(etPass2.text.length)
-        isPasswordVisible2 = !isPasswordVisible2
+        api.register(request).enqueue(object : Callback<com.example.lumikids.network.ApiResponse> {
+
+            override fun onResponse(
+                call: Call<com.example.lumikids.network.ApiResponse>,
+                response: Response<com.example.lumikids.network.ApiResponse>
+            ) {
+                if (response.isSuccessful) {
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        response.body()?.message ?: "Registro exitoso",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    finish() // regresa al login o pantalla anterior
+                } else {
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        "Error en el registro",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+            override fun onFailure(
+                call: Call<com.example.lumikids.network.ApiResponse>,
+                t: Throwable
+            ) {
+                Toast.makeText(
+                    this@RegisterActivity,
+                    "Error de conexión: ${t.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        })
     }
 }
