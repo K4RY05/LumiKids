@@ -28,6 +28,9 @@
         <activity android:name=".GameTypeActivity"
             android:screenOrientation="landscape"/>
 
+        <activity android:name=".ProfileActivity"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".SplashActivity"
             android:screenOrientation="portrait"

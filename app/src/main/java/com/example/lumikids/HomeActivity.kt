@@ -16,6 +16,16 @@ class HomeActivity : AppCompatActivity() {
         val btnTablero = findViewById<ImageView>(R.id.btnTablero)
         val btnMinijuegos = findViewById<ImageView>(R.id.btnMinijuegos)
 
+        val ivProfile = findViewById<ImageView>(R.id.ivProfile)
+
+        ivProfile.setOnClickListener {
+
+            // Intent para abrir UserActivity
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
+
+
         btnTablero.setOnClickListener {
             Toast.makeText(this, "Presionaste Tablero", Toast.LENGTH_SHORT).show()
         }
