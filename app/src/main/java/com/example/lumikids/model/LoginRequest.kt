@@ -1,7 +1,6 @@
 package com.example.lumikids.model
 
-data class RegisterRequest(
-    val name: String,
+data class LoginRequest(
     val email: String,
     val password: String
 )

@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.example.lumikids.R
 import com.example.lumikids.network.AuthApi
-import com.example.lumikids.network.RegisterRequest
+import com.example.lumikids.model.RegisterRequest
 import com.example.lumikids.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -63,11 +63,11 @@ class RegisterActivity : AppCompatActivity() {
             password = password
         )
 
-        api.register(request).enqueue(object : Callback<com.example.lumikids.network.ApiResponse> {
+        api.register(request).enqueue(object : Callback<com.example.lumikids.model.ApiResponse> {
 
             override fun onResponse(
-                call: Call<com.example.lumikids.network.ApiResponse>,
-                response: Response<com.example.lumikids.network.ApiResponse>
+                call: Call<com.example.lumikids.model.ApiResponse>,
+                response: Response<com.example.lumikids.model.ApiResponse>
             ) {
                 if (response.isSuccessful) {
                     Toast.makeText(
@@ -86,7 +86,7 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             override fun onFailure(
-                call: Call<com.example.lumikids.network.ApiResponse>,
+                call: Call<com.example.lumikids.model.ApiResponse>,
                 t: Throwable
             ) {
                 Toast.makeText(
