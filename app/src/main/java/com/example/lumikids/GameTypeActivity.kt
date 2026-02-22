@@ -20,28 +20,30 @@ class GameTypeActivity : AppCompatActivity() {
         // Recibir temática seleccionada
         val theme = intent.getStringExtra("THEME")
 
-        // 🃏 Tarjetas
+        //  Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
-/*
-        // 🎯 Identifica el objeto
+
+        //  Identifica el objeto
         cardObject.setOnClickListener {
 
             val intent = Intent(this, GameActivity::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "OBJECT")
             startActivity(intent)
+            finish()
         }
 
-        // 🧠 Memorama
+        // Memorama
         cardMemory.setOnClickListener {
 
             val intent = Intent(this, GameActivity::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "MEMORY")
             startActivity(intent)
+            finish()
         }
 
- */
+
     }
 }
