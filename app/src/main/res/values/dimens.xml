@@ -12,5 +12,7 @@
     <!-- Titulo main -->
     <dimen name="title_size">32sp</dimen>
 
-
+    <dimen name="icono_esquina">60dp</dimen>
+    <dimen name="esquina_ancho">140dp</dimen>
+    <dimen name="esquina_alto">100dp</dimen>
 </resources>

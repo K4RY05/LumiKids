@@ -1,13 +1,13 @@
 package com.example.lumikids
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-// 1. Creamos un modelo de datos simple para representar cada objeto
-data class LumiObject(val name: String, val imageResId: Int)
+// 1. Modelo de datos actualizado con audioResId
+data class LumiObject(val name: String, val imageResId: Int, val audioResId: Int)
 
 class GameActivity : AppCompatActivity() {
 
@@ -15,6 +15,8 @@ class GameActivity : AppCompatActivity() {
     private lateinit var imgOption2: ImageView
     private lateinit var imgOption3: ImageView
     private lateinit var btnBack: ImageView
+
+    private var mediaPlayer: MediaPlayer? = null
 
     private var currentCorrectObject: LumiObject? = null
     private var currentThemeItems: List<LumiObject> = emptyList()
@@ -24,7 +26,6 @@ class GameActivity : AppCompatActivity() {
         setContentView(R.layout.activity_game)
 
         // 2. Vincular las vistas
-
         imgOption1 = findViewById(R.id.imgOption1)
         imgOption2 = findViewById(R.id.imgOption2)
         imgOption3 = findViewById(R.id.imgOption3)
@@ -37,9 +38,15 @@ class GameActivity : AppCompatActivity() {
         val gameType = intent.getStringExtra("GAME_TYPE") ?: "OBJECT"
 
         if (gameType == "OBJECT") {
-            // Cargar la lista de objetos según el tema
+            // Cargar la lista de objetos de forma dinámica
             currentThemeItems = getItemsForTheme(theme)
-            startNewRound()
+
+            // Verificamos si se encontraron elementos antes de jugar
+            if (currentThemeItems.isEmpty()) {
+                Toast.makeText(this, "Agrega imágenes en drawable y audios en raw", Toast.LENGTH_LONG).show()
+            } else {
+                startNewRound()
+            }
         } else {
             // Aquí irá el código del memorama en el futuro
             Toast.makeText(this, "Memorama en construcción", Toast.LENGTH_SHORT).show()
@@ -47,7 +54,10 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun startNewRound() {
-        if (currentThemeItems.size < 3) return // Prevención de errores si hay pocas imágenes
+        if (currentThemeItems.size < 3) {
+            Toast.makeText(this, "Se necesitan al menos 3 objetos para jugar", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         // 4. Elegir 3 objetos al azar
         val shuffledItems = currentThemeItems.shuffled()
@@ -55,8 +65,17 @@ class GameActivity : AppCompatActivity() {
 
         // 5. De esos 3, elegir 1 como la respuesta correcta
         currentCorrectObject = roundOptions.random()
+        /*
+                // 6. REPRODUCIR EL AUDIO DE LA INSTRUCCIÓN
+                // Libera el audio anterior si existía para no amontonar sonidos
+                mediaPlayer?.release()
+                currentCorrectObject?.let { correctObj ->
+                    // Crea el reproductor con el audio del objeto ganador y lo inicia
+                    mediaPlayer = MediaPlayer.create(this, correctObj.audioResId)
+                    mediaPlayer?.start()
+                }
 
-
+         */
 
         // 7. Poner las imágenes en los botones
         imgOption1.setImageResource(roundOptions[0].imageResId)
@@ -72,42 +91,73 @@ class GameActivity : AppCompatActivity() {
     private fun setupOptionClick(imageView: ImageView, clickedObject: LumiObject) {
         imageView.setOnClickListener {
             if (clickedObject == currentCorrectObject) {
-                // ¡Correcto!
+                reproducirEfecto(R.raw.win)
                 Toast.makeText(this, "¡Muy bien!", Toast.LENGTH_SHORT).show()
                 // Iniciar nueva ronda después de un pequeño retraso
                 imageView.postDelayed({
                     startNewRound()
                 }, 1000) // Espera 1 segundo
             } else {
-                // Incorrecto
+                reproducirEfecto(R.raw.fail)
                 Toast.makeText(this, "Intenta de nuevo", Toast.LENGTH_SHORT).show()
-                // Aquí podrías agregar una pequeña animación de error
             }
         }
+
     }
 
-    // 🔴 CAMBIA R.drawable.xxx POR TUS IMÁGENES REALES
+    // LECTURA DINÁMICA AUTOMÁTICA
     private fun getItemsForTheme(theme: String): List<LumiObject> {
-        return when (theme) {
-            "FOOD" -> listOf(
-                LumiObject("la Manzana", R.drawable.ic_logo), // Cambia ic_logo por tu manzana
-                LumiObject("el Plátano", R.drawable.ic_logo),
-                LumiObject("las Uvas", R.drawable.ic_logo),
-                LumiObject("la Naranja", R.drawable.ic_logo)
-            )
-            "EMOTIONS" -> listOf(
-                LumiObject("Feliz", R.drawable.ic_emocionv2),
-                LumiObject("Triste", R.drawable.ic_logo),
-                LumiObject("Enojado", R.drawable.ic_logo),
-                LumiObject("Asustado", R.drawable.ic_logo)
-            )
-            "CLOTHES" -> listOf(
-                LumiObject("la Camisa", R.drawable.ic_logo),
-                LumiObject("el Pantalón", R.drawable.ic_logo),
-                LumiObject("los Zapatos", R.drawable.ic_logo),
-                LumiObject("el Gorro", R.drawable.ic_logo)
-            )
-            else -> emptyList()
+        val prefijo = when (theme) {
+            "FOOD" -> "food_"
+            "EMOTIONS" -> "emo_"
+            "CLOTHES" -> "clother_"
+            else -> return emptyList()
         }
+
+        val listaAutomatica = mutableListOf<LumiObject>()
+        val todosLosDrawables = R.drawable::class.java.fields
+
+        for (archivo in todosLosDrawables) {
+            val nombreArchivo = archivo.name
+
+            if (nombreArchivo.startsWith(prefijo)) {
+                try {
+                    val idImagen = archivo.getInt(null)
+                    // Busca el audio con el mismo nombre en la carpeta res/raw/
+                    val idAudio = resources.getIdentifier(nombreArchivo, "raw", packageName)
+
+                    //if (idAudio != 0)
+                    if (true) {
+                        // Limpia el nombre por si necesitas imprimirlo (convierte food_manzana -> Manzana)
+                        val nombreLimpio = nombreArchivo.removePrefix(prefijo)
+                            .replace("_", " ")
+                            .replaceFirstChar { it.uppercase() }
+
+                        listaAutomatica.add(LumiObject(nombreLimpio, idImagen, idAudio))
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        return listaAutomatica
+    }
+
+    private fun reproducirEfecto(sonidoResId: Int) {
+        val efectoPlayer = MediaPlayer.create(this, sonidoResId)
+        efectoPlayer.setOnCompletionListener {
+            it.release() // Destruye el reproductor en cuanto termina el sonido
+        }
+        efectoPlayer.start()
+    }
+
+
+
+    //  liberar el reproductor cuando se cierra la pantalla
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }

@@ -8,16 +8,16 @@
 
     <FrameLayout
         android:id="@+id/leftCorner"
-        android:layout_width="140dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/esquina_ancho"
+        android:layout_height="@dimen/esquina_alto"
         android:background="@drawable/bg_corner_left"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="@dimen/icono_esquina"
+            android:layout_height="@dimen/icono_esquina"
             android:layout_gravity="center"
             android:src="@drawable/ic_left"
             android:clickable="true"
@@ -26,16 +26,16 @@
 
     <FrameLayout
         android:id="@+id/rightCorner"
-        android:layout_width="140dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/esquina_ancho"
+        android:layout_height="@dimen/esquina_alto"
         android:background="@drawable/bg_corner_right"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/btnPause"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="@dimen/icono_esquina"
+            android:layout_height="@dimen/icono_esquina"
             android:layout_gravity="center"
             android:src="@drawable/ic_pause"
             android:clickable="true"
