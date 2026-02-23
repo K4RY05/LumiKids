@@ -65,7 +65,7 @@ class GameActivity : AppCompatActivity() {
 
         // 5. De esos 3, elegir 1 como la respuesta correcta
         currentCorrectObject = roundOptions.random()
-        /*
+
                 // 6. REPRODUCIR EL AUDIO DE LA INSTRUCCIÓN
                 // Libera el audio anterior si existía para no amontonar sonidos
                 mediaPlayer?.release()
@@ -75,7 +75,7 @@ class GameActivity : AppCompatActivity() {
                     mediaPlayer?.start()
                 }
 
-         */
+
 
         // 7. Poner las imágenes en los botones
         imgOption1.setImageResource(roundOptions[0].imageResId)
@@ -127,7 +127,7 @@ class GameActivity : AppCompatActivity() {
                     val idAudio = resources.getIdentifier(nombreArchivo, "raw", packageName)
 
                     //if (idAudio != 0)
-                    if (true) {
+                    if (idAudio != 0) {
                         // Limpia el nombre por si necesitas imprimirlo (convierte food_manzana -> Manzana)
                         val nombreLimpio = nombreArchivo.removePrefix(prefijo)
                             .replace("_", " ")

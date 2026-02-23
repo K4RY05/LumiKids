@@ -12,6 +12,12 @@
     <!-- Titulo main -->
     <dimen name="title_size">32sp</dimen>
 
+    <dimen name="margen_perfil">16dp</dimen>
+    <dimen name="tamano_user">30sp</dimen>
+    <dimen name="tamano_avatar">180dp</dimen>
+    <dimen name="tallButton">50dp</dimen>
+    <dimen name="buttonFontSize">16sp</dimen>
+
     <dimen name="icono_esquina">60dp</dimen>
     <dimen name="esquina_ancho">140dp</dimen>
     <dimen name="esquina_alto">100dp</dimen>

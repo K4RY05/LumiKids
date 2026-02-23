@@ -21,7 +21,7 @@ class ProfileActivity : AppCompatActivity() {
         val btnTemas = findViewById<Button>(R.id.btnTemas)
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
 
-        txtTitulo.text = "Usuario Lumikids"
+        txtTitulo.text = "Usuario"
 
         btnDatos.setOnClickListener {
             // Abrir datos personales
