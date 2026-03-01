@@ -21,4 +21,8 @@
     <dimen name="icono_esquina">60dp</dimen>
     <dimen name="esquina_ancho">140dp</dimen>
     <dimen name="esquina_alto">100dp</dimen>
+
+
+    <dimen name="tarjeta_memorama">120dp</dimen>
+
 </resources>

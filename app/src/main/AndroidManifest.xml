@@ -27,7 +27,9 @@
             android:screenOrientation="landscape"/>
         <activity android:name=".GameTypeActivity"
             android:screenOrientation="landscape"/>
-        <activity android:name=".GameActivity"
+        <activity android:name=".GameActivityN1"
+            android:screenOrientation="landscape"/>
+        <activity android:name=".GameActivityN2"
             android:screenOrientation="landscape"/>
 
         <activity android:name=".ProfileActivity"

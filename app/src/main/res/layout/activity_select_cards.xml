@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
-
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/c_four">
-
 
     <!-- HEADER -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -80,9 +78,11 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
     <!-- TARJETA 1 -->
     <ImageView
-        android:id="@+id/cardObjeto"
+        android:id="@+id/cardFood"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
@@ -92,20 +92,38 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/bton_object"
+        android:src="@drawable/btn_memory6cards"
 
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/cardMemorama"
+        app:layout_constraintEnd_toStartOf="@id/cardEmociones"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintHorizontal_chainStyle="spread"/>
 
-
-
     <!-- TARJETA 2 -->
     <ImageView
-        android:id="@+id/cardMemorama"
+        android:id="@+id/cardEmociones"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_memory8cards"
+
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cardFood"
+        app:layout_constraintEnd_toStartOf="@id/cardRopa"
+        app:layout_constraintDimensionRatio="1:1"/>
+
+    <!-- TARJETA 3 -->
+    <ImageView
+        android:id="@+id/cardRopa"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
@@ -115,11 +133,11 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/bton_memory"
+        android:src="@drawable/btn_memory10cards"
 
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/cardObjeto"
+        app:layout_constraintStart_toEndOf="@id/cardEmociones"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintDimensionRatio="1:1"/>
 

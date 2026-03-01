@@ -27,7 +27,7 @@ class GameTypeActivity : AppCompatActivity() {
         //  Identifica el objeto
         cardObject.setOnClickListener {
 
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, GameActivityN1::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "OBJECT")
             startActivity(intent)
@@ -37,7 +37,7 @@ class GameTypeActivity : AppCompatActivity() {
         // Memorama
         cardMemory.setOnClickListener {
 
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, GameActivityN2::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "MEMORY")
             startActivity(intent)

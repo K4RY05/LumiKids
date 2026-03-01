@@ -6,10 +6,10 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
-// 1. Modelo de datos actualizado con audioResId
+// Modelo de datos actualizado con audioResId
 data class LumiObject(val name: String, val imageResId: Int, val audioResId: Int)
 
-class GameActivity : AppCompatActivity() {
+class GameActivityN1 : AppCompatActivity() {
 
     private lateinit var imgOption1: ImageView
     private lateinit var imgOption2: ImageView
@@ -23,7 +23,7 @@ class GameActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game)
+        setContentView(R.layout.activity_game_n1)
 
         // 2. Vincular las vistas
         imgOption1 = findViewById(R.id.imgOption1)
