@@ -9,6 +9,7 @@ import java.io.InputStreamReader
 
 import android.content.Intent
 import android.widget.Button
+import com.example.lumikids.MainActivity
 
 class TermsActivity : AppCompatActivity() {
 
@@ -23,7 +24,7 @@ class TermsActivity : AppCompatActivity() {
         val btnFinish = findViewById<Button>(R.id.btnFinish)
 
         btnFinish.setOnClickListener {
-            val intent = Intent(this, HomeActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         }

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -13,28 +15,47 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids">
 
-        <activity android:name=".MainActivity" />
         <activity
             android:name=".ui.LoginActivity"
-            android:screenOrientation="portrait" />
-        <activity android:name=".ui.RegisterActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name=".ui.TermsActivity"
+
+        <activity
+            android:name=".ui.RegisterActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name=".ui.HomeActivity"
-            android:screenOrientation="landscape"/>
-        <activity android:name=".ui.GameTypeActivity"
-            android:screenOrientation="landscape"/>
-        <activity android:name=".ui.ProfileActivity"
-            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.TermsActivity"
+            android:screenOrientation="portrait"/>
+
+        <!-- Pantallas horizontales -->
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="sensorLandscape"
+             />
+
+        <activity
+            android:name=".ui.GameTypeActivity"
+            android:screenOrientation="sensorLandscape"/>
+        <activity android:name=".ui.PecsBoardActivity"
+            android:screenOrientation="sensorLandscape"/>
+
+        <activity
+            android:name=".ui.ProfileActivity"
+            android:screenOrientation="portrait"/>
+
+        <!-- Pantalla inicial -->
         <activity
             android:name=".ui.SplashActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
     </application>
 
 </manifest>
