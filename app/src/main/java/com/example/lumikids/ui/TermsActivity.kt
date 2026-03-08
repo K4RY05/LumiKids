@@ -9,6 +9,7 @@ import java.io.InputStreamReader
 
 import android.content.Intent
 import android.widget.Button
+
 class TermsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -11,6 +11,7 @@ import com.example.lumikids.model.ApiResponse
 import com.example.lumikids.model.LoginRequest
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
+import com.example.lumikids.utils.SessionManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -18,9 +19,19 @@ import retrofit2.Response
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sessionManager = SessionManager(this)
+
+        // Si ya está logueado, ir directo a Main
+        if (sessionManager.isLoggedIn()) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -30,13 +41,13 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
 
-            // 🔎 Validar campos vacíos
+            // Validar campos vacíos
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // 🔎 Validar formato email
+            // Validar formato email
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(this, "Correo electrónico inválido", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -64,17 +75,20 @@ class LoginActivity : AppCompatActivity() {
 
                 if (response.isSuccessful && response.body()?.success == true) {
 
+                    // Guardar sesión
+                    sessionManager.saveLogin(email)
+
                     Toast.makeText(
                         this@LoginActivity,
-                        response.body()?.message,
+                        response.body()?.message ?: "Bienvenido",
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // ✅ Solo entra si success = true
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
 
                 } else {
+
                     Toast.makeText(
                         this@LoginActivity,
                         response.body()?.message ?: "Credenciales incorrectas",

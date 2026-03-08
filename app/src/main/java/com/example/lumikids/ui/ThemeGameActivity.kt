@@ -1,9 +1,10 @@
-package com.example.lumikids
+package com.example.lumikids.ui
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.lumikids.R
 
 class ThemeGameActivity : AppCompatActivity() {
 

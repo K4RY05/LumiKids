@@ -33,31 +33,51 @@ class RegisterActivity : AppCompatActivity() {
             val pass = etPass.text.toString()
             val passConfirm = etPassConfirm.text.toString()
 
-
+            // Validar campos vacíos
             if (usuario.isEmpty() || correo.isEmpty() || pass.isEmpty() || passConfirm.isEmpty()) {
                 Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            // Validar correo
             if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
                 Toast.makeText(this, "Ingresa un correo electrónico válido", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            // Validar contraseñas
             if (pass != passConfirm) {
                 Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            registrarUsuario(usuario, correo, pass)
+            // Generar ID de usuario
+            val ID_user = generarUserId(usuario)
+
+            registrarUsuario(ID_user, usuario, correo, pass)
         }
     }
 
-    private fun registrarUsuario(nombre: String, email: String, password: String) {
+    // Función para generar ID (3 letras + 3 números)
+    private fun generarUserId(nombre: String): String {
+
+        val letras = if (nombre.length >= 3) {
+            nombre.substring(0, 3).lowercase()
+        } else {
+            nombre.lowercase().padEnd(3, 'x')
+        }
+
+        val numeros = (100..999).random()
+
+        return "$letras$numeros"
+    }
+
+    private fun registrarUsuario(ID_user: String, nombre: String, email: String, password: String) {
 
         val api = RetrofitClient.instance.create(AuthApi::class.java)
 
         val request = RegisterRequest(
+            ID_user = ID_user,
             name = nombre,
             email = email,
             password = password
@@ -70,13 +90,16 @@ class RegisterActivity : AppCompatActivity() {
                 response: Response<com.example.lumikids.model.ApiResponse>
             ) {
                 if (response.isSuccessful) {
+
                     Toast.makeText(
                         this@RegisterActivity,
                         response.body()?.message ?: "Registro exitoso",
                         Toast.LENGTH_LONG
                     ).show()
-                    finish() // regresa al login o pantalla anterior
+
+                    finish()
                 } else {
+
                     Toast.makeText(
                         this@RegisterActivity,
                         "Error en el registro",
