@@ -13,7 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids">
 
-        <activity android:name=".MainActivity" />
+
+
+
+        <activity android:name=".MainActivity"
+            android:screenOrientation="sensorLandscape"/>
         <activity
             android:name=".ui.LoginActivity"
             android:screenOrientation="portrait" />
@@ -21,10 +25,11 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".ui.TermsActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name=".ui.HomeActivity"
-            android:screenOrientation="landscape"/>
+
         <activity android:name=".ui.GameTypeActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="sensorLandscape"/>
+        <activity android:name=".ui.ThemeGameActivity"
+            android:screenOrientation="sensorLandscape"/>
         <activity android:name=".ui.ProfileActivity"
             android:screenOrientation="portrait" />
         <activity

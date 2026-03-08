@@ -1,8 +1,10 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.text.InputType
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -16,6 +18,9 @@ import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
 
+    private var isPassVisible = false
+    private var isPass2Visible = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -25,6 +30,20 @@ class RegisterActivity : AppCompatActivity() {
         val etPass = findViewById<EditText>(R.id.etPass)
         val etPassConfirm = findViewById<EditText>(R.id.etPass2)
         val btnContinuar = findViewById<AppCompatButton>(R.id.btnContinue)
+
+        // Se deben inicializar los botones de visibilidad y sus listeners fuera del clic de registro
+        val ivTogglePass = findViewById<ImageButton>(R.id.ivTogglePass)
+        val ivTogglePass2 = findViewById<ImageButton>(R.id.ivTogglePass2)
+
+        ivTogglePass.setOnClickListener {
+            isPassVisible = !isPassVisible
+            togglePasswordVisibility(etPass, ivTogglePass, isPassVisible)
+        }
+
+        ivTogglePass2.setOnClickListener {
+            isPass2Visible = !isPass2Visible
+            togglePasswordVisibility(etPassConfirm, ivTogglePass2, isPass2Visible)
+        }
 
         btnContinuar.setOnClickListener {
 
@@ -56,6 +75,20 @@ class RegisterActivity : AppCompatActivity() {
 
             registrarUsuario(ID_user, usuario, correo, pass)
         }
+    }
+
+    private fun togglePasswordVisibility(editText: EditText, button: ImageButton, isVisible: Boolean) {
+        if (isVisible) {
+            // Mostrar contraseña
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_open)
+        } else {
+            // Ocultar contraseña
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_closed)
+        }
+        // Mover el cursor al final del texto para que no salte al inicio
+        editText.setSelection(editText.text.length)
     }
 
     // Función para generar ID (3 letras + 3 números)
