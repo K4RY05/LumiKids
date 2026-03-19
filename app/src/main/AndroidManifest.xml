@@ -30,6 +30,16 @@
             android:screenOrientation="sensorLandscape"/>
         <activity android:name=".ui.ThemeGameActivity"
             android:screenOrientation="sensorLandscape"/>
+        <activity android:name=".ui.MemoryLevelActivity"
+            android:screenOrientation="sensorLandscape"/>
+        <activity android:name=".ui.ObjectLevelPickerActivity"
+            android:screenOrientation="sensorLandscape"/>
+
+        <activity android:name=".minigame.objectrecognition.ui.GameActivityN1"
+            android:screenOrientation="landscape"/>
+        <activity android:name=".minigame.memorygame.ui.GameActivityN2"
+            android:screenOrientation="landscape"/>
+
         <activity android:name=".ui.ProfileActivity"
             android:screenOrientation="portrait" />
         <activity

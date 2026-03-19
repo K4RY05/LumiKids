@@ -19,15 +19,15 @@ class ThemeGameActivity : AppCompatActivity() {
         }
 
         // Tarjetas (Temáticas)
-        val food = findViewById<ImageView>(R.id.cardFood)
+        val food = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
         val clothes = findViewById<ImageView>(R.id.cardRopa)
 
-        //  FOOD
+        //  FURNITURE
         food.setOnClickListener {
 
             val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "FOOD")
+            intent.putExtra("THEME", "FURNITURE")
             startActivity(intent)
         }
 

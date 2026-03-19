@@ -1,0 +1,35 @@
+{
+  "food_manzana": "Selecciona la manzana",
+  "food_pera": "Selecciona la pera",
+  "food_platano": "Selecciona el plátano",
+  "food_sandia": "Selecciona la sandía",
+  "food_uva": "Selecciona la uva",
+
+
+  "emo_felicidad": "Selecciona cómo te sientes cuando tu mejor amigo viene a tu casa",
+  "emo_tristeza": "Elige la emoción que sientes cuando se te cae tu helado favorito",
+  "emo_enojo": "Elige cómo te sientes cuando alguien toma un juguete tuyo sin pedir permiso",
+  "emo_sorprendido": "Cuando entras a un cuarto y tus amigos gritan ¡Feliz cumpleaños!",
+  "emo_enfermo": "Cuando te duele mucho la pancita y tienes que quedarte en la cama",
+  "emo_confusion": "Selecciona la cara de confusión",
+  "emo_sorpresa": "Selecciona la cara que pones cuando entras a un cuarto y hay una fiesta.",
+
+
+  "clother_calceta": "Selecciona lo que te pones en los pies para estar calientito.",
+  "clother_camisa": "Elige la prenda que cubre el pecho y los brazos.",
+  "clother_chaleco": "Marca lo que se pone encima de la camisa para proteger el pecho.",
+  "clother_gorra": "Selecciona el accesorio que va en la cabeza para tapar el sol.",
+  "clother_pantalon": "Elige la prenda que se usa para tapar tus piernas.",
+
+  "furniture_cama": "Selecciona el mueble donde te acuestas a dormir y a soñar.",
+  "furniture_lampara": "Elige lo que se prende para dar luz cuando el cuarto está oscuro.",
+  "furniture_mesa": "Marca el mueble que sirve para poner tus platos de comida.",
+  "furniture_refrigerador": "Selecciona el aparato que guarda la comida y siempre está frío.",
+  "furniture_silla": "Elige el objeto que sirve para que te sientes y descanses un rato.",
+  "furniture_television": "Selecciona la pantalla donde puedes ver tus caricaturas favoritas.",
+  "furniture_horno": "Marca lo que se usa para calentar la comida o cocinar galletas.",
+  "furniture_ventana": "Selecciona por donde miras hacia la calle para ver si salió el sol.",
+  "furniture_puerta": "Elige lo que se abre para entrar o salir de un cuarto.",
+  "furniture_lavadora": "Selecciona el aparato que da muchas vueltas para dejar tu ropa limpia.",
+  "furniture_ventilador": "Marca lo que echa aire fresco para que no tengas calor."
+}

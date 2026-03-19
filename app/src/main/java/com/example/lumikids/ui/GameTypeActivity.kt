@@ -1,9 +1,12 @@
 package com.example.lumikids.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
+import com.example.lumikids.ui.MemoryLevelActivity
+import com.example.lumikids.minigame.objectrecognition.ui.GameActivityN1
 
 class GameTypeActivity : AppCompatActivity() {
 
@@ -20,28 +23,30 @@ class GameTypeActivity : AppCompatActivity() {
         // Recibir temática seleccionada
         val theme = intent.getStringExtra("THEME")
 
-        // 🃏 Tarjetas
+        //  Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
-/*
-        // 🎯 Identifica el objeto
+
+        //  Identifica el objeto
         cardObject.setOnClickListener {
 
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, ObjectLevelPickerActivity::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "OBJECT")
             startActivity(intent)
+            finish()
         }
 
-        // 🧠 Memorama
+        // Memorama
         cardMemory.setOnClickListener {
 
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, MemoryLevelActivity::class.java)
             intent.putExtra("THEME", theme)
             intent.putExtra("GAME_TYPE", "MEMORY")
             startActivity(intent)
+            finish()
         }
 
- */
+
     }
 }
