@@ -5,8 +5,7 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.ui.MemoryLevelActivity
-import com.example.lumikids.minigame.objectrecognition.ui.GameActivityN1
+import com.example.lumikids.model.GameTheme
 
 class GameTypeActivity : AppCompatActivity() {
 
@@ -14,39 +13,35 @@ class GameTypeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_type)
 
-        // Botón regresar
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         btnBack.setOnClickListener {
             finish()
         }
 
-        // Recibir temática seleccionada
-        val theme = intent.getStringExtra("THEME")
+        val theme = intent.getStringExtra("THEME")?.let {
+            GameTheme.valueOf(it)
+        } ?: return
 
-        //  Tarjetas
+        // Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
 
-        //  Identifica el objeto
+        // Eventos SIN GameType
         cardObject.setOnClickListener {
-
-            val intent = Intent(this, ObjectLevelPickerActivity::class.java)
-            intent.putExtra("THEME", theme)
-            intent.putExtra("GAME_TYPE", "OBJECT")
-            startActivity(intent)
-            finish()
+            openGame(ObjectLevelPickerActivity::class.java, theme)
         }
 
-        // Memorama
         cardMemory.setOnClickListener {
-
-            val intent = Intent(this, MemoryLevelActivity::class.java)
-            intent.putExtra("THEME", theme)
-            intent.putExtra("GAME_TYPE", "MEMORY")
-            startActivity(intent)
-            finish()
+            openGame(MemoryLevelActivity::class.java, theme)
         }
+    }
 
-
+    private fun openGame(
+        activity: Class<*>,
+        theme: GameTheme
+    ) {
+        val intent = Intent(this, activity)
+        intent.putExtra("THEME", theme.name)
+        startActivity(intent)
     }
 }

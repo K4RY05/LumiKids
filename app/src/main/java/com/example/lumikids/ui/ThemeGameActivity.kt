@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-
+import com.example.lumikids.model.GameTheme
 class ThemeGameActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,31 +19,27 @@ class ThemeGameActivity : AppCompatActivity() {
         }
 
         // Tarjetas (Temáticas)
-        val food = findViewById<ImageView>(R.id.cardFur)
+        val furniture = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
-        val clothes = findViewById<ImageView>(R.id.cardRopa)
+        val clothes = findViewById<ImageView>(R.id.cardClot)
 
-        //  FURNITURE
-        food.setOnClickListener {
-
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "FURNITURE")
-            startActivity(intent)
+        // Eventos
+        furniture.setOnClickListener {
+            openGame(GameTheme.FURNITURE)
         }
 
-        //  EMOTIONS
         emotions.setOnClickListener {
-
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "EMOTIONS")
-            startActivity(intent)
+            openGame(GameTheme.EMOTIONS)
         }
 
-        //  CLOTHES
         clothes.setOnClickListener {
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "CLOTHES")
-            startActivity(intent)
+            openGame(GameTheme.CLOTHES)
         }
+    }
+
+    private fun openGame(theme: GameTheme) {
+        val intent = Intent(this, GameTypeActivity::class.java)
+        intent.putExtra("THEME", theme.name)
+        startActivity(intent)
     }
 }

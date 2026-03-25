@@ -118,12 +118,12 @@
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/cardFur"
-        app:layout_constraintEnd_toStartOf="@id/cardRopa"
+        app:layout_constraintEnd_toStartOf="@id/cardClot"
         app:layout_constraintDimensionRatio="1:1"/>
 
     <!-- TARJETA 3 -->
     <ImageView
-        android:id="@+id/cardRopa"
+        android:id="@+id/cardClot"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"

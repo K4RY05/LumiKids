@@ -6,36 +6,39 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
+import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.objectrecognition.ui.GameActivityN1
 
 class ObjectLevelPickerActivity : AppCompatActivity() {
 
-    // Variables de estado del seleccionador
-    private var selectedRounds: Int = 3 // Valor por defecto (como en image_1)
+    // Estado
+    private var selectedRounds: Int = 3
     private val minRounds = 1
-    private val maxRounds = 10 // Límite razonable
+    private val maxRounds = 10
 
-    // Componentes de la Interfaz
+    // UI
     private lateinit var tvRoundCount: TextView
+
+    // 🔥 Tema tipado (NO string)
+    private lateinit var theme: GameTheme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
 
-        // 1. Recibimos el tema seleccionado de la pantalla anterior
-        val theme = intent.getStringExtra("THEME") ?: "FURNITURE"
+        theme = intent.getStringExtra("THEME")?.let {
+            GameTheme.valueOf(it)
+        } ?: GameTheme.FURNITURE
 
-        // 2. Vinculamos vistas
+
         tvRoundCount = findViewById(R.id.tvRoundCount)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnDecrease = findViewById<ImageView>(R.id.btnDecrease)
         val btnIncrease = findViewById<ImageView>(R.id.btnIncrease)
         val btnStart = findViewById<TextView>(R.id.btnStart)
 
-        // Actualizar UI inicial
         updateUi()
 
-        // 3. Lógica de los botones del selector (Flechas rojas)
         btnDecrease.setOnClickListener {
             if (selectedRounds > minRounds) {
                 selectedRounds--
@@ -50,21 +53,22 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
             }
         }
 
-        // 4. Lógica de navegación
         btnBack.setOnClickListener { finish() }
 
-        // BOTÓN JUGAR: Inicia el juego pasando el tema Y el número de rondas
         btnStart.setOnClickListener {
-            val intent = Intent(this, GameActivityN1::class.java).apply {
-                putExtra("THEME", theme)
-                putExtra("NUM_ROUNDS", selectedRounds) // ¡Enviamos el dato elegido!
-            }
-            startActivity(intent)
-            // finish() // Opcional: Cerrar el seleccionador para que no vuelvan a él al dar atrás
+            startGame()
         }
     }
 
     private fun updateUi() {
         tvRoundCount.text = selectedRounds.toString()
+    }
+
+    private fun startGame() {
+        val intent = Intent(this, GameActivityN1::class.java).apply {
+            putExtra("THEME", theme.name)
+            putExtra("NUM_ROUNDS", selectedRounds)
+        }
+        startActivity(intent)
     }
 }

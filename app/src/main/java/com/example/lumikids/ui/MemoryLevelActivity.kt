@@ -5,38 +5,43 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-
+import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.memorygame.ui.GameActivityN2
 
 class MemoryLevelActivity : AppCompatActivity() {
 
+    private lateinit var theme: GameTheme
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Asegúrate de que el nombre del layout coincida con el tuyo
         setContentView(R.layout.activity_memory_level)
 
-        // Recibimos el tema que eligió el usuario
-        val theme = intent.getStringExtra("THEME") ?: "EMOTIONS"
+        // 🔥 Recibir tema correctamente
+        theme = intent.getStringExtra("THEME")?.let {
+            GameTheme.valueOf(it)
+        } ?: GameTheme.EMOTIONS
 
-        // 2. Configuramos el botón de regresar
-        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        // Botón regresar
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
 
-        // 3. Configuramos los clics de las tarjetas de dificultad
-        findViewById<ImageView>(R.id.card6).setOnClickListener {
-            iniciarMemorama(theme, 6)
-        }
-        findViewById<ImageView>(R.id.card8).setOnClickListener {
-            iniciarMemorama(theme, 8)
-        }
-        findViewById<ImageView>(R.id.card10).setOnClickListener {
-            iniciarMemorama(theme, 10)
+        // Eventos de dificultad
+        setupCard(R.id.card6, 6)
+        setupCard(R.id.card8, 8)
+        setupCard(R.id.card10, 10)
+    }
+
+    private fun setupCard(viewId: Int, numCards: Int) {
+        findViewById<ImageView>(viewId).setOnClickListener {
+            iniciarMemorama(numCards)
         }
     }
 
-    private fun iniciarMemorama(theme: String, numeroDeCartas: Int) {
+    private fun iniciarMemorama(numeroDeCartas: Int) {
         val intent = Intent(this, GameActivityN2::class.java).apply {
-            putExtra("THEME", theme)
-            putExtra("NUM_CARDS", numeroDeCartas) // Enviamos el número de cartas
+            putExtra("THEME", theme.name)
+            putExtra("NUM_CARDS", numeroDeCartas)
         }
         startActivity(intent)
     }

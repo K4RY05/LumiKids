@@ -6,6 +6,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
+import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.objectrecognition.controller.ObjectRecognitionController
 import com.example.lumikids.minigame.objectrecognition.model.GameObject
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
@@ -20,20 +21,20 @@ class GameActivityN1 : AppCompatActivity() {
     private var totalRoundsWanted: Int = 3
     private var currentRoundCount: Int = 0
 
-    private var isFirstRound = true
     private lateinit var audioManager: AudioPlayer
+    private lateinit var theme: GameTheme
 
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
     private lateinit var btnBack: ImageView
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n1)
 
-        val theme = intent.getStringExtra("THEME") ?: "FURNITURE"
+        theme = intent.getStringExtra("THEME")?.let {
+            GameTheme.valueOf(it)
+        } ?: GameTheme.FURNITURE
 
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
 
@@ -41,9 +42,6 @@ class GameActivityN1 : AppCompatActivity() {
         audioManager = AudioManager(this)
 
         initViews()
-
-        Toast.makeText(this, "Rondas totales: $totalRoundsWanted", Toast.LENGTH_SHORT).show()
-
         startNewRound()
     }
 
@@ -61,29 +59,31 @@ class GameActivityN1 : AppCompatActivity() {
     }
 
     private fun startNewRound() {
+
         if (currentRoundCount >= totalRoundsWanted) {
             finalizarJuego()
             return
         }
 
         currentRoundCount++
-
         currentRound = controller.getNewRound()
 
         currentRound?.let { round ->
-            // Actualizar textos y limpiar colores (Código original)
+
             tvInstruction.text = round.correctObject.instructionText
             resetImagesBackground()
 
             round.options.forEachIndexed { index, gameObject ->
-                images[index].setImageResource(gameObject.imageResId)
-                images[index].isEnabled = true
-                images[index].setOnClickListener {
-                    handleOptionClick(gameObject, images[index])
+
+                images[index].apply {
+                    setImageResource(gameObject.imageResId)
+                    isEnabled = true
+
+                    setOnClickListener {
+                        handleOptionClick(gameObject, this)
+                    }
                 }
             }
-
-            audioManager.playObjectAudio(round.correctObject.name)
 
         } ?: run {
             Toast.makeText(this, "No hay suficientes objetos", Toast.LENGTH_SHORT).show()
@@ -97,9 +97,9 @@ class GameActivityN1 : AppCompatActivity() {
         val isCorrect = controller.isCorrect(clickedObject, correctObj)
 
         if (isCorrect) {
+
             view.setBackgroundResource(R.drawable.rounded_green_bg)
             audioManager.playEffect(R.raw.win)
-            Toast.makeText(this, "¡Muy bien!", Toast.LENGTH_SHORT).show()
 
             images.forEach {
                 it.isEnabled = false
@@ -111,10 +111,12 @@ class GameActivityN1 : AppCompatActivity() {
             }, 1000)
 
         } else {
+
             view.setBackgroundResource(R.drawable.rounded_red_bg)
             audioManager.playEffect(R.raw.fail)
-            Toast.makeText(this, "Intenta de nuevo", Toast.LENGTH_SHORT).show()
+
             view.isEnabled = false
+
             view.postDelayed({
                 view.setBackgroundResource(R.drawable.rounded_white_bg)
                 view.isEnabled = true
@@ -123,9 +125,14 @@ class GameActivityN1 : AppCompatActivity() {
     }
 
     private fun finalizarJuego() {
+
         audioManager.playEffect(R.raw.win)
 
-        Toast.makeText(this, "¡Felicidades! Terminaste todas las rondas", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            this,
+            "¡Felicidades! Terminaste todas las rondas",
+            Toast.LENGTH_LONG
+        ).show()
 
         images.forEach { it.isEnabled = false }
 
@@ -134,9 +141,10 @@ class GameActivityN1 : AppCompatActivity() {
         }, 2000)
     }
 
-    // Métodos auxiliares y onDestroy (Código original)
     private fun resetImagesBackground() {
-        images.forEach { it.setBackgroundResource(R.drawable.rounded_white_bg) }
+        images.forEach {
+            it.setBackgroundResource(R.drawable.rounded_white_bg)
+        }
     }
 
     override fun onDestroy() {

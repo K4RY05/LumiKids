@@ -22,4 +22,12 @@
     <dimen name="esquina_alto">140dp</dimen>
 
     <dimen name="tarjeta_memorama">130dp</dimen>
+
+    <dimen name="selector_arrow_size">120dp</dimen>
+    <dimen name="selector_card_size">220dp</dimen>
+    <dimen name="selector_number_text">140sp</dimen>
+    <dimen name="selector_title_text">42sp</dimen>
+    <dimen name="button_start_text">48sp</dimen>
+    <dimen name="button_start_padding">64dp</dimen>
+
 </resources>
