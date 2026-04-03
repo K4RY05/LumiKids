@@ -13,10 +13,14 @@
         android:gravity="center"
         android:padding="24dp"
 
+        android:layout_marginStart="@dimen/margen_perfil"
+        android:layout_marginEnd="@dimen/margen_perfil"
+
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
+
 
         <!-- TITULO -->
         <TextView
@@ -24,16 +28,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Usuario"
-            android:textSize="30sp"
+            android:textSize="@dimen/tamano_user"
             android:textStyle="bold"
+
+
+
+
             android:textColor="@android:color/black"
             android:layout_marginBottom="24dp"/>
 
-        <!-- IMAGEN MÁS GRANDE -->
+        <!-- IMAGEN -->
         <ImageView
             android:id="@+id/imgUsuario"
-            android:layout_width="180dp"
-            android:layout_height="180dp"
+            android:layout_width="@dimen/tamano_avatar"
+            android:layout_height="@dimen/tamano_avatar"
             android:background="@drawable/circle_bg"
             android:clipToOutline="true"
             android:outlineProvider="background"
@@ -41,40 +49,43 @@
             android:scaleType="centerCrop"
             android:layout_marginBottom="36dp"/>
 
-        <!-- BOTONES MÁS ANCHOS -->
+        <!-- BOTONES -->
         <Button
             android:id="@+id/btnDatos"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
             android:text="Datos Personales"
-            android:textSize="16sp"
+            android:layout_height="@dimen/tallButton"
+            android:textSize="@dimen/buttonFontSize"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="#B39DDB"/>
+            android:textColor="@color/c_two"
+            android:backgroundTint="@color/c_three"/>
 
         <Button
             android:id="@+id/btnNotificaciones"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
             android:text="Notificaciones"
-            android:textSize="16sp"
+            android:layout_height="@dimen/tallButton"
+            android:textSize="@dimen/buttonFontSize"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="#B39DDB"/>
+            android:textColor="@color/c_two"
+            android:backgroundTint="@color/c_three"/>
 
         <Button
             android:id="@+id/btnTemas"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
             android:text="Temas de colores"
-            android:textSize="16sp"
+            android:layout_height="@dimen/tallButton"
+            android:textSize="@dimen/buttonFontSize"
             android:layout_marginBottom="28dp"
-            android:backgroundTint="#B39DDB"/>
+            android:textColor="@color/c_two"
+            android:backgroundTint="@color/c_three"/>
 
         <Button
             android:id="@+id/btnCerrarSesion"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
             android:text="Cerrar Sesión"
-            android:textSize="16sp"
+            android:layout_height="@dimen/tallButton"
+            android:textSize="@dimen/buttonFontSize"
             android:textColor="@android:color/white"
             android:backgroundTint="#F44336"/>
 
