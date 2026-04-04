@@ -1,8 +1,10 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.text.InputType
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -10,11 +12,15 @@ import com.example.lumikids.R
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.model.RegisterRequest
 import com.example.lumikids.network.RetrofitClient
+import com.google.android.material.snackbar.Snackbar // 🔥 Usaremos Snackbar para errores de servidor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
+
+    private var isPasswordVisible = false
+    private var isPasswordConfirmVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +32,22 @@ class RegisterActivity : AppCompatActivity() {
         val etPassConfirm = findViewById<EditText>(R.id.etPass2)
         val btnContinuar = findViewById<AppCompatButton>(R.id.btnContinue)
 
+        // Botones de mostrar/ocultar contraseña
+        val ivTogglePass = findViewById<ImageButton>(R.id.ivTogglePass)
+        val ivTogglePass2 = findViewById<ImageButton>(R.id.ivTogglePass2)
+
+        // Lógica para mostrar/ocultar contraseña principal
+        ivTogglePass.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            togglePasswordVisibility(etPass, ivTogglePass, isPasswordVisible)
+        }
+
+        // Lógica para mostrar/ocultar confirmación de contraseña
+        ivTogglePass2.setOnClickListener {
+            isPasswordConfirmVisible = !isPasswordConfirmVisible
+            togglePasswordVisibility(etPassConfirm, ivTogglePass2, isPasswordConfirmVisible)
+        }
+
         btnContinuar.setOnClickListener {
 
             val usuario = etUsuario.text.toString().trim()
@@ -33,42 +55,72 @@ class RegisterActivity : AppCompatActivity() {
             val pass = etPass.text.toString()
             val passConfirm = etPassConfirm.text.toString()
 
-            // Validar campos vacíos
-            if (usuario.isEmpty() || correo.isEmpty() || pass.isEmpty() || passConfirm.isEmpty()) {
-                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+            // 1. Limpiar errores previos
+            etUsuario.error = null
+            etCorreo.error = null
+            etPass.error = null
+            etPassConfirm.error = null
+
+            // 2. Validaciones con feedback visual (de arriba hacia abajo)
+            if (usuario.isEmpty()) {
+                etUsuario.error = "Ingresa tu nombre de usuario"
+                etUsuario.requestFocus()
                 return@setOnClickListener
             }
 
-            // Validar correo
-            if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-                Toast.makeText(this, "Ingresa un correo electrónico válido", Toast.LENGTH_SHORT).show()
+            if (correo.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+                etCorreo.error = "Ingresa un correo electrónico válido"
+                etCorreo.requestFocus()
                 return@setOnClickListener
             }
 
-            // Validar contraseñas
-            if (pass != passConfirm) {
-                Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+            if (pass.isEmpty()) {
+                etPass.error = "Ingresa una contraseña"
+                etPass.requestFocus()
                 return@setOnClickListener
             }
 
-            // Generar ID de usuario
+            // Buena práctica: Validar longitud mínima
+            if (pass.length < 6) {
+                etPass.error = "La contraseña debe tener al menos 6 caracteres"
+                etPass.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (passConfirm.isEmpty() || pass != passConfirm) {
+                etPassConfirm.error = "Las contraseñas no coinciden"
+                etPassConfirm.requestFocus()
+                return@setOnClickListener
+            }
+
+            // Generar ID de usuario y registrar
             val ID_user = generarUserId(usuario)
-
             registrarUsuario(ID_user, usuario, correo, pass)
         }
     }
 
-    // Función para generar ID (3 letras + 3 números)
-    private fun generarUserId(nombre: String): String {
+    // Función auxiliar para cambiar el tipo de input y el ícono
+    private fun togglePasswordVisibility(editText: EditText, icon: ImageButton, isVisible: Boolean) {
+        if (isVisible) {
+            // Mostrar texto
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            icon.setImageResource(R.drawable.ic_eye_open) // Asumiendo que tienes este ícono
+        } else {
+            // Ocultar texto
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            icon.setImageResource(R.drawable.ic_eye_closed)
+        }
+        // Mantener el cursor al final del texto
+        editText.setSelection(editText.text.length)
+    }
 
+    private fun generarUserId(nombre: String): String {
         val letras = if (nombre.length >= 3) {
             nombre.substring(0, 3).lowercase()
         } else {
             nombre.lowercase().padEnd(3, 'x')
         }
-
         val numeros = (100..999).random()
-
         return "$letras$numeros"
     }
 
@@ -90,20 +142,18 @@ class RegisterActivity : AppCompatActivity() {
                 response: Response<com.example.lumikids.model.ApiResponse>
             ) {
                 if (response.isSuccessful) {
-
                     Toast.makeText(
                         this@RegisterActivity,
                         response.body()?.message ?: "Registro exitoso",
                         Toast.LENGTH_LONG
                     ).show()
-
-                    finish()
+                    finish() // Regresa a la pantalla de Login
                 } else {
-
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Error en el registro",
-                        Toast.LENGTH_LONG
+                    // Usamos Snackbar para errores que vienen del servidor (ej. "El correo ya existe")
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        "Error en el registro: Verifica tus datos o intenta con otro correo",
+                        Snackbar.LENGTH_LONG
                     ).show()
                 }
             }
@@ -112,10 +162,10 @@ class RegisterActivity : AppCompatActivity() {
                 call: Call<com.example.lumikids.model.ApiResponse>,
                 t: Throwable
             ) {
-                Toast.makeText(
-                    this@RegisterActivity,
+                Snackbar.make(
+                    findViewById(android.R.id.content),
                     "Error de conexión: ${t.message}",
-                    Toast.LENGTH_LONG
+                    Snackbar.LENGTH_LONG
                 ).show()
             }
         })
