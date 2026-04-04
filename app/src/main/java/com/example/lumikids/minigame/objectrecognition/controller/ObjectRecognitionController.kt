@@ -1,15 +1,17 @@
 package com.example.lumikids.minigame.objectrecognition.controller
 
 import android.content.Context
-import com.example.lumikids.R
 import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.core.InstructionRepository
+import com.example.lumikids.minigame.core.PictogramRepository // Importamos el nuevo repositorio
 import com.example.lumikids.minigame.objectrecognition.model.GameObject
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
+import com.example.lumikids.model.GameResult
 
 class ObjectRecognitionController(
     private val context: Context,
-    private val theme: GameTheme
+    private val theme: GameTheme,
+    private val totalRoundsWanted: Int
 ) {
 
     private val instructionMap =
@@ -17,47 +19,50 @@ class ObjectRecognitionController(
 
     private var allItems: List<GameObject> = loadItemsFromResources()
 
+    private var currentRoundCount: Int = 0
+    private var errors: Int = 0
+    private var startTime: Long = System.currentTimeMillis()
+    private var currentRound: ObjectRound? = null
+
     fun getNewRound(): ObjectRound? {
-        if (allItems.size < 3) return null
+        if (allItems.size < 3 || isGameOver()) return null
+
+        currentRoundCount++
 
         val roundOptions = allItems.shuffled().take(3)
         val correctObject = roundOptions.random()
 
-        return ObjectRound(roundOptions, correctObject)
+        currentRound = ObjectRound(roundOptions, correctObject)
+        return currentRound
     }
 
-    fun isCorrect(clicked: GameObject, correct: GameObject): Boolean {
-        return clicked == correct
+    fun checkAnswer(clicked: GameObject): Boolean {
+        return clicked == currentRound?.correctObject
+    }
+
+    fun addError() {
+        errors++
+    }
+
+    fun isGameOver(): Boolean {
+        return currentRoundCount >= totalRoundsWanted
+    }
+
+    fun getFinalResult(gameTitle: String): GameResult {
+        val totalTime = (System.currentTimeMillis() - startTime) / 1000
+        return GameResult(totalTime, errors, gameTitle)
     }
 
     private fun loadItemsFromResources(): List<GameObject> {
+        // 1. Obtenemos la lista pura de imágenes desde el repositorio central
+        val rawPictograms = PictogramRepository.getPictogramsByTheme(theme)
 
-        val prefix = when (theme) {
-            GameTheme.FURNITURE -> "furniture_"
-            GameTheme.EMOTIONS -> "emo_"
-            GameTheme.CLOTHES -> "clother_"
+        return rawPictograms.map { pair ->
+            val name = pair.first
+            val imgId = pair.second
+            val instruction = instructionMap[name] ?: "Selecciona el objeto"
+
+            GameObject(name, imgId, instruction)
         }
-
-        val list = mutableListOf<GameObject>()
-        val fields = R.drawable::class.java.fields
-
-        for (field in fields) {
-            val name = field.name
-
-            if (!name.startsWith(prefix)) continue
-
-            try {
-                val imgId = field.getInt(null)
-                val instruction =
-                    instructionMap[name] ?: "Selecciona el objeto"
-
-                list.add(GameObject(name, imgId, instruction))
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        return list
     }
 }

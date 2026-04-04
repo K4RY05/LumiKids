@@ -16,5 +16,10 @@
 
     <string name="terms_text">Terminos</string>
 
+    <string name="desc_btn_back">Volver</string>
+    <string name="desc_logo_lumikids">Logotipo de LumiKids</string>
+
+
+
 
 </resources>

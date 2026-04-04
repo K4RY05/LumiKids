@@ -20,6 +20,7 @@
 
         <ImageView
             android:id="@+id/ivLogo"
+            android:contentDescription="Logotipo de LumiKids"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
@@ -37,10 +38,10 @@
             android:layout_marginEnd="12dp"
             android:layout_toStartOf="@id/ivProfile"
             android:layout_toEndOf="@id/ivLogo"
-            android:autoSizeMaxTextSize="@dimen/title_size"
-            android:autoSizeMinTextSize="22sp"
-            android:autoSizeStepGranularity="2sp"
-            android:autoSizeTextType="uniform"
+            app:autoSizeMaxTextSize="@dimen/title_size"
+            app:autoSizeMinTextSize="22sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
             android:ellipsize="end"
             android:gravity="center"
             android:maxLines="1"
@@ -57,11 +58,13 @@
             android:layout_marginEnd="16dp"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
+            android:contentDescription="Perfil de usuario"
             android:src="@drawable/ic_user"/>
     </RelativeLayout>
 
     <ImageView
         android:id="@+id/btnTablero"
+        android:contentDescription="Botón para abrir el tablero"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
@@ -80,6 +83,7 @@
 
     <ImageView
         android:id="@+id/btnMinijuegos"
+        android:contentDescription="Botón para abrir el modulo de minijuegos"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"

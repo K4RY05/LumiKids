@@ -6,61 +6,47 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-    <FrameLayout
-        android:id="@+id/leftCorner"
-        android:layout_width="@dimen/esquina_ancho"
-        android:layout_height="@dimen/esquina_alto"
-        android:background="@drawable/bg_corner_left"
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_left"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"/>
 
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="@dimen/icono_esquina"
-            android:layout_height="@dimen/icono_esquina"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_left"
-            android:clickable="true"
-            android:focusable="true"/>
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/rightCorner"
-        android:layout_width="@dimen/esquina_ancho"
-        android:layout_height="@dimen/esquina_alto"
-        android:background="@drawable/bg_corner_right"
+    <ImageView
+        android:id="@+id/btnPause"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_pause"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        <ImageView
-            android:id="@+id/btnPause"
-            android:layout_width="@dimen/icono_esquina"
-            android:layout_height="@dimen/icono_esquina"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_pause"
-            android:clickable="true"
-            android:focusable="true"/>
-    </FrameLayout>
-
-
-    <!-- TEXTO DE INSTRUCCIÓN -->
     <TextView
         android:id="@+id/tvInstruction"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Selecciona el objeto"
-        android:textSize="28sp"
+        android:textSize="40sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:textColor="@color/c_one"
         android:gravity="center"
         android:maxLines="2"
         android:padding="8dp"
-
-        app:layout_constraintStart_toEndOf="@id/leftCorner"
-        app:layout_constraintEnd_toStartOf="@id/rightCorner"
-        app:layout_constraintTop_toTopOf="@id/leftCorner"
-        app:layout_constraintBottom_toBottomOf="@id/leftCorner"/>
-
+        app:layout_constraintStart_toEndOf="@id/btnBack"
+        app:layout_constraintEnd_toStartOf="@id/btnPause"
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"/>
 
     <ImageView
         android:id="@+id/imgOption1"
@@ -69,8 +55,8 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="32dp"
-        android:background="@drawable/rounded_white_bg"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_card"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
@@ -79,7 +65,7 @@
         app:layout_constraintEnd_toStartOf="@id/imgOption2"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/leftCorner" />
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction" />
 
     <ImageView
         android:id="@+id/imgOption2"
@@ -88,8 +74,8 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="32dp"
-        android:background="@drawable/rounded_white_bg"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_card"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
@@ -97,21 +83,21 @@
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@id/imgOption3"
         app:layout_constraintStart_toEndOf="@id/imgOption1"
-        app:layout_constraintTop_toBottomOf="@id/leftCorner" />
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction" />
 
     <ImageView
         android:id="@+id/imgOption3"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
-        android:layout_marginEnd="24dp"
         android:layout_marginTop="24dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        android:background="@drawable/rounded_white_bg"
-        app:layout_constraintTop_toBottomOf="@id/rightCorner"
+        android:background="@drawable/bg_card"
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/imgOption2"
         app:layout_constraintEnd_toEndOf="parent"

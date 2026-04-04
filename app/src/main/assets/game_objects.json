@@ -1,11 +1,5 @@
 {
-  "FOOD": [
-    "food_manzana",
-    "food_pera",
-    "food_platano",
-    "food_sandia",
-    "food_uva"
-  ],
+
 
   "EMOTIONS": [
     "emo_confusion",
