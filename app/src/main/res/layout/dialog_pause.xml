@@ -2,13 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#80000000"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Contenedor del popup -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/containerPause"
         android:layout_width="0dp"
@@ -22,15 +22,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Título -->
         <TextView
             android:id="@+id/txtPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PAUSA"
+            android:text="@string/pause_title"
             android:textStyle="bold"
             android:textSize="@dimen/pause_title_size"
-            android:textColor="@android:color/white"
+            android:textColor="@color/c_one"
             android:paddingHorizontal="16dp"
             android:paddingVertical="6dp"
             android:background="@drawable/bg_popup"
@@ -38,7 +37,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
-        <!-- Botón Play -->
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnPlay"
             android:layout_width="0dp"
@@ -46,9 +44,10 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
             android:background="@null"
-            android:contentDescription="Reanudar juego"
+            android:contentDescription="@string/desc_resume_game"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_play"
+            tools:ignore="ImageContrastCheck"
             app:layout_constraintTop_toBottomOf="@id/txtPause"
             app:layout_constraintBottom_toTopOf="@id/volumeContainer"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,7 +55,6 @@
             app:layout_constraintWidth_percent="0.18"
             app:layout_constraintDimensionRatio="1:1"/>
 
-        <!-- Contenedor de volumen -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/volumeContainer"
             android:layout_width="0dp"
@@ -66,21 +64,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Ícono volumen (MISMO tamaño que Play) -->
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imgVolume"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_marginStart="10dp"
                 android:src="@drawable/ic_volume"
-                android:contentDescription="Icono de volumen"
+                tools:ignore="ImageContrastCheck"
+                android:contentDescription="@string/desc_volume_icon"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintWidth_percent="0.14"
                 app:layout_constraintDimensionRatio="1:1"/>
 
-            <!-- SeekBar -->
             <androidx.appcompat.widget.AppCompatSeekBar
                 android:id="@+id/seekVolume"
                 android:layout_width="0dp"
@@ -93,7 +90,7 @@
                 android:progressDrawable="@drawable/volume_progress"
                 android:thumb="@drawable/volume_thumb"
                 android:splitTrack="false"
-                android:contentDescription="Control de volumen"
+                android:contentDescription="@string/desc_volume_control"
                 app:layout_constraintStart_toEndOf="@id/imgVolume"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@id/imgVolume"

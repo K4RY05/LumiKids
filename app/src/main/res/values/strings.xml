@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">LumiKids</string>
 
+
+    <string name="desc_btn_back">Volver</string>
+    <string name="desc_logo_lumikids">Logotipo de LumiKids</string>
+
     <string name="login_email">Correo</string>
     <string name="login_password">Contraseña</string>
     <string name="login_button">Iniciar sesión</string>
@@ -16,10 +20,32 @@
 
     <string name="terms_text">Terminos</string>
 
-    <string name="desc_btn_back">Volver</string>
-    <string name="desc_logo_lumikids">Logotipo de LumiKids</string>
+    <string name="desc_theme_furniture">Categoría de muebles</string>
+    <string name="desc_theme_emotions">Categoría de emociones</string>
+    <string name="desc_theme_clothes">Categoría de ropa</string>
+
+    <string name="desc_game_mem_card">Boton del minijuego de memorama</string>
+    <string name="desc_game_obj_card">Boton del minijuego de identfica el objeto</string>
 
 
+    <string name="desc_memory_level_6">Nivel de 6 cartas</string>
+    <string name="desc_memory_level_8">Nivel de 8 cartas</string>
+    <string name="desc_memory_level_10">Nivel de 10 cartas</string>
 
+
+    <string name="select_rounds_title">Selecciona número rondas</string>
+    <string name="desc_decrease_rounds">Disminuir rondas</string>
+    <string name="desc_increase_rounds">Aumentar rondas</string>
+    <string name="btn_play">JUGAR</string>
+
+    <string name="pause_title">PAUSA</string>
+    <string name="desc_resume_game">Reanudar juego</string>
+    <string name="desc_volume_icon">Icono de volumen</string>
+    <string name="desc_volume_control">Control de volumen</string>
+
+    <string name="result_title_success">¡Buen Trabajo!</string>
+    <string name="result_label_time">TIEMPO</string>
+    <string name="result_label_errors">ERRORES</string>
+    <string name="desc_close_results">Cerrar resultados</string>
 
 </resources>

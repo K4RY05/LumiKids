@@ -2,11 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-    <!-- HEADER -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -26,7 +26,8 @@
             android:layout_height="0dp"
             android:src="@drawable/ic_left"
             android:scaleType="fitCenter"
-            android:contentDescription="Volver"
+            android:contentDescription="@string/desc_btn_back"
+            tools:ignore="ImageContrastCheck"
             android:clickable="true"
             android:focusable="true"
 
@@ -43,6 +44,7 @@
             android:layout_height="0dp"
             android:src="@drawable/ic_logo"
             android:scaleType="fitCenter"
+            android:contentDescription="@string/desc_logo_lumikids"
             android:layout_marginEnd="8dp"
 
             app:layout_constraintHeight_percent="0.7"
@@ -58,7 +60,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:text="LumiKids"
+            android:text="@string/app_name"
             android:textColor="@color/c_one"
             android:textStyle="bold"
             android:gravity="center_vertical"
@@ -78,12 +80,11 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-    <!-- TARJETA 1 -->
     <ImageView
         android:id="@+id/card6"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/desc_memory_level_6"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="12dp"
         android:layout_marginTop="24dp"
@@ -100,11 +101,11 @@
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintHorizontal_chainStyle="spread"/>
 
-    <!-- TARJETA 2 -->
     <ImageView
         android:id="@+id/card8"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/desc_memory_level_8"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
         android:layout_marginTop="24dp"
@@ -120,11 +121,11 @@
         app:layout_constraintEnd_toStartOf="@id/card10"
         app:layout_constraintDimensionRatio="1:1"/>
 
-    <!-- TARJETA 3 -->
     <ImageView
         android:id="@+id/card10"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/desc_memory_level_10"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="24dp"

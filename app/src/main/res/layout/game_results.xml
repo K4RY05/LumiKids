@@ -27,7 +27,7 @@
             android:id="@+id/tvResultTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="¡Buen Trabajo!"
+            android:text="@string/result_title_success"
             android:textColor="@color/c_one"
             android:textSize="@dimen/text_size_result_title"
             android:textStyle="bold"
@@ -56,8 +56,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TIEMPO"
-                    android:textColor="@android:color/white"
+                    android:text="@string/result_label_time"
+                    android:textColor="@android:color/black"
                     android:textSize="@dimen/text_size_result_label"
                     android:textStyle="bold"/>
 
@@ -76,7 +76,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
-                android:background="@color/white"/>
+                android:background="@color/black"/>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -88,8 +88,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="ERRORES"
-                    android:textColor="@android:color/white"
+                    android:text="@string/result_label_errors"
+                    android:textColor="@android:color/black"
                     android:textSize="@dimen/text_size_result_label"
                     android:textStyle="bold"/>
 
@@ -111,9 +111,10 @@
             android:layout_height="0dp"
             android:layout_marginTop="8dp"
             android:padding="0dp"
-            android:contentDescription="Cerrar resultados"
+            android:contentDescription="@string/desc_close_results"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_left"
+            tools:ignore="ImageContrastCheck"
             android:scaleType="fitCenter"
             app:layout_constraintTop_toBottomOf="@id/containerStats"
             app:layout_constraintBottom_toBottomOf="parent"

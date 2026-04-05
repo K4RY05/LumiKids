@@ -5,6 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/c_four">
 
 
@@ -24,23 +25,23 @@
 
         <ImageView
             android:id="@+id/btnBack"
+            android:contentDescription="@string/desc_btn_back"
+            tools:ignore="ImageContrastCheck"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:src="@drawable/ic_left"
             android:scaleType="fitCenter"
-            android:contentDescription="Volver"
             android:clickable="true"
             android:focusable="true"
-
             app:layout_constraintHeight_percent="0.6"
             app:layout_constraintDimensionRatio="1:1"
-
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageView
             android:id="@+id/logo"
+            android:contentDescription="@string/desc_logo_lumikids"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:src="@drawable/ic_logo"
@@ -60,7 +61,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:text="LumiKids"
+            android:text="@string/app_name"
             android:textColor="@color/c_one"
             android:textStyle="bold"
             android:gravity="center_vertical"
@@ -84,6 +85,7 @@
         android:id="@+id/cardObjeto"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/desc_game_obj_card"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="12dp"
         android:layout_marginTop="24dp"
@@ -92,7 +94,6 @@
         android:focusable="true"
         android:scaleType="fitCenter"
         android:src="@drawable/bton_object"
-
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -101,12 +102,12 @@
         app:layout_constraintHorizontal_chainStyle="spread"/>
 
 
-
     <!-- TARJETA 2 -->
     <ImageView
         android:id="@+id/cardMemorama"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:contentDescription="@string/desc_game_mem_card"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="24dp"
@@ -115,7 +116,6 @@
         android:focusable="true"
         android:scaleType="fitCenter"
         android:src="@drawable/bton_memory"
-
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/cardObjeto"
