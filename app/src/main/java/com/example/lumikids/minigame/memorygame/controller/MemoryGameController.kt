@@ -19,7 +19,6 @@ class MemoryGameController(
         // Llamamos a tu PictogramRepository que ya está adaptado para recibir el String
         val allItems = PictogramRepository.getPictogramsByTheme(theme)
 
-        // Si por alguna razón no hay suficientes imágenes, devolvemos una lista vacía para no crashear
         if (allItems.isEmpty()) return emptyList()
 
         val pairsNeeded = numCards / 2

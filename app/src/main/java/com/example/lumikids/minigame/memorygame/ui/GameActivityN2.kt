@@ -106,7 +106,7 @@ class GameActivityN2 : AppCompatActivity() {
                     height = size
                     setMargins(margin, margin, margin, margin)
                 }
-                setBackgroundResource(R.drawable.bg_button)
+                setBackgroundResource(R.drawable.bg_card)
                 setPadding(padding, padding, padding, padding)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
