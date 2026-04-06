@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
 
 class GameTypeActivity : AppCompatActivity() {
 
@@ -18,15 +17,15 @@ class GameTypeActivity : AppCompatActivity() {
             finish()
         }
 
-        val theme = intent.getStringExtra("THEME")?.let {
-            GameTheme.valueOf(it)
-        } ?: return
+        // Recibimos el String directamente.
+        // Si no llega nada, usamos "furniure" como respaldo para evitar que la app falle.
+        val theme = intent.getStringExtra("THEME") ?: "furniure"
 
         // Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
 
-        // Eventos SIN GameType
+        // Eventos
         cardObject.setOnClickListener {
             openGame(ObjectLevelPickerActivity::class.java, theme)
         }
@@ -36,12 +35,13 @@ class GameTypeActivity : AppCompatActivity() {
         }
     }
 
+    // La función ahora recibe directamente el String
     private fun openGame(
         activity: Class<*>,
-        theme: GameTheme
+        theme: String
     ) {
         val intent = Intent(this, activity)
-        intent.putExtra("THEME", theme.name)
+        intent.putExtra("THEME", theme) // Pasamos el String intacto a la siguiente actividad
         startActivity(intent)
     }
 }

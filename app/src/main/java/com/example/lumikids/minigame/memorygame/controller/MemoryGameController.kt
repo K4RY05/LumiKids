@@ -1,26 +1,32 @@
 package com.example.lumikids.minigame.memorygame.controller
 
-import com.example.lumikids.model.GameTheme
-import com.example.lumikids.minigame.core.PictogramRepository // Importamos el repositorio central
+import com.example.lumikids.minigame.core.PictogramRepository
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.model.GameResult
 
 class MemoryGameController(
-    private val theme: GameTheme,
+    private val theme: String, // ✨ Recibe el String directamente
     private val numCards: Int
 ) {
 
-    // Variables de estado
     private var matchedPairs: Int = 0
     private var errors: Int = 0
     private var startTime: Long = System.currentTimeMillis()
 
+    // ✨ Función síncrona que retorna la lista directamente
     fun generateBoard(): List<MemoryCard> {
 
+        // Llamamos a tu PictogramRepository que ya está adaptado para recibir el String
         val allItems = PictogramRepository.getPictogramsByTheme(theme)
 
+        // Si por alguna razón no hay suficientes imágenes, devolvemos una lista vacía para no crashear
+        if (allItems.isEmpty()) return emptyList()
+
         val pairsNeeded = numCards / 2
-        val selectedItems = allItems.shuffled().take(pairsNeeded)
+
+        // Evitamos un error si pairsNeeded es mayor que la cantidad de imágenes disponibles
+        val safePairsNeeded = minOf(pairsNeeded, allItems.size)
+        val selectedItems = allItems.shuffled().take(safePairsNeeded)
 
         val boardItems = (selectedItems + selectedItems).shuffled()
 
@@ -28,12 +34,13 @@ class MemoryGameController(
             MemoryCard(
                 id = index,
                 name = pair.first,
-                imageResId = pair.second
+                imageResId = pair.second // ✨ Usamos imageResId (Int) para recursos locales
             )
         }
     }
 
     fun isMatch(card1: MemoryCard, card2: MemoryCard): Boolean {
+        // Comparamos los identificadores enteros locales
         val match = card1.imageResId == card2.imageResId
         if (match) {
             matchedPairs++

@@ -1,7 +1,6 @@
 package com.example.lumikids.minigame.objectrecognition.controller
 
 import android.content.Context
-import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.core.InstructionRepository
 import com.example.lumikids.minigame.core.PictogramRepository // Importamos el nuevo repositorio
 import com.example.lumikids.minigame.objectrecognition.model.GameObject
@@ -10,12 +9,12 @@ import com.example.lumikids.model.GameResult
 
 class ObjectRecognitionController(
     private val context: Context,
-    private val theme: GameTheme,
+    private val theme: String,
     private val totalRoundsWanted: Int
 ) {
 
     private val instructionMap =
-        InstructionRepository.loadInstructionsByTheme(context, theme.name)
+        InstructionRepository.loadInstructionsByTheme(context, theme)
 
     private var allItems: List<GameObject> = loadItemsFromResources()
 
@@ -54,7 +53,6 @@ class ObjectRecognitionController(
     }
 
     private fun loadItemsFromResources(): List<GameObject> {
-        // 1. Obtenemos la lista pura de imágenes desde el repositorio central
         val rawPictograms = PictogramRepository.getPictogramsByTheme(theme)
 
         return rawPictograms.map { pair ->

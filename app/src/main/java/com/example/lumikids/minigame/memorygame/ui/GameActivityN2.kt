@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
+// 🔥 Se eliminó la importación de GameTheme
 import com.example.lumikids.minigame.memorygame.controller.MemoryGameController
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.minigame.utils.ScoreManager
@@ -21,7 +21,8 @@ import com.example.lumikids.minigame.utils.PauseDialog
 
 class GameActivityN2 : AppCompatActivity() {
 
-    private lateinit var theme: GameTheme
+    // ✨ Cambiado de GameTheme a String
+    private lateinit var theme: String
     private var numCards: Int = 6
 
     private lateinit var controller: MemoryGameController
@@ -41,15 +42,15 @@ class GameActivityN2 : AppCompatActivity() {
         setContentView(R.layout.activity_game_n2)
 
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
 
-        theme = intent.getStringExtra("THEME")?.let {
-            GameTheme.valueOf(it)
-        } ?: GameTheme.FURNITURE
+        // ✨ Extraemos el texto directamente del Intent. Si falla, ponemos "furniure"
+        theme = intent.getStringExtra("THEME") ?: "furniure"
 
         numCards = intent.getIntExtra("NUM_CARDS", 6)
 
+        // El controlador ya fue modificado para recibir el String
         controller = MemoryGameController(theme, numCards)
         boardCards = controller.generateBoard()
 
@@ -63,14 +64,13 @@ class GameActivityN2 : AppCompatActivity() {
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
-        // ✨ NUEVO: Evento del botón de pausa
+        // Evento del botón de pausa
         val btnPause = findViewById<ImageView>(R.id.btnPause)
         btnPause.setOnClickListener {
             val pauseDialog = PauseDialog(this)
             pauseDialog.showDialog(
                 onResume = {
                     // El usuario presionó el botón de reanudar (Play).
-                    // El diálogo ya se cerró solo, aquí el juego puede continuar.
                 }
             )
         }
@@ -123,6 +123,7 @@ class GameActivityN2 : AppCompatActivity() {
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true) return
 
+        // ✨ Usamos imageResId porque estamos trabajando con archivos locales
         uiHandler.flipCardUp(view, card.imageResId)
         view.tag = true
 

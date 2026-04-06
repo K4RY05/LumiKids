@@ -6,7 +6,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.objectrecognition.ui.GameActivityN1
 
 class ObjectLevelPickerActivity : AppCompatActivity() {
@@ -19,17 +18,16 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
     // UI
     private lateinit var tvRoundCount: TextView
 
-    // 🔥 Tema tipado (NO string)
-    private lateinit var theme: GameTheme
+    // Ahora el tema es un String directamente
+    private lateinit var theme: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
 
-        theme = intent.getStringExtra("THEME")?.let {
-            GameTheme.valueOf(it)
-        } ?: GameTheme.FURNITURE
-
+        // Recibimos el String directamente.
+        // Mantenemos "furniure" como valor por defecto para evitar nulos y coincidir con tu servidor.
+        theme = intent.getStringExtra("THEME") ?: "furniure"
 
         tvRoundCount = findViewById(R.id.tvRoundCount)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
@@ -66,7 +64,8 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
 
     private fun startGame() {
         val intent = Intent(this, GameActivityN1::class.java).apply {
-            putExtra("THEME", theme.name)
+            // Pasamos el String del tema directamente al juego
+            putExtra("THEME", theme)
             putExtra("NUM_ROUNDS", selectedRounds)
         }
         startActivity(intent)

@@ -1,17 +1,24 @@
 package com.example.lumikids.minigame.core
 
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
+// 🔥 Se eliminó la importación de GameTheme
 
 object PictogramRepository {
 
-    fun getPictogramsByTheme(theme: GameTheme): List<Pair<String, Int>> {
+    // ✨ Ahora recibe un String directamente
+    fun getPictogramsByTheme(theme: String): List<Pair<String, Int>> {
 
-        val prefix = when (theme) {
-            GameTheme.FURNITURE -> "furniture_"
-            GameTheme.EMOTIONS -> "emo_"
-            GameTheme.CLOTHES -> "clother_"
+        // ✨ Comparamos el texto (ignorando mayúsculas/minúsculas)
+        // Agregamos "FURNIURE" para soportar el valor que manda el servidor y la vista
+        val prefix = when (theme.uppercase()) {
+            "FURNITURE", "FURNIURE" -> "furniture_"
+            "EMOTIONS" -> "emo_"
+            "CLOTHES" -> "clother_"
+            else -> ""
         }
+
+        // Si mandan un tema que no existe, devolvemos una lista vacía para evitar crasheos
+        if (prefix.isEmpty()) return emptyList()
 
         val pictograms = mutableListOf<Pair<String, Int>>()
         val fields = R.drawable::class.java.fields

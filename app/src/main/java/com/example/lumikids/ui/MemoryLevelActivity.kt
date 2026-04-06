@@ -5,21 +5,20 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
 import com.example.lumikids.minigame.memorygame.ui.GameActivityN2
 
 class MemoryLevelActivity : AppCompatActivity() {
 
-    private lateinit var theme: GameTheme
+    // Ahora usamos String para el tema
+    private lateinit var theme: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memory_level)
 
-        // 🔥 Recibir tema correctamente
-        theme = intent.getStringExtra("THEME")?.let {
-            GameTheme.valueOf(it)
-        } ?: GameTheme.EMOTIONS
+        // Recibir el String directamente.
+        // Si es nulo, usamos "emotions" como valor por defecto.
+        theme = intent.getStringExtra("THEME") ?: "emotions"
 
         // Botón regresar
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
@@ -40,7 +39,8 @@ class MemoryLevelActivity : AppCompatActivity() {
 
     private fun iniciarMemorama(numeroDeCartas: Int) {
         val intent = Intent(this, GameActivityN2::class.java).apply {
-            putExtra("THEME", theme.name)
+            // Pasamos el String tal cual lo recibimos
+            putExtra("THEME", theme)
             putExtra("NUM_CARDS", numeroDeCartas)
         }
         startActivity(intent)

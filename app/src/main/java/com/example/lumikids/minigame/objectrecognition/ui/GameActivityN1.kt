@@ -11,7 +11,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.appcompat.app.AppCompatActivity
 
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
+// 🔥 Se eliminó la importación de GameTheme
 import com.example.lumikids.minigame.objectrecognition.controller.ObjectRecognitionController
 import com.example.lumikids.minigame.utils.AudioPlayer
 import com.example.lumikids.minigame.utils.AudioManager
@@ -23,7 +23,9 @@ class GameActivityN1 : AppCompatActivity() {
     private lateinit var controller: ObjectRecognitionController
 
     private lateinit var audioManager: AudioPlayer
-    private lateinit var theme: GameTheme
+
+    // 🔥 Ahora el tema es un String directamente
+    private lateinit var theme: String
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
 
@@ -38,14 +40,14 @@ class GameActivityN1 : AppCompatActivity() {
 
         // Modo Inmersivo (Pantalla Completa)
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
 
-        theme = intent.getStringExtra("THEME")?.let {
-            GameTheme.valueOf(it)
-        } ?: GameTheme.FURNITURE
+        // 🔥 Recibimos el String directamente, con "furniure" como respaldo
+        theme = intent.getStringExtra("THEME") ?: "furniure"
 
         val rounds = intent.getIntExtra("NUM_ROUNDS", 3)
+        // El controlador ya debe estar configurado para recibir un String
         controller = ObjectRecognitionController(this, theme, rounds)
 
         audioManager = AudioManager(this)

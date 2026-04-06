@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.model.GameTheme
+
 class ThemeGameActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,23 +23,25 @@ class ThemeGameActivity : AppCompatActivity() {
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
         val clothes = findViewById<ImageView>(R.id.cardClot)
 
-        // Eventos
+        // Eventos: Pasamos directamente los Strings
+        // Nota: Mantenemos "furniure" sin la 't' para que coincida con tu servidor
         furniture.setOnClickListener {
-            openGame(GameTheme.FURNITURE)
+            openGame("furniure")
         }
 
         emotions.setOnClickListener {
-            openGame(GameTheme.EMOTIONS)
+            openGame("emotions")
         }
 
         clothes.setOnClickListener {
-            openGame(GameTheme.CLOTHES)
+            openGame("clothes")
         }
     }
 
-    private fun openGame(theme: GameTheme) {
+    // La función ahora recibe un String en lugar del enum GameTheme
+    private fun openGame(theme: String) {
         val intent = Intent(this, GameTypeActivity::class.java)
-        intent.putExtra("THEME", theme.name)
+        intent.putExtra("THEME", theme)
         startActivity(intent)
     }
 }
