@@ -29,9 +29,6 @@
     <dimen name="ic_top_corner">60dp</dimen>
 
 
-
-    <dimen name="tarjeta_memorama">120dp</dimen>
-
     <dimen name="selector_arrow_size">64dp</dimen>
     <dimen name="selector_card_size">120dp</dimen>
     <dimen name="selector_number_text">80sp</dimen>

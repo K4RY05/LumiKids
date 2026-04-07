@@ -65,7 +65,7 @@ class GameActivityN1 : AppCompatActivity() {
     }
 
     private fun initViews() {
-        tvInstruction = findViewById(R.id.tvInstruction)
+       /* tvInstruction = findViewById(R.id.tvInstruction)*/
         btnBack = findViewById(R.id.btnBack)
         btnPause = findViewById(R.id.btnPause)
 

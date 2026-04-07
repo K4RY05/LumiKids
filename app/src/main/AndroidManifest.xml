@@ -13,9 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids">
 
-
-
-
         <activity android:name=".MainActivity"
             android:screenOrientation="sensorLandscape"/>
         <activity
@@ -42,6 +39,11 @@
 
         <activity android:name=".ui.ProfileActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.NotificationActivity"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.PecsBoardActivity"
+            android:screenOrientation="landscape" />
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true">
