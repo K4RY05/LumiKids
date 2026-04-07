@@ -13,7 +13,7 @@ object RetrofitClient {
 
    // private const val BASE_URL = "http://192.168.208.104:3000/" // Phone 2
 
-
+    const val BASE_URL_IMAGES = "${BASE_URL}images/"
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }

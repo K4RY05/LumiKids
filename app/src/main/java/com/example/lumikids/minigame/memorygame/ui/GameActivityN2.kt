@@ -1,27 +1,25 @@
 package com.example.lumikids.minigame.memorygame.ui
 
 import android.os.Bundle
-import android.util.TypedValue
+import android.view.Gravity // ✨ Necesario para centrar las cartas
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
-
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-
-import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
-// 🔥 Se eliminó la importación de GameTheme
 import com.example.lumikids.minigame.memorygame.controller.MemoryGameController
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.minigame.utils.ScoreManager
 import com.example.lumikids.minigame.utils.AudioManager
 import com.example.lumikids.minigame.utils.PauseDialog
+import kotlinx.coroutines.launch
 
 class GameActivityN2 : AppCompatActivity() {
 
-    // ✨ Cambiado de GameTheme a String
     private lateinit var theme: String
     private var numCards: Int = 6
 
@@ -29,10 +27,8 @@ class GameActivityN2 : AppCompatActivity() {
     private lateinit var boardCards: List<MemoryCard>
 
     private val uiHandler = MemoryGameUIHandler()
-
     private lateinit var audioManager: AudioManager
 
-    // Solo conservamos el estado visual temporal
     private var firstSelectedCard: MemoryCard? = null
     private var firstSelectedView: ImageView? = null
     private var isBusy = false
@@ -45,37 +41,36 @@ class GameActivityN2 : AppCompatActivity() {
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
 
-        // ✨ Extraemos el texto directamente del Intent. Si falla, ponemos "furniure"
         theme = intent.getStringExtra("THEME") ?: "furniure"
-
         numCards = intent.getIntExtra("NUM_CARDS", 6)
 
-        // El controlador ya fue modificado para recibir el String
-        controller = MemoryGameController(theme, numCards)
-        boardCards = controller.generateBoard()
-
+        controller = MemoryGameController(this, theme, numCards)
         audioManager = AudioManager(this)
 
-        if (boardCards.isEmpty()) {
-            Toast.makeText(this, "No se encontraron cartas para este tema", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
-        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
-
-        // Evento del botón de pausa
         val btnPause = findViewById<ImageView>(R.id.btnPause)
         btnPause.setOnClickListener {
             val pauseDialog = PauseDialog(this)
             pauseDialog.showDialog(
-                onResume = {
-                    // El usuario presionó el botón de reanudar (Play).
-                }
+                onResume = { },
+                onExit = { finish() }
             )
         }
 
-        crearTableroDinamico()
+        lifecycleScope.launch {
+            val success = controller.cargarDatos()
+            if (success) {
+                boardCards = controller.generateBoard()
+                if (boardCards.isEmpty()) {
+                    Toast.makeText(this@GameActivityN2, "No hay cartas disponibles", Toast.LENGTH_LONG).show()
+                    finish()
+                } else {
+                    crearTableroDinamico()
+                }
+            } else {
+                Toast.makeText(this@GameActivityN2, "Error de red", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     private fun crearTableroDinamico() {
@@ -90,24 +85,35 @@ class GameActivityN2 : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
 
-        val maxWidthPerCard = (screenWidth * 0.95f) / columns
-        val maxHeightPerCard = (screenHeight * 0.75f) / 2f
+        // ✨ CONFIGURACIÓN AL LÍMITE:
+        // Usamos el 98% del ancho y el 92% del alto.
+        val maxWidthPerCard = (screenWidth * 0.98f) / columns
+        val maxHeightPerCard = (screenHeight * 0.92f) / 2f
 
         val baseSize = kotlin.math.min(maxWidthPerCard, maxHeightPerCard).toInt()
-        val margin = (baseSize * 0.05).toInt()
+
+        // ✨ MARGEN CASI CERO: Solo 1% de espacio entre cartas para que crezcan más
+        val margin = (baseSize * 0.01).toInt()
         val size = baseSize - (margin * 2)
-        val padding = margin
 
         for (i in 0 until numCards) {
             val cardData = boardCards[i]
             val view = ImageView(this).apply {
-                layoutParams = GridLayout.LayoutParams().apply {
+                val params = GridLayout.LayoutParams().apply {
                     width = size
                     height = size
                     setMargins(margin, margin, margin, margin)
+                    setGravity(Gravity.CENTER)
                 }
+                layoutParams = params
+
                 setBackgroundResource(R.drawable.bg_card)
-                setPadding(padding, padding, padding, padding)
+
+                // ✨ FOTO MÁS GRANDE: Bajamos el padding interno al 2%
+                // para que el dibujo del sol o la foto casi toquen el borde de la carta.
+                val internalPadding = (size * 0.02).toInt()
+                setPadding(internalPadding, internalPadding, internalPadding, internalPadding)
+
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
                 tag = false
@@ -123,8 +129,7 @@ class GameActivityN2 : AppCompatActivity() {
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true) return
 
-        // ✨ Usamos imageResId porque estamos trabajando con archivos locales
-        uiHandler.flipCardUp(view, card.imageResId)
+        uiHandler.flipCardUp(view, card.imageUrl)
         view.tag = true
 
         if (firstSelectedCard == null) {
@@ -132,18 +137,15 @@ class GameActivityN2 : AppCompatActivity() {
             firstSelectedView = view
         } else {
             isBusy = true
-
             val isMatch = controller.isMatch(firstSelectedCard!!, card)
 
             if (isMatch) {
                 audioManager.playEffect(R.raw.win)
-
                 resetSelection()
                 isBusy = false
                 checkGameFinished()
             } else {
                 audioManager.playEffect(R.raw.fail)
-
                 view.postDelayed({
                     uiHandler.flipCardsDown(firstSelectedView!!, view, R.drawable.ic_logo) {
                         view.tag = false
@@ -159,7 +161,6 @@ class GameActivityN2 : AppCompatActivity() {
     private fun checkGameFinished() {
         if (controller.isGameOver()) {
             audioManager.playEffect(R.raw.win)
-
             val finalResult = controller.getFinalResult("Memorama")
             ScoreManager(this).showResults(finalResult) {
                 finish()
@@ -171,15 +172,6 @@ class GameActivityN2 : AppCompatActivity() {
         firstSelectedCard = null
         firstSelectedView = null
     }
-
-    private fun dpToPx(dp: Float): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp,
-            resources.displayMetrics
-        ).toInt()
-    }
-
 
     override fun onDestroy() {
         super.onDestroy()

@@ -1,46 +1,77 @@
 package com.example.lumikids.minigame.memorygame.controller
 
-import com.example.lumikids.minigame.core.PictogramRepository
+import android.content.Context
+import com.example.lumikids.minigame.core.FotogramaRepository // ✨ Conectamos a la base de datos
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.model.GameResult
+import kotlinx.coroutines.suspendCancellableCoroutine // ✨ Importante para asincronía
+import kotlin.coroutines.resume
 
 class MemoryGameController(
-    private val theme: String, // ✨ Recibe el String directamente
+    private val context: Context, // ✨ Agregamos el contexto que pasaste desde la Activity
+    private val theme: String,
     private val numCards: Int
 ) {
 
     private var matchedPairs: Int = 0
     private var errors: Int = 0
-    private var startTime: Long = System.currentTimeMillis()
+    private var startTime: Long = 0
 
-    // ✨ Función síncrona que retorna la lista directamente
+    // Almacenamos temporalmente los datos descargados
+    private var allItems: List<Pair<String, String>> = emptyList()
+
+    /**
+     * ✨ Descargamos los datos desde MySQL antes de armar el tablero
+     */
+    suspend fun cargarDatos(): Boolean = suspendCancellableCoroutine { continuation ->
+        FotogramaRepository.getFotogramasByTheme(theme) { response ->
+            if (response != null) {
+                // Filtramos los nulos y guardamos los pares (Nombre, Link)
+                allItems = response.mapNotNull { item ->
+                    val name = item.nametheme
+                    val link = item.linktheme
+                    if (name != null && link != null) {
+                        Pair(name, link)
+                    } else {
+                        null
+                    }
+                }
+
+                val pairsNeeded = numCards / 2
+                // Verificamos si tenemos suficientes imágenes en la DB para el número de cartas pedido
+                if (allItems.size >= pairsNeeded) {
+                    startTime = System.currentTimeMillis()
+                    continuation.resume(true)
+                } else {
+                    continuation.resume(false)
+                }
+            } else {
+                continuation.resume(false)
+            }
+        }
+    }
+
     fun generateBoard(): List<MemoryCard> {
-
-        // Llamamos a tu PictogramRepository que ya está adaptado para recibir el String
-        val allItems = PictogramRepository.getPictogramsByTheme(theme)
-
         if (allItems.isEmpty()) return emptyList()
 
         val pairsNeeded = numCards / 2
+        val selectedItems = allItems.shuffled().take(pairsNeeded)
 
-        // Evitamos un error si pairsNeeded es mayor que la cantidad de imágenes disponibles
-        val safePairsNeeded = minOf(pairsNeeded, allItems.size)
-        val selectedItems = allItems.shuffled().take(safePairsNeeded)
-
+        // Duplicamos las cartas para crear los pares y los revolvemos
         val boardItems = (selectedItems + selectedItems).shuffled()
 
         return boardItems.mapIndexed { index, pair ->
             MemoryCard(
                 id = index,
                 name = pair.first,
-                imageResId = pair.second // ✨ Usamos imageResId (Int) para recursos locales
+                imageUrl = pair.second // ✨ Asignamos la ruta JPG
             )
         }
     }
 
     fun isMatch(card1: MemoryCard, card2: MemoryCard): Boolean {
-        // Comparamos los identificadores enteros locales
-        val match = card1.imageResId == card2.imageResId
+        // ✨ Comparamos usando la URL de la imagen en vez del Int local
+        val match = card1.imageUrl == card2.imageUrl
         if (match) {
             matchedPairs++
         } else {

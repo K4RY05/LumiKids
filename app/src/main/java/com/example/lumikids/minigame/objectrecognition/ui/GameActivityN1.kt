@@ -4,52 +4,48 @@ import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.appcompat.app.AppCompatActivity
-
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-// 🔥 Se eliminó la importación de GameTheme
 import com.example.lumikids.minigame.objectrecognition.controller.ObjectRecognitionController
-import com.example.lumikids.minigame.utils.AudioPlayer
 import com.example.lumikids.minigame.utils.AudioManager
+import com.example.lumikids.minigame.utils.AudioPlayer
+import com.example.lumikids.minigame.utils.PauseDialog
 import com.example.lumikids.minigame.utils.ScoreManager
-import com.example.lumikids.minigame.utils.PauseDialog // ✨ Diálogo de pausa
+import com.example.lumikids.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 class GameActivityN1 : AppCompatActivity() {
 
     private lateinit var controller: ObjectRecognitionController
-
     private lateinit var audioManager: AudioPlayer
 
-    // 🔥 Ahora el tema es un String directamente
     private lateinit var theme: String
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
 
-    private lateinit var btnBack: ImageView
-    private lateinit var btnPause: ImageView // ✨ Botón de pausa
-
+    private lateinit var btnPause: ImageView
     private lateinit var uiHandler: GameUIHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n1)
 
-        // Modo Inmersivo (Pantalla Completa)
+        // Configuración de pantalla completa
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
 
-        // 🔥 Recibimos el String directamente, con "furniure" como respaldo
         theme = intent.getStringExtra("THEME") ?: "furniure"
-
         val rounds = intent.getIntExtra("NUM_ROUNDS", 3)
-        // El controlador ya debe estar configurado para recibir un String
-        controller = ObjectRecognitionController(this, theme, rounds)
 
+        controller = ObjectRecognitionController(this, theme, rounds)
         audioManager = AudioManager(this)
 
         initViews()
@@ -61,12 +57,19 @@ class GameActivityN1 : AppCompatActivity() {
             onError = { controller.addError() }
         )
 
-        startNewRound()
+        lifecycleScope.launch {
+            val success = controller.cargarDatos()
+            if (success) {
+                startNewRound()
+            } else {
+                Toast.makeText(this@GameActivityN1, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     private fun initViews() {
         tvInstruction = findViewById(R.id.tvInstruction)
-        btnBack = findViewById(R.id.btnBack)
         btnPause = findViewById(R.id.btnPause)
 
         images = listOf(
@@ -75,17 +78,15 @@ class GameActivityN1 : AppCompatActivity() {
             findViewById(R.id.imgOption3)
         )
 
-        // Evento Botón Regresar (Este es el que saca al niño del nivel)
-        btnBack.setOnClickListener { finish() }
-
-        // ✨ EVENTO BOTÓN PAUSA CORREGIDO ✨
+        // ✨ ACTUALIZACIÓN: El botón de pausa ahora maneja Reanudar y Salir
         btnPause.setOnClickListener {
             val pauseDialog = PauseDialog(this)
-
-            // Llamamos a la nueva versión simplificada que solo requiere "onResume"
             pauseDialog.showDialog(
                 onResume = {
-
+                    // El juego continúa normalmente
+                },
+                onExit = {
+                    finish() // ✨ Cierra la actividad y vuelve al menú
                 }
             )
         }
@@ -105,7 +106,12 @@ class GameActivityN1 : AppCompatActivity() {
 
             round.options.forEachIndexed { index, gameObject ->
                 images[index].apply {
-                    setImageResource(gameObject.imageResId)
+                    Glide.with(this@GameActivityN1)
+                        .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
+                        .placeholder(R.drawable.ic_logo)
+                        .transform(CenterCrop(), RoundedCorners(30))
+                        .into(this)
+
                     isEnabled = true
                     setOnClickListener {
                         val isCorrect = controller.checkAnswer(gameObject)
@@ -122,10 +128,7 @@ class GameActivityN1 : AppCompatActivity() {
     private fun mostrarResultadosFinales() {
         audioManager.playEffect(R.raw.win)
         val finalResult = controller.getFinalResult("Identificar Objeto")
-
-        ScoreManager(this).showResults(finalResult) {
-            finish()
-        }
+        ScoreManager(this).showResults(finalResult) { finish() }
     }
 
     override fun onDestroy() {

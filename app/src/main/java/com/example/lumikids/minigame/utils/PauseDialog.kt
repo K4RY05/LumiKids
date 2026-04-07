@@ -16,8 +16,8 @@ import com.example.lumikids.R
 
 class PauseDialog(private val context: Context) {
 
-    fun showDialog(onResume: () -> Unit) {
-        // ✨ SOLUCIÓN 1: Forzamos un tema transparente de pantalla completa nativo
+    // ✨ CAMBIO: Agregamos onExit para manejar el cierre de la actividad
+    fun showDialog(onResume: () -> Unit, onExit: () -> Unit) {
         val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
@@ -38,25 +38,32 @@ class PauseDialog(private val context: Context) {
         }
 
         val btnPlay = dialog.findViewById<ImageButton>(R.id.btnPlay)
+        val btnExit = dialog.findViewById<ImageButton>(R.id.btnExit) // ✨ Nuevo botón configurado
         val seekVolume = dialog.findViewById<SeekBar>(R.id.seekVolume)
 
-        // Botón reanudar
+        // Botón Reanudar
         btnPlay?.setOnClickListener {
             dialog.dismiss()
             onResume()
         }
 
-        // Control de volumen REAL
-        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        // ✨ NUEVO: Botón Salir (Regresar al menú)
+        btnExit?.setOnClickListener {
+            dialog.dismiss()
+            onExit() // Llama a finish() en la Activity
+        }
+
+        // Control de volumen REAL del dispositivo
+        val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
         seekVolume?.max = maxVolume
-        seekVolume?.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        seekVolume?.progress = audioService.getStreamVolume(AudioManager.STREAM_MUSIC)
 
         seekVolume?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                    audioService.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
                 }
             }
 
