@@ -27,15 +27,12 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="12dp"
-        android:background="@drawable/bg_purple"
+        android:background="@drawable/bg_card"
         android:orientation="horizontal"
         android:padding="10dp"
         app:layout_constraintEnd_toStartOf="@id/sideButtons"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="parent">
-
-        <!-- Ejemplo de tarjetas dentro -->
-        <!-- Aquí agregas dinámicamente EL, COME, etc -->
     </LinearLayout>
 
     <!-- Botones laterales -->
@@ -55,7 +52,7 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="12dp"
             android:background="@color/c_six"
-            android:src="@drawable/ic_pause"
+            android:src="@drawable/ic_delete"
             android:scaleType="centerInside"/>
 
         <ImageButton
@@ -63,11 +60,9 @@
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:background="@color/c_six"
-            android:src="@drawable/ic_pause"
+            android:src="@drawable/ic_speaker"
             android:scaleType="centerInside"/>
     </LinearLayout>
-
-    <!-- Opciones (grid tipo tarjetas) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOptions"
         android:layout_width="0dp"

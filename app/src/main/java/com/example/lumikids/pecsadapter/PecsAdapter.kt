@@ -29,8 +29,8 @@ class PecsAdapter(
 
         holder.img.load(item.imageUrl) {
             crossfade(true)
-            placeholder(R.drawable.ic_launcher_background)
-            error(R.drawable.ic_launcher_background)
+            placeholder(R.drawable.ic_user)
+            error(R.drawable.ic_app_foreground)
         }
 
         holder.itemView.setOnClickListener {
