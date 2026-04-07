@@ -63,7 +63,7 @@
 
         android:orientation="vertical"
         android:padding="20dp"
-        android:background="@drawable/rounded_blue_bg"
+        android:background="@drawable/bg_main_container"
 
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -97,7 +97,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_marginTop="10dp"
-            android:background="@drawable/rounded_white_bg"
+            android:background="@drawable/bg_card"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -140,7 +140,7 @@
             android:text="FINALIZAR"
             android:textStyle="bold"
             android:textColor="@color/black"
-            android:background="@drawable/button_bg"
+            android:background="@drawable/bg_button"
             android:backgroundTint="@null"/>
 
     </LinearLayout>

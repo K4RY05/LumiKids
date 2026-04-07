@@ -6,41 +6,31 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-    <FrameLayout
-        android:id="@+id/leftCorner"
-        android:layout_width="@dimen/esquina_ancho"
-        android:layout_height="@dimen/esquina_alto"
-        android:background="@drawable/bg_corner_left"
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_left"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"/>
 
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="@dimen/icono_esquina"
-            android:layout_height="@dimen/icono_esquina"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_left"
-            android:clickable="true"
-            android:focusable="true"/>
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/rightCorner"
-        android:layout_width="@dimen/esquina_ancho"
-        android:layout_height="@dimen/esquina_alto"
-        android:background="@drawable/bg_corner_right"
+    <ImageView
+        android:id="@+id/btnPause"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_pause"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageView
-            android:id="@+id/btnPause"
-            android:layout_width="@dimen/icono_esquina"
-            android:layout_height="@dimen/icono_esquina"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_pause"
-            android:clickable="true"
-            android:focusable="true"/>
-    </FrameLayout>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 
     <GridLayout
@@ -49,122 +39,13 @@
         android:layout_height="wrap_content"
         android:columnCount="5"
         android:rowCount="2"
-
-        app:layout_constraintTop_toBottomOf="@id/leftCorner"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1">
-        <ImageView
-            android:id="@+id/card1"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card2"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card3"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card4"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card5"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card6"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card7"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card8"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card9"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageView
-            android:id="@+id/card10"
-            android:layout_width="@dimen/tarjeta_memorama"
-            android:layout_height="@dimen/tarjeta_memorama"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_white_bg"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"/>
-
+        app:layout_constraintVertical_bias="0.5">
     </GridLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

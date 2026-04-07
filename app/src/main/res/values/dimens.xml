@@ -25,4 +25,24 @@
 
     <dimen name="tarjeta_memorama">120dp</dimen>
 
+
+    <dimen name="ic_top_corner">60dp</dimen>
+
+
+
+    <dimen name="tarjeta_memorama">120dp</dimen>
+
+    <dimen name="selector_arrow_size">64dp</dimen>
+    <dimen name="selector_card_size">120dp</dimen>
+    <dimen name="selector_number_text">80sp</dimen>
+    <dimen name="selector_title_text">26sp</dimen>
+    <dimen name="button_start_text">28sp</dimen>
+    <dimen name="button_start_padding">32dp</dimen>
+
+    <dimen name="pause_title_size">24sp</dimen>
+
+    <dimen name="text_size_result_title">28sp</dimen>
+    <dimen name="text_size_result_label">20sp</dimen>
+    <dimen name="text_size_result_value">40sp</dimen>
+
 </resources>

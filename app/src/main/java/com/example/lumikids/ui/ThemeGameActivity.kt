@@ -19,31 +19,29 @@ class ThemeGameActivity : AppCompatActivity() {
         }
 
         // Tarjetas (Temáticas)
-        val food = findViewById<ImageView>(R.id.cardFood)
+        val furniture = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
-        val clothes = findViewById<ImageView>(R.id.cardRopa)
+        val clothes = findViewById<ImageView>(R.id.cardClot)
 
-        //  FOOD
-        food.setOnClickListener {
-
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "FOOD")
-            startActivity(intent)
+        // Eventos: Pasamos directamente los Strings
+        // Nota: Mantenemos "furniure" sin la 't' para que coincida con tu servidor
+        furniture.setOnClickListener {
+            openGame("furniure")
         }
 
-        //  EMOTIONS
         emotions.setOnClickListener {
-
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "EMOTIONS")
-            startActivity(intent)
+            openGame("emotions")
         }
 
-        //  CLOTHES
         clothes.setOnClickListener {
-            val intent = Intent(this, GameTypeActivity::class.java)
-            intent.putExtra("THEME", "CLOTHES")
-            startActivity(intent)
+            openGame("clothes")
         }
+    }
+
+    // La función ahora recibe un String en lugar del enum GameTheme
+    private fun openGame(theme: String) {
+        val intent = Intent(this, GameTypeActivity::class.java)
+        intent.putExtra("THEME", theme)
+        startActivity(intent)
     }
 }

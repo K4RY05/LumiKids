@@ -1,17 +1,18 @@
 package com.example.lumikids.ui
 
+import android.content.Intent // Asegúrate de importar Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
+import com.example.lumikids.utils.SessionManager // Importa tu SessionManager
 
 class ProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_profile)
 
         val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
@@ -36,8 +37,18 @@ class ProfileActivity : AppCompatActivity() {
             // Abrir temas de colores
         }
 
+        // --- SOLUCIÓN AQUÍ ---
         btnCerrarSesion.setOnClickListener {
-            finish() // Cierra la pantalla
+            // 1. Borrar los datos de SharedPreferences
+            val sessionManager = SessionManager(this)
+            sessionManager.logout()
+
+            // 2. Redirigir a LoginActivity y limpiar la pila de actividades
+            val intent = Intent(this, LoginActivity::class.java)
+            // Estas flags evitan que el usuario regrese a la app si presiona el botón "Atrás"
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
     }
 }
