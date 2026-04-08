@@ -1,6 +1,7 @@
 package com.example.lumikids.minigame.objectrecognition.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -16,6 +17,7 @@ import com.example.lumikids.R
 import com.example.lumikids.minigame.objectrecognition.controller.ObjectRecognitionController
 import com.example.lumikids.minigame.utils.AudioManager
 import com.example.lumikids.minigame.utils.AudioPlayer
+import com.example.lumikids.minigame.utils.NetworkAudioManager
 import com.example.lumikids.minigame.utils.PauseDialog
 import com.example.lumikids.minigame.utils.ScoreManager
 import com.example.lumikids.network.RetrofitClient
@@ -25,24 +27,24 @@ class GameActivityN1 : AppCompatActivity() {
 
     private lateinit var controller: ObjectRecognitionController
     private lateinit var audioManager: AudioPlayer
+    private val networkAudio = NetworkAudioManager()
+    private lateinit var uiHandler: GameUIHandler
 
     private lateinit var theme: String
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
 
     private lateinit var btnPause: ImageView
-    private lateinit var uiHandler: GameUIHandler
+    private lateinit var btnBack: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n1)
 
-        // Configuración de pantalla completa
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+        setupImmersiveMode()
 
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+        // ✨ Corrección: el default ahora está bien escrito ("furniture")
+        theme = intent.getStringExtra("THEME") ?: "furniture"
         val rounds = intent.getIntExtra("NUM_ROUNDS", 3)
 
         controller = ObjectRecognitionController(this, theme, rounds)
@@ -57,20 +59,19 @@ class GameActivityN1 : AppCompatActivity() {
             onError = { controller.addError() }
         )
 
-        lifecycleScope.launch {
-            val success = controller.cargarDatos()
-            if (success) {
-                startNewRound()
-            } else {
-                Toast.makeText(this@GameActivityN1, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-        }
+        cargarDatosDelJuego()
+    }
+
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun initViews() {
         tvInstruction = findViewById(R.id.tvInstruction)
         btnPause = findViewById(R.id.btnPause)
+        btnBack = findViewById(R.id.btnBack)
 
         images = listOf(
             findViewById(R.id.imgOption1),
@@ -78,17 +79,25 @@ class GameActivityN1 : AppCompatActivity() {
             findViewById(R.id.imgOption3)
         )
 
-        // ✨ ACTUALIZACIÓN: El botón de pausa ahora maneja Reanudar y Salir
+        btnBack.setOnClickListener { finish() }
+
         btnPause.setOnClickListener {
-            val pauseDialog = PauseDialog(this)
-            pauseDialog.showDialog(
-                onResume = {
-                    // El juego continúa normalmente
-                },
-                onExit = {
-                    finish() // ✨ Cierra la actividad y vuelve al menú
-                }
+            PauseDialog(this).showDialog(
+                onResume = { /* El juego continúa normalmente */ },
+                onExit = { finish() }
             )
+        }
+    }
+
+    private fun cargarDatosDelJuego() {
+        lifecycleScope.launch {
+            val success = controller.cargarDatos()
+            if (success) {
+                startNewRound()
+            } else {
+                Toast.makeText(this@GameActivityN1, "Error al cargar datos", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
@@ -100,30 +109,62 @@ class GameActivityN1 : AppCompatActivity() {
 
         val round = controller.getNewRound()
 
-        if (round != null) {
-            tvInstruction.text = round.correctObject.instructionText
-            uiHandler.resetImagesBackground()
 
-            round.options.forEachIndexed { index, gameObject ->
-                images[index].apply {
-                    Glide.with(this@GameActivityN1)
-                        .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
-                        .placeholder(R.drawable.ic_logo)
-                        .transform(CenterCrop(), RoundedCorners(30))
-                        .into(this)
-
-                    isEnabled = true
-                    setOnClickListener {
-                        val isCorrect = controller.checkAnswer(gameObject)
-                        uiHandler.handleSelection(this, isCorrect)
-                    }
-                }
-            }
-        } else {
+        if (round == null) {
             Toast.makeText(this, "No hay suficientes objetos", Toast.LENGTH_SHORT).show()
             finish()
+            return
+        }
+
+        val objetoCorrecto = round.correctObject
+        tvInstruction.text = objetoCorrecto.instructionText
+
+        val claveInstruccion = "${theme.lowercase()}_${objetoCorrecto.name}"
+        reproducirAudio(claveInstruccion, true)
+
+        uiHandler.resetImagesBackground()
+
+        round.options.forEachIndexed { index, gameObject ->
+            images[index].apply {
+                Glide.with(this@GameActivityN1)
+                    .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
+                    .placeholder(R.drawable.ic_logo)
+                    .transform(CenterCrop(), RoundedCorners(30))
+                    .into(this)
+
+                isEnabled = true
+
+                setOnClickListener {
+                    val isCorrect = controller.checkAnswer(gameObject)
+
+                    // Reproducir el nombre corto (ej. "hat")
+                    reproducirAudio(gameObject.name, false)
+
+                    uiHandler.handleSelection(this, isCorrect)
+                }
+            }
         }
     }
+
+    private fun reproducirAudio(claveBuscada: String, mostrarError: Boolean) {
+        val listaSonidos = controller.listaDeSonidos
+
+        if (listaSonidos.isEmpty()) {
+            if (mostrarError) Toast.makeText(this, "Lista de audios vacía.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val sonido = listaSonidos.find { it.namesounds == claveBuscada }
+
+        if (sonido != null) {
+            val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + sonido.linksounds
+            Log.d("AUDIO_TEST", "Reproduciendo: $urlCompleta")
+            networkAudio.playAudioFromUrl(urlCompleta)
+        } else {
+            if (mostrarError) Toast.makeText(this, "Falta audio: $claveBuscada", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun mostrarResultadosFinales() {
         audioManager.playEffect(R.raw.win)
@@ -134,5 +175,6 @@ class GameActivityN1 : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         audioManager.release()
+        networkAudio.stopAudio()
     }
 }

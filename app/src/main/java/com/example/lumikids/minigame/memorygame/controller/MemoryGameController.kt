@@ -1,14 +1,16 @@
 package com.example.lumikids.minigame.memorygame.controller
 
 import android.content.Context
-import com.example.lumikids.minigame.core.FotogramaRepository // ✨ Conectamos a la base de datos
+import com.example.lumikids.minigame.core.FotogramaRepository
+import com.example.lumikids.minigame.core.InstructionRepository // ✨ Importamos el repositorio de audios
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.model.GameResult
-import kotlinx.coroutines.suspendCancellableCoroutine // ✨ Importante para asincronía
+import com.example.lumikids.model.SoundResponse // ✨ Importamos el modelo de los sonidos
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class MemoryGameController(
-    private val context: Context, // ✨ Agregamos el contexto que pasaste desde la Activity
+    private val context: Context,
     private val theme: String,
     private val numCards: Int
 ) {
@@ -20,33 +22,45 @@ class MemoryGameController(
     // Almacenamos temporalmente los datos descargados
     private var allItems: List<Pair<String, String>> = emptyList()
 
+    // ✨ NUEVA VARIABLE: Aquí guardaremos los audios cortos (nombres)
+    var listaDeSonidos: List<SoundResponse> = emptyList()
+
     /**
-     * ✨ Descargamos los datos desde MySQL antes de armar el tablero
+     * ✨ Descargamos imágenes y audios optimizados desde MySQL
      */
     suspend fun cargarDatos(): Boolean = suspendCancellableCoroutine { continuation ->
-        FotogramaRepository.getFotogramasByTheme(theme) { response ->
-            if (response != null) {
-                // Filtramos los nulos y guardamos los pares (Nombre, Link)
-                allItems = response.mapNotNull { item ->
-                    val name = item.nametheme
-                    val link = item.linktheme
-                    if (name != null && link != null) {
-                        Pair(name, link)
+        // 1. Descargamos las imágenes
+        FotogramaRepository.getFotogramasByTheme(theme) { responseImages ->
+            if (responseImages != null) {
+
+                // ✨ 2. AQUÍ ESTÁ LA OPTIMIZACIÓN: Le pedimos a Node.js SOLO los "names"
+                InstructionRepository.getInstructionsByTheme(theme, "names") { responseSounds ->
+                    if (responseSounds != null) {
+                        listaDeSonidos = responseSounds
+                    }
+
+                    // Preparamos los datos visuales
+                    allItems = responseImages.mapNotNull { item ->
+                        val name = item.nametheme
+                        val link = item.linktheme
+                        if (name != null && link != null) {
+                            Pair(name, link)
+                        } else {
+                            null
+                        }
+                    }
+
+                    val pairsNeeded = numCards / 2
+                    // Verificamos si tenemos suficientes imágenes en la DB para el número de cartas pedido
+                    if (allItems.size >= pairsNeeded) {
+                        startTime = System.currentTimeMillis()
+                        continuation.resume(true) // Éxito
                     } else {
-                        null
+                        continuation.resume(false) // Faltan cartas
                     }
                 }
-
-                val pairsNeeded = numCards / 2
-                // Verificamos si tenemos suficientes imágenes en la DB para el número de cartas pedido
-                if (allItems.size >= pairsNeeded) {
-                    startTime = System.currentTimeMillis()
-                    continuation.resume(true)
-                } else {
-                    continuation.resume(false)
-                }
             } else {
-                continuation.resume(false)
+                continuation.resume(false) // Error de red
             }
         }
     }
@@ -64,13 +78,12 @@ class MemoryGameController(
             MemoryCard(
                 id = index,
                 name = pair.first,
-                imageUrl = pair.second // ✨ Asignamos la ruta JPG
+                imageUrl = pair.second
             )
         }
     }
 
     fun isMatch(card1: MemoryCard, card2: MemoryCard): Boolean {
-        // ✨ Comparamos usando la URL de la imagen en vez del Int local
         val match = card1.imageUrl == card2.imageUrl
         if (match) {
             matchedPairs++

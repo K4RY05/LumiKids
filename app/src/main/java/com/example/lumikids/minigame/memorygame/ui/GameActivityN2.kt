@@ -1,7 +1,7 @@
 package com.example.lumikids.minigame.memorygame.ui
 
 import android.os.Bundle
-import android.view.Gravity // ✨ Necesario para centrar las cartas
+import android.view.Gravity
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
@@ -37,25 +37,45 @@ class GameActivityN2 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n2)
 
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+        setupImmersiveMode()
 
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+        // ✨ Corrección: el nombre por defecto ahora es correcto
+        theme = intent.getStringExtra("THEME") ?: "furniture"
         numCards = intent.getIntExtra("NUM_CARDS", 6)
 
         controller = MemoryGameController(this, theme, numCards)
         audioManager = AudioManager(this)
 
+        initViews()
+        cargarDatosDelJuego()
+    }
+
+    // ✨ OPTIMIZACIÓN: Modularizamos la pantalla inmersiva
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    // ✨ OPTIMIZACIÓN: Modularizamos los botones
+    private fun initViews() {
         val btnPause = findViewById<ImageView>(R.id.btnPause)
+        val btnBack = findViewById<ImageView>(R.id.btnBack) // ✨ NUEVO: Enlazamos el botón back
+
+        btnBack.setOnClickListener {
+            finish()
+        }
+
         btnPause.setOnClickListener {
-            val pauseDialog = PauseDialog(this)
-            pauseDialog.showDialog(
-                onResume = { },
+            PauseDialog(this).showDialog(
+                onResume = { /* El juego continúa */ },
                 onExit = { finish() }
             )
         }
+    }
 
+    // ✨ OPTIMIZACIÓN: Descarga de datos en segundo plano
+    private fun cargarDatosDelJuego() {
         lifecycleScope.launch {
             val success = controller.cargarDatos()
             if (success) {
@@ -67,7 +87,7 @@ class GameActivityN2 : AppCompatActivity() {
                     crearTableroDinamico()
                 }
             } else {
-                Toast.makeText(this@GameActivityN2, "Error de red", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GameActivityN2, "Error de red al cargar el tablero", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
@@ -77,6 +97,7 @@ class GameActivityN2 : AppCompatActivity() {
         val grid = findViewById<GridLayout>(R.id.gridMemorama)
         grid.removeAllViews()
 
+        // Ajustamos dinámicamente cuántas columnas tendrá el tablero (Ej: 8 cartas = 4 columnas)
         val columns = numCards / 2
         grid.columnCount = columns
         grid.rowCount = 2
@@ -85,37 +106,28 @@ class GameActivityN2 : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
 
-        // ✨ CONFIGURACIÓN AL LÍMITE:
-        // Usamos el 98% del ancho y el 92% del alto.
-        val maxWidthPerCard = (screenWidth * 0.98f) / columns
-        val maxHeightPerCard = (screenHeight * 0.92f) / 2f
+        // Cálculo de espacio dinámico para que las cartas no se salgan de la pantalla
+        val maxWidthPerCard = (screenWidth * 0.95f) / columns
+        val maxHeightPerCard = (screenHeight * 0.75f) / 2f
 
         val baseSize = kotlin.math.min(maxWidthPerCard, maxHeightPerCard).toInt()
-
-        // ✨ MARGEN CASI CERO: Solo 1% de espacio entre cartas para que crezcan más
-        val margin = (baseSize * 0.01).toInt()
+        val margin = (baseSize * 0.05).toInt()
         val size = baseSize - (margin * 2)
+        val padding = margin
 
         for (i in 0 until numCards) {
             val cardData = boardCards[i]
             val view = ImageView(this).apply {
-                val params = GridLayout.LayoutParams().apply {
+                layoutParams = GridLayout.LayoutParams().apply {
                     width = size
                     height = size
                     setMargins(margin, margin, margin, margin)
-                    setGravity(Gravity.CENTER)
+                    setGravity(Gravity.CENTER) // ✨ NUEVO: Asegura que las cartas se centren en sus casillas
                 }
-                layoutParams = params
-
                 setBackgroundResource(R.drawable.bg_card)
-
-                // ✨ FOTO MÁS GRANDE: Bajamos el padding interno al 2%
-                // para que el dibujo del sol o la foto casi toquen el borde de la carta.
-                val internalPadding = (size * 0.02).toInt()
-                setPadding(internalPadding, internalPadding, internalPadding, internalPadding)
-
+                setPadding(padding, padding, padding, padding)
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                setImageResource(R.drawable.ic_logo)
+                setImageResource(R.drawable.ic_logo) // Logo del reverso de la carta
                 tag = false
             }
 
@@ -127,25 +139,32 @@ class GameActivityN2 : AppCompatActivity() {
     }
 
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
+        // Evita seleccionar más de 2 cartas al mismo tiempo o cartas ya volteadas
         if (isBusy || view.tag == true) return
 
         uiHandler.flipCardUp(view, card.imageUrl)
         view.tag = true
 
         if (firstSelectedCard == null) {
+            // Es la primera carta que toca el niño en este turno
             firstSelectedCard = card
             firstSelectedView = view
         } else {
+            // Es la segunda carta
             isBusy = true
             val isMatch = controller.isMatch(firstSelectedCard!!, card)
 
             if (isMatch) {
+                // ✨ Acierto: reproducir sonido y mantener volteadas
                 audioManager.playEffect(R.raw.win)
                 resetSelection()
                 isBusy = false
                 checkGameFinished()
             } else {
+                // ✨ Error: reproducir sonido y regresar cartas
                 audioManager.playEffect(R.raw.fail)
+
+                // Esperamos 1 segundo para que el niño memorice las cartas antes de voltearlas
                 view.postDelayed({
                     uiHandler.flipCardsDown(firstSelectedView!!, view, R.drawable.ic_logo) {
                         view.tag = false

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,7 +5,18 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_left"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Botón para regresar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
         android:id="@+id/btnPause"
@@ -19,7 +29,7 @@
         android:focusable="true"
         android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/tvInstruction"
@@ -30,11 +40,12 @@
         android:textStyle="bold"
         android:textColor="@color/c_one"
         android:gravity="center"
+        android:maxLines="2"
         android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="@id/btnPause"
+        app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintEnd_toStartOf="@id/btnPause"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnPause" />
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack" />
 
     <ImageView
         android:id="@+id/imgOption1"
@@ -48,12 +59,12 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintEnd_toStartOf="@id/imgOption2"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvInstruction" />
+        app:layout_constraintEnd_toStartOf="@id/imgOption2"
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <ImageView
         android:id="@+id/imgOption2"
@@ -67,11 +78,11 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintEnd_toStartOf="@id/imgOption3"
         app:layout_constraintStart_toEndOf="@id/imgOption1"
-        app:layout_constraintTop_toBottomOf="@id/tvInstruction" />
+        app:layout_constraintEnd_toStartOf="@id/imgOption3"
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <ImageView
         android:id="@+id/imgOption3"
@@ -81,14 +92,14 @@
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_card"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="fitCenter"
-        android:background="@drawable/bg_card"
-        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toEndOf="@id/imgOption2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="1:1"/>
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

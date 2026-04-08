@@ -1,12 +1,19 @@
 package com.example.lumikids.minigame.objectrecognition.controller
 
 import android.content.Context
+import android.util.Log
 import com.example.lumikids.minigame.core.InstructionRepository
-import com.example.lumikids.minigame.core.FotogramaRepository // ✨ Importante para la DB
+import com.example.lumikids.minigame.core.FotogramaRepository
 import com.example.lumikids.minigame.objectrecognition.model.GameObject
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
 import com.example.lumikids.model.GameResult
-import kotlinx.coroutines.suspendCancellableCoroutine // ✨ Necesario para corrutinas
+import com.example.lumikids.model.SoundResponse
+import com.example.lumikids.network.GamesApi
+import com.example.lumikids.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import retrofit2.awaitResponse // ✨ Necesario para convertir Call en suspend
 import kotlin.coroutines.resume
 
 class ObjectRecognitionController(
@@ -16,45 +23,67 @@ class ObjectRecognitionController(
 ) {
     private val instructionMap = InstructionRepository.loadInstructionsByTheme(context, theme)
     private var allItems: MutableList<GameObject> = mutableListOf()
+
+    var listaDeSonidos: List<SoundResponse> = emptyList()
+        private set
+
     private var currentRoundCount: Int = 0
     private var errors: Int = 0
     private var startTime: Long = 0
     private var currentRound: ObjectRound? = null
 
     /**
-     * Se conecta al repositorio para bajar los JPGs de la base de datos.
-     * Incluye protección contra datos nulos (NPE).
+     * Carga imágenes y sonidos de forma secuencial y síncrona dentro de la corrutina.
      */
-    suspend fun cargarDatos(): Boolean = suspendCancellableCoroutine { continuation ->
-        FotogramaRepository.getFotogramasByTheme(theme) { response ->
-            if (response != null) {
-                // ✨ CAMBIO CLAVE: Usamos mapNotNull para descartar datos corruptos o vacíos
-                allItems = response.mapNotNull { item ->
-                    val name = item.nametheme
-                    val link = item.linktheme
-
-                    // Solo creamos el GameObject si el servidor nos envió un nombre y una URL válidos
-                    if (name != null && link != null) {
-                        GameObject(
-                            name = name,
-                            imageUrl = link,
-                            instructionText = instructionMap[name] ?: "Selecciona el objeto"
-                        )
-                    } else {
-                        null // Si falta el nombre o la imagen, ignoramos este objeto para que no explote
-                    }
-                }.toMutableList()
-
-                // Verificamos si después de limpiar los nulos nos quedan al menos 3 objetos para jugar
-                if (allItems.size >= 3) {
-                    startTime = System.currentTimeMillis()
-                    continuation.resume(true) // ✅ Datos listos y seguros
-                } else {
-                    continuation.resume(false) // ❌ No hay suficientes datos válidos
+    suspend fun cargarDatos(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // 1. Cargamos los fotogramas (imágenes)
+            val responseItems = suspendCancellableCoroutine { continuation ->
+                FotogramaRepository.getFotogramasByTheme(theme) { response ->
+                    continuation.resume(response)
                 }
-            } else {
-                continuation.resume(false) // ❌ Error de red o respuesta vacía
             }
+
+            if (responseItems == null || responseItems.isEmpty()) {
+                Log.e("Controller", "No se recibieron imágenes para el tema: $theme")
+                return@withContext false
+            }
+
+            allItems = responseItems.mapNotNull { item ->
+                val name = item.nametheme
+                val link = item.linktheme
+                if (name != null && link != null) {
+                    GameObject(
+                        name = name,
+                        imageUrl = link,
+                        instructionText = instructionMap[name] ?: "Selecciona el objeto"
+                    )
+                } else null
+            }.toMutableList()
+
+            // 2. Cargamos los sonidos (Ahora con awaitResponse para esperar el resultado real)
+            val categoryId = obtenerIdDeCategoria(theme)
+            val api = RetrofitClient.instance.create(GamesApi::class.java)
+
+            val soundCall = api.getSoundsByCategory(categoryId).awaitResponse()
+
+            if (soundCall.isSuccessful) {
+                listaDeSonidos = soundCall.body() ?: emptyList()
+                Log.d("Controller", "Audios cargados: ${listaDeSonidos.size}")
+            } else {
+                Log.e("Controller", "Error en el servidor al pedir sonidos: ${soundCall.code()}")
+            }
+
+            // Iniciamos cronómetro si hay datos visuales mínimos
+            if (allItems.size >= 3) {
+                startTime = System.currentTimeMillis()
+                return@withContext true
+            }
+
+            false
+        } catch (e: Exception) {
+            Log.e("Controller", "Error fatal en cargarDatos: ${e.message}")
+            false
         }
     }
 
@@ -68,13 +97,23 @@ class ObjectRecognitionController(
     }
 
     fun checkAnswer(clicked: GameObject): Boolean = clicked == currentRound?.correctObject
-
     fun addError() { errors++ }
-
     fun isGameOver(): Boolean = currentRoundCount >= totalRoundsWanted
 
     fun getFinalResult(gameTitle: String): GameResult {
         val totalTime = (System.currentTimeMillis() - startTime) / 1000
         return GameResult(totalTime, errors, gameTitle)
+    }
+
+    private fun obtenerIdDeCategoria(themeName: String): Int {
+        return when (themeName.lowercase()) {
+            "verb" -> 1
+            "pronoun" -> 2
+            "clothing", "clother" -> 3
+            "food" -> 4
+            "emotions" -> 5
+            "furniure", "furniture" -> 8
+            else -> 0
+        }
     }
 }

@@ -1,11 +1,11 @@
 package com.example.lumikids.minigame.objectrecognition.ui
 
 import android.widget.ImageView
-import com.bumptech.glide.Glide // ✨ Librería necesaria para las fotos JPG
+import com.bumptech.glide.Glide
 import com.example.lumikids.R
 import com.example.lumikids.minigame.objectrecognition.model.GameObject
 import com.example.lumikids.minigame.utils.AudioPlayer
-import com.example.lumikids.network.RetrofitClient // ✨ Usamos tu URL centralizada
+import com.example.lumikids.network.RetrofitClient
 
 class GameUIHandler(
     private val images: List<ImageView>,
@@ -14,18 +14,14 @@ class GameUIHandler(
     private val onError: () -> Unit
 ) {
 
-    /**
-     * ✨ NUEVA FUNCIÓN: Se encarga de pintar las imágenes JPG desde el servidor
-     * usando Glide y la URL centralizada de RetrofitClient.
-     */
     fun updateImages(options: List<GameObject>) {
         options.forEachIndexed { index, gameObject ->
             val imageView = images[index]
 
             Glide.with(imageView.context)
                 .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
-                .placeholder(R.drawable.ic_logo) // Imagen mientras carga
-                .error(R.drawable.ic_logo)        // Imagen si falla la red
+                .placeholder(R.drawable.ic_logo)
+                .error(R.drawable.ic_logo)
                 .into(imageView)
 
             imageView.isEnabled = true
@@ -33,37 +29,43 @@ class GameUIHandler(
     }
 
     fun handleSelection(view: ImageView, isCorrect: Boolean) {
-        if (isCorrect) {
-            // Lógica de acierto: marco verde y sonido de victoria
-            view.setBackgroundResource(R.drawable.bg_rounded_green)
-            audioManager.playEffect(R.raw.win)
 
-            // Deshabilitamos clics para evitar doble selección
-            images.forEach {
-                it.isEnabled = false
-                it.setOnClickListener(null)
+        images.forEach { it.isEnabled = false }
+
+        // 2. Damos feedback visual inmediato (cambio de color)
+        if (isCorrect) {
+            view.setBackgroundResource(R.drawable.bg_rounded_green)
+        } else {
+            view.setBackgroundResource(R.drawable.bg_rounded_red)
+        }
+
+
+        view.postDelayed({
+
+            // 4. Después de la pausa, ejecutamos la lógica de acierto/error
+            if (isCorrect) {
+                audioManager.playEffect(R.raw.win)
+
+                // Quitamos los clics por completo porque ya ganó esta ronda
+                images.forEach { it.setOnClickListener(null) }
+
+                // Esperamos 1 segundo extra para que escuche el sonido de victoria antes de pasar de nivel
+                view.postDelayed({
+                    onNextRound()
+                }, 1000)
+
+            } else {
+                onError()
+                audioManager.playEffect(R.raw.fail)
+
+                // Regresamos la tarjeta a su fondo normal después de equivocarse
+                view.setBackgroundResource(R.drawable.bg_card)
+
+                // Volvemos a habilitar las tarjetas para que el niño lo siga intentando
+                images.forEach { it.isEnabled = true }
             }
 
-            // Esperamos un segundo para pasar a la siguiente ronda
-            view.postDelayed({
-                onNextRound()
-            }, 1000)
-
-        } else {
-            // Lógica de error
-            onError()
-
-            view.setBackgroundResource(R.drawable.bg_rounded_red)
-            audioManager.playEffect(R.raw.fail)
-
-            view.isEnabled = false
-
-            // Regresamos al fondo normal después de medio segundo
-            view.postDelayed({
-                view.setBackgroundResource(R.drawable.bg_card)
-                view.isEnabled = true
-            }, 500)
-        }
+        }, 1000)
     }
 
     fun resetImagesBackground() {

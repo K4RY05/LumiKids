@@ -17,31 +17,25 @@ class GameTypeActivity : AppCompatActivity() {
             finish()
         }
 
-        // Recibimos el String directamente.
-        // Si no llega nada, usamos "furniure" como respaldo para evitar que la app falle.
         val theme = intent.getStringExtra("THEME") ?: "furniure"
 
-        // Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
 
-        // Eventos
         cardObject.setOnClickListener {
             openGame(ObjectLevelPickerActivity::class.java, theme)
         }
-
         cardMemory.setOnClickListener {
             openGame(MemoryLevelActivity::class.java, theme)
         }
     }
 
-    // La función ahora recibe directamente el String
     private fun openGame(
         activity: Class<*>,
         theme: String
     ) {
         val intent = Intent(this, activity)
-        intent.putExtra("THEME", theme) // Pasamos el String intacto a la siguiente actividad
+        intent.putExtra("THEME", theme)
         startActivity(intent)
     }
 }
