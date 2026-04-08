@@ -18,7 +18,7 @@ class MemoryLevelActivity : AppCompatActivity() {
 
         // Recibir el String directamente.
         // Si es nulo, usamos "emotions" como valor por defecto.
-        theme = intent.getStringExtra("THEME") ?: "emotions"
+        theme = intent.getStringExtra("THEME") ?: "furniure"
 
         // Botón regresar
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {

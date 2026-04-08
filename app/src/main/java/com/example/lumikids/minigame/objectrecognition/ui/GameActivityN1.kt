@@ -44,7 +44,7 @@ class GameActivityN1 : AppCompatActivity() {
         setupImmersiveMode()
 
         // ✨ Corrección: el default ahora está bien escrito ("furniture")
-        theme = intent.getStringExtra("THEME") ?: "furniture"
+        theme = intent.getStringExtra("THEME") ?: "furniure"
         val rounds = intent.getIntExtra("NUM_ROUNDS", 3)
 
         controller = ObjectRecognitionController(this, theme, rounds)

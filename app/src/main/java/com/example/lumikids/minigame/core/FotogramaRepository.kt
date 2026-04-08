@@ -1,7 +1,7 @@
 package com.example.lumikids.minigame.core
 
 import com.example.lumikids.model.ThemeResponse
-import com.example.lumikids.network.GamesApi // ✨ Usamos la interfaz GamesApi corregida
+import com.example.lumikids.network.GamesApi
 import com.example.lumikids.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -11,13 +11,13 @@ object FotogramaRepository {
 
     private val api = RetrofitClient.instance.create(GamesApi::class.java)
 
-
     fun getFotogramasByTheme(themeName: String, onResult: (List<ThemeResponse>?) -> Unit) {
 
+        // ✨ CORRECCIÓN: Cambiamos "CLOTHES" por "CLOTHING" para coincidir con lo que envía ThemeGameActivity
         val categoryId = when (themeName.uppercase()) {
-            "FURNIURE" -> 8  // ID 8 en tu tabla category
-            "EMOTIONS" -> 5              // ID 5 en tu tabla category
-            "CLOTHES" -> 3               // ID 3 en tu tabla category
+            "FURNIURE" -> 8
+            "EMOTIONS" -> 5
+            "CLOTHING" -> 3
             else -> -1
         }
 
@@ -26,7 +26,7 @@ object FotogramaRepository {
             return
         }
 
-        // 2. Realizamos la llamada a la API
+        // Realizamos la llamada a la API usando los IDs correctos
         api.getThemesByCategory(categoryId).enqueue(object : Callback<List<ThemeResponse>> {
             override fun onResponse(
                 call: Call<List<ThemeResponse>>,

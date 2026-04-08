@@ -107,12 +107,9 @@ class ObjectRecognitionController(
 
     private fun obtenerIdDeCategoria(themeName: String): Int {
         return when (themeName.lowercase()) {
-            "verb" -> 1
-            "pronoun" -> 2
-            "clothing", "clother" -> 3
-            "food" -> 4
+            "clothing" -> 3
             "emotions" -> 5
-            "furniure", "furniture" -> 8
+            "furniure" -> 8
             else -> 0
         }
     }
