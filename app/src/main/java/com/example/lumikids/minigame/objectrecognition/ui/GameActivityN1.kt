@@ -1,7 +1,6 @@
 package com.example.lumikids.minigame.objectrecognition.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -34,6 +33,9 @@ class GameActivityN1 : AppCompatActivity() {
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
 
+    // ✨ CORRECCIÓN 1: Declaramos la lista para los nuevos íconos flotantes
+    private lateinit var resultIcons: List<ImageView>
+
     private lateinit var btnPause: ImageView
     private lateinit var btnBack: ImageView
 
@@ -43,7 +45,6 @@ class GameActivityN1 : AppCompatActivity() {
 
         setupImmersiveMode()
 
-        // ✨ Corrección: el default ahora está bien escrito ("furniture")
         theme = intent.getStringExtra("THEME") ?: "furniure"
         val rounds = intent.getIntExtra("NUM_ROUNDS", 3)
 
@@ -52,8 +53,10 @@ class GameActivityN1 : AppCompatActivity() {
 
         initViews()
 
+        // ✨ CORRECCIÓN 3: Le pasamos la lista de íconos al UIHandler
         uiHandler = GameUIHandler(
             images = images,
+            resultIcons = resultIcons,
             audioManager = audioManager,
             onNextRound = { startNewRound() },
             onError = { controller.addError() }
@@ -77,6 +80,13 @@ class GameActivityN1 : AppCompatActivity() {
             findViewById(R.id.imgOption1),
             findViewById(R.id.imgOption2),
             findViewById(R.id.imgOption3)
+        )
+
+        // ✨ CORRECCIÓN 2: Enlazamos los íconos que agregamos al XML
+        resultIcons = listOf(
+            findViewById(R.id.imgResult1),
+            findViewById(R.id.imgResult2),
+            findViewById(R.id.imgResult3)
         )
 
         btnBack.setOnClickListener { finish() }
@@ -108,8 +118,6 @@ class GameActivityN1 : AppCompatActivity() {
         }
 
         val round = controller.getNewRound()
-
-
         if (round == null) {
             Toast.makeText(this, "No hay suficientes objetos", Toast.LENGTH_SHORT).show()
             finish()
@@ -119,8 +127,10 @@ class GameActivityN1 : AppCompatActivity() {
         val objetoCorrecto = round.correctObject
         tvInstruction.text = objetoCorrecto.instructionText
 
-        val claveInstruccion = "${theme.lowercase()}_${objetoCorrecto.name}"
-        reproducirAudio(claveInstruccion, true)
+        if (objetoCorrecto.audioInstructionUrl != null) {
+            val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + objetoCorrecto.audioInstructionUrl
+            networkAudio.playAudioFromUrl(urlCompleta)
+        }
 
         uiHandler.resetImagesBackground()
 
@@ -137,34 +147,16 @@ class GameActivityN1 : AppCompatActivity() {
                 setOnClickListener {
                     val isCorrect = controller.checkAnswer(gameObject)
 
-                    // Reproducir el nombre corto (ej. "hat")
-                    reproducirAudio(gameObject.name, false)
+                    if (gameObject.audioShortUrl != null) {
+                        val urlCortaCompleta = RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl
+                        networkAudio.playAudioFromUrl(urlCortaCompleta)
+                    }
 
                     uiHandler.handleSelection(this, isCorrect)
                 }
             }
         }
     }
-
-    private fun reproducirAudio(claveBuscada: String, mostrarError: Boolean) {
-        val listaSonidos = controller.listaDeSonidos
-
-        if (listaSonidos.isEmpty()) {
-            if (mostrarError) Toast.makeText(this, "Lista de audios vacía.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val sonido = listaSonidos.find { it.namesounds == claveBuscada }
-
-        if (sonido != null) {
-            val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + sonido.linksounds
-            Log.d("AUDIO_TEST", "Reproduciendo: $urlCompleta")
-            networkAudio.playAudioFromUrl(urlCompleta)
-        } else {
-            if (mostrarError) Toast.makeText(this, "Falta audio: $claveBuscada", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     private fun mostrarResultadosFinales() {
         audioManager.playEffect(R.raw.win)

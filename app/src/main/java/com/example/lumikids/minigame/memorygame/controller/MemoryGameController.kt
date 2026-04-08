@@ -1,12 +1,14 @@
 package com.example.lumikids.minigame.memorygame.controller
 
 import android.content.Context
+import android.util.Log
 import com.example.lumikids.minigame.core.FotogramaRepository
-import com.example.lumikids.minigame.core.InstructionRepository // ✨ Importamos el repositorio de audios
+import com.example.lumikids.minigame.core.InstructionRepository
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.model.GameResult
-import com.example.lumikids.model.SoundResponse // ✨ Importamos el modelo de los sonidos
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 class MemoryGameController(
@@ -19,54 +21,67 @@ class MemoryGameController(
     private var errors: Int = 0
     private var startTime: Long = 0
 
-    // Almacenamos temporalmente los datos descargados
-    private var allItems: List<Pair<String, String>> = emptyList()
+    private var allItems: List<Triple<String, String, String?>> = emptyList()
 
-    // ✨ NUEVA VARIABLE: Aquí guardaremos los audios cortos (nombres)
-    var listaDeSonidos: List<SoundResponse> = emptyList()
+    // ✨ CORRECCIÓN: Agregamos withContext(Dispatchers.IO) y un bloque try-catch
+    suspend fun cargarDatos(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            suspendCancellableCoroutine { continuation ->
+                // 1. Descargamos las imágenes
+                FotogramaRepository.getFotogramasByTheme(theme) { responseImages ->
+                    if (responseImages != null) {
 
-    /**
-     * ✨ Descargamos imágenes y audios optimizados desde MySQL
-     */
-    suspend fun cargarDatos(): Boolean = suspendCancellableCoroutine { continuation ->
-        // 1. Descargamos las imágenes
-        FotogramaRepository.getFotogramasByTheme(theme) { responseImages ->
-            if (responseImages != null) {
+                        // 2. Le pedimos a Node.js SOLO los "names" (audios cortos)
+                        InstructionRepository.getInstructionsByTheme(theme, "names") { responseSounds ->
 
-                // ✨ 2. AQUÍ ESTÁ LA OPTIMIZACIÓN: Le pedimos a Node.js SOLO los "names"
-                InstructionRepository.getInstructionsByTheme(theme, "names") { responseSounds ->
-                    if (responseSounds != null) {
-                        listaDeSonidos = responseSounds
-                    }
+                            // ✨ CORRECCIÓN MÁS IMPORTANTE: Seguro contra cierres inesperados
+                            if (continuation.isActive) {
+                                val sonidosDescargados = responseSounds ?: emptyList()
 
-                    // Preparamos los datos visuales
-                    allItems = responseImages.mapNotNull { item ->
-                        val name = item.nametheme
-                        val link = item.linktheme
-                        if (name != null && link != null) {
-                            Pair(name, link)
-                        } else {
-                            null
+                                // 3. ENSAMBLAMOS LOS DATOS
+                                allItems = responseImages.mapNotNull { item ->
+                                    val name = item.nametheme
+                                    val link = item.linktheme
+
+                                    if (name != null && link != null) {
+                                        val audioUrl = sonidosDescargados.find { it.namesounds == name }?.linksounds
+                                        Triple(name, link, audioUrl)
+                                    } else {
+                                        null
+                                    }
+                                }
+
+                                val pairsNeeded = numCards / 2
+                                if (allItems.size >= pairsNeeded) {
+                                    startTime = System.currentTimeMillis()
+                                    continuation.resume(true) // Éxito
+                                } else {
+                                    Log.e("MemoryController", "Faltan cartas para armar pares. Necesarias: $pairsNeeded, Obtenidas: ${allItems.size}")
+                                    continuation.resume(false) // Faltan cartas
+                                }
+                            }
+                        }
+                    } else {
+                        // ✨ Seguro contra cierres si falla la primera petición
+                        if (continuation.isActive) {
+                            Log.e("MemoryController", "Error de red: No se pudieron descargar las imágenes.")
+                            continuation.resume(false)
                         }
                     }
-
-                    val pairsNeeded = numCards / 2
-                    // Verificamos si tenemos suficientes imágenes en la DB para el número de cartas pedido
-                    if (allItems.size >= pairsNeeded) {
-                        startTime = System.currentTimeMillis()
-                        continuation.resume(true) // Éxito
-                    } else {
-                        continuation.resume(false) // Faltan cartas
-                    }
                 }
-            } else {
-                continuation.resume(false) // Error de red
             }
+        } catch (e: Exception) {
+            Log.e("MemoryController", "Error crítico en cargarDatos: ${e.message}")
+            false
         }
     }
 
     fun generateBoard(): List<MemoryCard> {
         if (allItems.isEmpty()) return emptyList()
+
+        // Reiniciamos los contadores por si el juego se reinicia
+        matchedPairs = 0
+        errors = 0
 
         val pairsNeeded = numCards / 2
         val selectedItems = allItems.shuffled().take(pairsNeeded)
@@ -74,11 +89,12 @@ class MemoryGameController(
         // Duplicamos las cartas para crear los pares y los revolvemos
         val boardItems = (selectedItems + selectedItems).shuffled()
 
-        return boardItems.mapIndexed { index, pair ->
+        return boardItems.mapIndexed { index, triple ->
             MemoryCard(
                 id = index,
-                name = pair.first,
-                imageUrl = pair.second
+                name = triple.first,
+                imageUrl = triple.second,
+                audioShortUrl = triple.third
             )
         }
     }

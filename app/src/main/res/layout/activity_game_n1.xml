@@ -47,59 +47,101 @@
         app:layout_constraintTop_toTopOf="@id/btnBack"
         app:layout_constraintBottom_toBottomOf="@id/btnBack" />
 
-    <ImageView
-        android:id="@+id/imgOption1"
+    <FrameLayout
+        android:id="@+id/containerOption1"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="24dp"
-        android:background="@drawable/bg_card"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/imgOption2"
+        app:layout_constraintEnd_toStartOf="@id/containerOption2"
         app:layout_constraintTop_toBottomOf="@id/tvInstruction"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <ImageView
-        android:id="@+id/imgOption2"
+        <ImageView
+            android:id="@+id/imgOption1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult1"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/containerOption2"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="24dp"
-        android:background="@drawable/bg_card"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintStart_toEndOf="@id/imgOption1"
-        app:layout_constraintEnd_toStartOf="@id/imgOption3"
+        app:layout_constraintStart_toEndOf="@id/containerOption1"
+        app:layout_constraintEnd_toStartOf="@id/containerOption3"
         app:layout_constraintTop_toBottomOf="@id/tvInstruction"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <ImageView
-        android:id="@+id/imgOption3"
+        <ImageView
+            android:id="@+id/imgOption2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult2"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/containerOption3"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
-        android:background="@drawable/bg_card"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintStart_toEndOf="@id/imgOption2"
+        app:layout_constraintStart_toEndOf="@id/containerOption2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvInstruction"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/imgOption3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult3"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

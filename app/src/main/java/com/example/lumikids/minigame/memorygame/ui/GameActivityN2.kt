@@ -13,9 +13,11 @@ import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.minigame.memorygame.controller.MemoryGameController
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
-import com.example.lumikids.minigame.utils.ScoreManager
 import com.example.lumikids.minigame.utils.AudioManager
+import com.example.lumikids.minigame.utils.NetworkAudioManager
 import com.example.lumikids.minigame.utils.PauseDialog
+import com.example.lumikids.minigame.utils.ScoreManager
+import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 class GameActivityN2 : AppCompatActivity() {
@@ -28,6 +30,7 @@ class GameActivityN2 : AppCompatActivity() {
 
     private val uiHandler = MemoryGameUIHandler()
     private lateinit var audioManager: AudioManager
+    private val networkAudio = NetworkAudioManager() // ✨ NUEVO REPRODUCTOR DE RED
 
     private var firstSelectedCard: MemoryCard? = null
     private var firstSelectedView: ImageView? = null
@@ -39,8 +42,7 @@ class GameActivityN2 : AppCompatActivity() {
 
         setupImmersiveMode()
 
-        // ✨ Corrección: el nombre por defecto ahora es correcto
-        theme = intent.getStringExtra("THEME") ?: "furniture"
+        theme = intent.getStringExtra("THEME") ?: "furniure"
         numCards = intent.getIntExtra("NUM_CARDS", 6)
 
         controller = MemoryGameController(this, theme, numCards)
@@ -50,21 +52,17 @@ class GameActivityN2 : AppCompatActivity() {
         cargarDatosDelJuego()
     }
 
-    // ✨ OPTIMIZACIÓN: Modularizamos la pantalla inmersiva
     private fun setupImmersiveMode() {
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-    // ✨ OPTIMIZACIÓN: Modularizamos los botones
     private fun initViews() {
         val btnPause = findViewById<ImageView>(R.id.btnPause)
-        val btnBack = findViewById<ImageView>(R.id.btnBack) // ✨ NUEVO: Enlazamos el botón back
+        val btnBack = findViewById<ImageView>(R.id.btnBack)
 
-        btnBack.setOnClickListener {
-            finish()
-        }
+        btnBack.setOnClickListener { finish() }
 
         btnPause.setOnClickListener {
             PauseDialog(this).showDialog(
@@ -74,7 +72,6 @@ class GameActivityN2 : AppCompatActivity() {
         }
     }
 
-    // ✨ OPTIMIZACIÓN: Descarga de datos en segundo plano
     private fun cargarDatosDelJuego() {
         lifecycleScope.launch {
             val success = controller.cargarDatos()
@@ -97,7 +94,6 @@ class GameActivityN2 : AppCompatActivity() {
         val grid = findViewById<GridLayout>(R.id.gridMemorama)
         grid.removeAllViews()
 
-        // Ajustamos dinámicamente cuántas columnas tendrá el tablero (Ej: 8 cartas = 4 columnas)
         val columns = numCards / 2
         grid.columnCount = columns
         grid.rowCount = 2
@@ -106,7 +102,6 @@ class GameActivityN2 : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
 
-        // Cálculo de espacio dinámico para que las cartas no se salgan de la pantalla
         val maxWidthPerCard = (screenWidth * 0.95f) / columns
         val maxHeightPerCard = (screenHeight * 0.75f) / 2f
 
@@ -122,12 +117,12 @@ class GameActivityN2 : AppCompatActivity() {
                     width = size
                     height = size
                     setMargins(margin, margin, margin, margin)
-                    setGravity(Gravity.CENTER) // ✨ NUEVO: Asegura que las cartas se centren en sus casillas
+                    setGravity(Gravity.CENTER)
                 }
                 setBackgroundResource(R.drawable.bg_card)
                 setPadding(padding, padding, padding, padding)
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                setImageResource(R.drawable.ic_logo) // Logo del reverso de la carta
+                setImageResource(R.drawable.ic_logo)
                 tag = false
             }
 
@@ -139,32 +134,32 @@ class GameActivityN2 : AppCompatActivity() {
     }
 
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
-        // Evita seleccionar más de 2 cartas al mismo tiempo o cartas ya volteadas
         if (isBusy || view.tag == true) return
 
         uiHandler.flipCardUp(view, card.imageUrl)
         view.tag = true
 
         if (firstSelectedCard == null) {
-            // Es la primera carta que toca el niño en este turno
             firstSelectedCard = card
             firstSelectedView = view
         } else {
-            // Es la segunda carta
             isBusy = true
             val isMatch = controller.isMatch(firstSelectedCard!!, card)
 
             if (isMatch) {
-                // ✨ Acierto: reproducir sonido y mantener volteadas
-                audioManager.playEffect(R.raw.win)
+                if (card.audioShortUrl != null) {
+                    val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + card.audioShortUrl
+                    networkAudio.playAudioFromUrl(urlCompleta)
+                } else {
+                    audioManager.playEffect(R.raw.win)
+                }
+
                 resetSelection()
                 isBusy = false
                 checkGameFinished()
             } else {
-                // ✨ Error: reproducir sonido y regresar cartas
                 audioManager.playEffect(R.raw.fail)
 
-                // Esperamos 1 segundo para que el niño memorice las cartas antes de voltearlas
                 view.postDelayed({
                     uiHandler.flipCardsDown(firstSelectedView!!, view, R.drawable.ic_logo) {
                         view.tag = false
@@ -179,10 +174,14 @@ class GameActivityN2 : AppCompatActivity() {
 
     private fun checkGameFinished() {
         if (controller.isGameOver()) {
-            audioManager.playEffect(R.raw.win)
-            val finalResult = controller.getFinalResult("Memorama")
-            ScoreManager(this).showResults(finalResult) {
-                finish()
+            lifecycleScope.launch {
+                kotlinx.coroutines.delay(1500)
+                audioManager.playEffect(R.raw.win)
+
+                val finalResult = controller.getFinalResult("Memorama")
+                ScoreManager(this@GameActivityN2).showResults(finalResult) {
+                    finish()
+                }
             }
         }
     }
@@ -195,5 +194,6 @@ class GameActivityN2 : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         audioManager.release()
+        networkAudio.stopAudio() // ✨ APAGAMOS EL REPRODUCTOR AL SALIR
     }
 }

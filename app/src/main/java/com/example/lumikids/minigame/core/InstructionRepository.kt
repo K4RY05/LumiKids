@@ -12,11 +12,6 @@ import java.nio.charset.Charset
 
 object InstructionRepository {
 
-    /**
-     * ✨ CORRECCIÓN: Actualizamos el prefijo de ropa.
-     * Ahora que renombraste tus archivos, debe ser 'clothing_' para que
-     * coincida con el JSON y la base de datos.
-     */
     fun getPrefix(theme: String): String {
         return when (theme) {
             "furniure" -> "furniure_"
@@ -62,9 +57,6 @@ object InstructionRepository {
             })
     }
 
-    /**
-     * Carga instrucciones locales desde el archivo JSON de assets.
-     */
     fun loadInstructionsByTheme(context: Context, themeName: String): Map<String, String> {
         val instructionsMap = mutableMapOf<String, String>()
 
@@ -75,7 +67,6 @@ object InstructionRepository {
 
             val jsonObject = JSONObject(jsonString)
 
-            // Usamos el prefijo corregido
             val prefix = getPrefix(themeName)
 
             if (prefix.isEmpty()) return instructionsMap
@@ -84,8 +75,6 @@ object InstructionRepository {
             while (keys.hasNext()) {
                 val key = keys.next()
                 if (key.startsWith(prefix)) {
-                    // Si el prefijo es "clothing_", una clave como "clothing_socks"
-                    // se convierte en "socks", que es como se llama en tu base de datos.
                     val cleanKey = key.removePrefix(prefix)
                     instructionsMap[cleanKey] = jsonObject.getString(key)
                 }

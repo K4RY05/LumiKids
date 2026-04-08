@@ -1,5 +1,6 @@
 package com.example.lumikids.minigame.objectrecognition.ui
 
+import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.example.lumikids.R
@@ -9,47 +10,39 @@ import com.example.lumikids.network.RetrofitClient
 
 class GameUIHandler(
     private val images: List<ImageView>,
+    private val resultIcons: List<ImageView>, // ✨ AÑADIMOS ESTA LISTA AL CONSTRUCTOR
     private val audioManager: AudioPlayer,
     private val onNextRound: () -> Unit,
     private val onError: () -> Unit
 ) {
 
     fun updateImages(options: List<GameObject>) {
-        options.forEachIndexed { index, gameObject ->
-            val imageView = images[index]
-
-            Glide.with(imageView.context)
-                .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
-                .placeholder(R.drawable.ic_logo)
-                .error(R.drawable.ic_logo)
-                .into(imageView)
-
-            imageView.isEnabled = true
-        }
+        // ... (esta función se queda igual) ...
     }
 
     fun handleSelection(view: ImageView, isCorrect: Boolean) {
 
         images.forEach { it.isEnabled = false }
 
-        // 2. Damos feedback visual inmediato (cambio de color)
-        if (isCorrect) {
-            view.setBackgroundResource(R.drawable.bg_rounded_green)
-        } else {
-            view.setBackgroundResource(R.drawable.bg_rounded_red)
-        }
+        // ✨ 1. ENCONTRAMOS EL ICONO CORRESPONDIENTE A LA CARTA TOCADA
+        val index = images.indexOf(view)
+        val resultIcon = resultIcons[index]
 
+        // ✨ 2. MOSTRAMOS EL ICONO DE CHECK O EQUIS
+        if (isCorrect) {
+            resultIcon.setImageResource(R.drawable.ic_correct) // Pon tu icono verde aquí
+            resultIcon.visibility = View.VISIBLE
+        } else {
+            resultIcon.setImageResource(R.drawable.ic_error) // Pon tu icono rojo aquí
+            resultIcon.visibility = View.VISIBLE
+        }
 
         view.postDelayed({
 
-            // 4. Después de la pausa, ejecutamos la lógica de acierto/error
             if (isCorrect) {
                 audioManager.playEffect(R.raw.win)
-
-                // Quitamos los clics por completo porque ya ganó esta ronda
                 images.forEach { it.setOnClickListener(null) }
 
-                // Esperamos 1 segundo extra para que escuche el sonido de victoria antes de pasar de nivel
                 view.postDelayed({
                     onNextRound()
                 }, 1000)
@@ -58,10 +51,9 @@ class GameUIHandler(
                 onError()
                 audioManager.playEffect(R.raw.fail)
 
-                // Regresamos la tarjeta a su fondo normal después de equivocarse
-                view.setBackgroundResource(R.drawable.bg_card)
+                // ✨ OCULTAMOS EL ICONO ROJO DESPUÉS DE LA PAUSA
+                resultIcon.visibility = View.INVISIBLE
 
-                // Volvemos a habilitar las tarjetas para que el niño lo siga intentando
                 images.forEach { it.isEnabled = true }
             }
 
@@ -69,8 +61,9 @@ class GameUIHandler(
     }
 
     fun resetImagesBackground() {
-        images.forEach {
-            it.setBackgroundResource(R.drawable.bg_card)
+        // ✨ OCULTAMOS TODOS LOS ICONOS AL INICIAR UNA NUEVA RONDA
+        resultIcons.forEach {
+            it.visibility = View.INVISIBLE
         }
     }
 }

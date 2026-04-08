@@ -13,11 +13,10 @@ object FotogramaRepository {
 
     fun getFotogramasByTheme(themeName: String, onResult: (List<ThemeResponse>?) -> Unit) {
 
-        // ✨ CORRECCIÓN: Cambiamos "CLOTHES" por "CLOTHING" para coincidir con lo que envía ThemeGameActivity
-        val categoryId = when (themeName.uppercase()) {
-            "FURNIURE" -> 8
-            "EMOTIONS" -> 5
-            "CLOTHING" -> 3
+        val categoryId = when (themeName) {
+            "furniure" -> 8
+            "emotions" -> 5
+            "clothing" -> 3
             else -> -1
         }
 
@@ -26,14 +25,14 @@ object FotogramaRepository {
             return
         }
 
-        // Realizamos la llamada a la API usando los IDs correctos
+        // El resto del código de la API se mantiene igual...
         api.getThemesByCategory(categoryId).enqueue(object : Callback<List<ThemeResponse>> {
             override fun onResponse(
                 call: Call<List<ThemeResponse>>,
                 response: Response<List<ThemeResponse>>
             ) {
                 if (response.isSuccessful) {
-                    onResult(response.body()) // Devolvemos la lista de fotogramas
+                    onResult(response.body())
                 } else {
                     onResult(null)
                 }
