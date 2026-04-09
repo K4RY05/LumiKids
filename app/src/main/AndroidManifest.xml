@@ -42,6 +42,17 @@
 
         <activity android:name=".ui.ProfileActivity"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.EditProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ChangePasswordActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true">

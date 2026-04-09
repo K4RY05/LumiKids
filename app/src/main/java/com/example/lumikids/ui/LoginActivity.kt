@@ -14,6 +14,7 @@ import com.example.lumikids.model.LoginRequest
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
+import com.example.lumikids.utils.UserManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,12 +23,14 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var sessionManager: SessionManager
+    private lateinit var userManager: UserManager
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
+        userManager = UserManager(this)
 
         // 1. Verificar sesión primero
         if (sessionManager.isLoggedIn()) {
@@ -90,13 +93,27 @@ class LoginActivity : AppCompatActivity() {
 
         api.login(request).enqueue(object : Callback<ApiResponse> {
             override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
-                if (response.isSuccessful && response.body()?.success == true) {
+                val body = response.body() // Guardamos el cuerpo de la respuesta
+
+                if (response.isSuccessful && body?.success == true) {
+                    // --- LO QUE SE AÑADIÓ ---
                     sessionManager.saveLogin(email)
-                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
+
+                    // Guardamos el ID del usuario para futuras ediciones
+                    body.ID_user?.let { sessionManager.saveUserId(it) }
+
+                    // Guardamos Nombre y Correo en UserManager para que se vean en el Perfil
+                    userManager.saveUserData(
+                        body.name ?: "Usuario",
+                        body.email ?: email
+                    )
+                    // -------------------------
+
+                    Toast.makeText(this@LoginActivity, body.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@LoginActivity, body?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
                 }
             }
 
