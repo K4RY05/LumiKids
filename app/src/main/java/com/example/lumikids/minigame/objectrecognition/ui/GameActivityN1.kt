@@ -32,8 +32,6 @@ class GameActivityN1 : AppCompatActivity() {
     private lateinit var theme: String
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
-
-    // ✨ CORRECCIÓN 1: Declaramos la lista para los nuevos íconos flotantes
     private lateinit var resultIcons: List<ImageView>
 
     private lateinit var btnPause: ImageView
@@ -53,7 +51,6 @@ class GameActivityN1 : AppCompatActivity() {
 
         initViews()
 
-        // ✨ CORRECCIÓN 3: Le pasamos la lista de íconos al UIHandler
         uiHandler = GameUIHandler(
             images = images,
             resultIcons = resultIcons,
@@ -82,7 +79,6 @@ class GameActivityN1 : AppCompatActivity() {
             findViewById(R.id.imgOption3)
         )
 
-        // ✨ CORRECCIÓN 2: Enlazamos los íconos que agregamos al XML
         resultIcons = listOf(
             findViewById(R.id.imgResult1),
             findViewById(R.id.imgResult2),
@@ -92,8 +88,14 @@ class GameActivityN1 : AppCompatActivity() {
         btnBack.setOnClickListener { finish() }
 
         btnPause.setOnClickListener {
+            // ✨ OPTIMIZACIÓN: Congelamos el reloj interno del juego
+            controller.pauseTimer()
+
             PauseDialog(this).showDialog(
-                onResume = { /* El juego continúa normalmente */ },
+                onResume = {
+                    // ✨ OPTIMIZACIÓN: El niño vuelve a jugar, el tiempo sigue corriendo
+                    controller.resumeTimer()
+                },
                 onExit = { finish() }
             )
         }

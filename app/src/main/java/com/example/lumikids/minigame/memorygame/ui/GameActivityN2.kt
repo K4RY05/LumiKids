@@ -61,8 +61,18 @@ class GameActivityN2 : AppCompatActivity() {
 
     private fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
-            PauseDialog(this).showDialog(onResume = {}, onExit = { finish() })
+            // ✨ OPTIMIZACIÓN: Congelamos el reloj interno del juego al pausar
+            controller.pauseTimer()
+
+            PauseDialog(this).showDialog(
+                onResume = {
+                    // ✨ OPTIMIZACIÓN: Reanudamos el reloj cuando el niño vuelve a jugar
+                    controller.resumeTimer()
+                },
+                onExit = { finish() }
+            )
         }
     }
 
