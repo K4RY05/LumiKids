@@ -42,7 +42,6 @@ class NetworkAudioManager {
         }
     }
 
-    // Función para apagar el audio manualmente
     fun stopAudio() {
         try {
             mediaPlayer?.let {

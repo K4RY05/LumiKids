@@ -1,7 +1,7 @@
 package com.example.lumikids.minigame.objectrecognition.controller
 
 import android.content.Context
-import com.example.lumikids.minigame.core.InstructionRepository
+import com.example.lumikids.minigame.utils.InstructionRepository
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
 import com.example.lumikids.model.GameResult
 import com.example.lumikids.network.GamesApi

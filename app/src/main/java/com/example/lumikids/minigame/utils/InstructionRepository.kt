@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.core
+package com.example.lumikids.minigame.utils
 
 import android.content.Context
 import org.json.JSONObject
