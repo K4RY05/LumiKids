@@ -45,7 +45,6 @@ class GameActivityN2 : AppCompatActivity() {
         theme = intent.getStringExtra("THEME") ?: "furniure"
         val numPairs = intent.getIntExtra("NUM_CARDS", 6) / 2 // Convertimos total de cartas a pares
 
-        // Inicializamos el controlador con el número de pares deseados
         controller = MemoryGameController(numPairs)
         audioManager = AudioManager(this)
 
@@ -78,10 +77,9 @@ class GameActivityN2 : AppCompatActivity() {
 
     private fun cargarDatosDelJuego() {
         lifecycleScope.launch {
-            // Pasamos el tema actual para que el controlador busque la categoría correcta
             val success = controller.cargarDatos(theme)
             if (success) {
-                boardCards = controller.cards // Usamos la lista de cartas ya generada y barajada
+                boardCards = controller.cards
                 if (boardCards.isEmpty()) {
                     Toast.makeText(this@GameActivityN2, "No hay cartas disponibles", Toast.LENGTH_LONG).show()
                     finish()
