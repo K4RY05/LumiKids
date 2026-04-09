@@ -1,121 +1,90 @@
 package com.example.lumikids.minigame.memorygame.controller
 
-import android.content.Context
 import android.util.Log
-import com.example.lumikids.minigame.core.FotogramaRepository
-import com.example.lumikids.minigame.core.InstructionRepository
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
+import com.example.lumikids.model.GameObject
 import com.example.lumikids.model.GameResult
+import com.example.lumikids.network.GamesApi
+import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
+import retrofit2.awaitResponse
 
-class MemoryGameController(
-    private val context: Context,
-    private val theme: String,
-    private val numCards: Int
-) {
-
-    private var matchedPairs: Int = 0
+class MemoryGameController(private val numPairsWanted: Int) {
+    var cards: List<MemoryCard> = emptyList()
     private var errors: Int = 0
     private var startTime: Long = 0
 
-    private var allItems: List<Triple<String, String, String?>> = emptyList()
 
-    // ✨ CORRECCIÓN: Agregamos withContext(Dispatchers.IO) y un bloque try-catch
-    suspend fun cargarDatos(): Boolean = withContext(Dispatchers.IO) {
+    suspend fun cargarDatos(theme: String): Boolean = withContext(Dispatchers.IO) {
         try {
-            suspendCancellableCoroutine { continuation ->
-                // 1. Descargamos las imágenes
-                FotogramaRepository.getFotogramasByTheme(theme) { responseImages ->
-                    if (responseImages != null) {
+            val categoryId = obtenerIdDeCategoria(theme)
+            val api = RetrofitClient.instance.create(GamesApi::class.java)
 
-                        // 2. Le pedimos a Node.js SOLO los "names" (audios cortos)
-                        InstructionRepository.getInstructionsByTheme(theme, "names") { responseSounds ->
+            // Llamada unificada al servidor
+            val call = api.getGameObjects(categoryId).awaitResponse()
 
-                            // ✨ CORRECCIÓN MÁS IMPORTANTE: Seguro contra cierres inesperados
-                            if (continuation.isActive) {
-                                val sonidosDescargados = responseSounds ?: emptyList()
+            if (call.isSuccessful) {
+                val allAvailableObjects = call.body() ?: emptyList()
 
-                                // 3. ENSAMBLAMOS LOS DATOS
-                                allItems = responseImages.mapNotNull { item ->
-                                    val name = item.nametheme
-                                    val link = item.linktheme
-
-                                    if (name != null && link != null) {
-                                        val audioUrl = sonidosDescargados.find { it.namesounds == name }?.linksounds
-                                        Triple(name, link, audioUrl)
-                                    } else {
-                                        null
-                                    }
-                                }
-
-                                val pairsNeeded = numCards / 2
-                                if (allItems.size >= pairsNeeded) {
-                                    startTime = System.currentTimeMillis()
-                                    continuation.resume(true) // Éxito
-                                } else {
-                                    Log.e("MemoryController", "Faltan cartas para armar pares. Necesarias: $pairsNeeded, Obtenidas: ${allItems.size}")
-                                    continuation.resume(false) // Faltan cartas
-                                }
-                            }
-                        }
-                    } else {
-                        // ✨ Seguro contra cierres si falla la primera petición
-                        if (continuation.isActive) {
-                            Log.e("MemoryController", "Error de red: No se pudieron descargar las imágenes.")
-                            continuation.resume(false)
-                        }
-                    }
+                if (allAvailableObjects.size < numPairsWanted) {
+                    Log.e("MemoryController", "Insuficientes objetos")
+                    return@withContext false
                 }
+
+                // Generamos los pares usando el GameObject universal
+                val selectedObjects = allAvailableObjects.shuffled().take(numPairsWanted)
+                val memoryCards = mutableListOf<MemoryCard>()
+
+                selectedObjects.forEach { obj ->
+                    memoryCards.add(MemoryCard(gameObject = obj))
+                    memoryCards.add(MemoryCard(gameObject = obj))
+                }
+
+                cards = memoryCards.shuffled()
+                startTime = System.currentTimeMillis() // Iniciamos cronómetro
+                return@withContext true
             }
+            false
         } catch (e: Exception) {
-            Log.e("MemoryController", "Error crítico en cargarDatos: ${e.message}")
+            Log.e("MemoryController", "Error: ${e.message}")
             false
         }
     }
 
-    fun generateBoard(): List<MemoryCard> {
-        if (allItems.isEmpty()) return emptyList()
-
-        // Reiniciamos los contadores por si el juego se reinicia
-        matchedPairs = 0
-        errors = 0
-
-        val pairsNeeded = numCards / 2
-        val selectedItems = allItems.shuffled().take(pairsNeeded)
-
-        // Duplicamos las cartas para crear los pares y los revolvemos
-        val boardItems = (selectedItems + selectedItems).shuffled()
-
-        return boardItems.mapIndexed { index, triple ->
-            MemoryCard(
-                id = index,
-                name = triple.first,
-                imageUrl = triple.second,
-                audioShortUrl = triple.third
-            )
-        }
-    }
-
+    /**
+     * ✨ SOLUCIÓN ERROR 1: Verifica si dos cartas son pareja comparando sus IDs.
+     */
     fun isMatch(card1: MemoryCard, card2: MemoryCard): Boolean {
-        val match = card1.imageUrl == card2.imageUrl
-        if (match) {
-            matchedPairs++
+        return if (card1.gameObject.id == card2.gameObject.id) {
+            card1.isMatched = true
+            card2.isMatched = true
+            true
         } else {
-            errors++
+            errors++ // Registramos el error si no coinciden
+            false
         }
-        return match
     }
 
-    fun isGameOver(): Boolean {
-        val totalPairs = numCards / 2
-        return matchedPairs >= totalPairs
-    }
+    /**
+     * Verifica si todas las parejas han sido encontradas.
+     */
+    fun isGameOver(): Boolean = cards.all { it.isMatched }
 
+    /**
+     * ✨ SOLUCIÓN ERROR 2: Calcula el tiempo total y errores para la pantalla de resultados.
+     */
     fun getFinalResult(gameTitle: String): GameResult {
-        val totalSeconds = (System.currentTimeMillis() - startTime) / 1000
-        return GameResult(totalSeconds, errors, gameTitle)
+        val totalTime = (System.currentTimeMillis() - startTime) / 1000
+        return GameResult(totalTime, errors, gameTitle)
+    }
+
+    private fun obtenerIdDeCategoria(themeName: String): Int {
+        return when (themeName.lowercase()) {
+            "clothing" -> 3
+            "emotions" -> 5
+            "furniure" -> 8
+            else -> 0
+        }
     }
 }

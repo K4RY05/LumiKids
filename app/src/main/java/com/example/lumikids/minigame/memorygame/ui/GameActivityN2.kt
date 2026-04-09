@@ -30,7 +30,7 @@ class GameActivityN2 : AppCompatActivity() {
 
     private val uiHandler = MemoryGameUIHandler()
     private lateinit var audioManager: AudioManager
-    private val networkAudio = NetworkAudioManager() // ✨ NUEVO REPRODUCTOR DE RED
+    private val networkAudio = NetworkAudioManager()
 
     private var firstSelectedCard: MemoryCard? = null
     private var firstSelectedView: ImageView? = null
@@ -43,9 +43,10 @@ class GameActivityN2 : AppCompatActivity() {
         setupImmersiveMode()
 
         theme = intent.getStringExtra("THEME") ?: "furniure"
-        numCards = intent.getIntExtra("NUM_CARDS", 6)
+        val numPairs = intent.getIntExtra("NUM_CARDS", 6) / 2 // Convertimos total de cartas a pares
 
-        controller = MemoryGameController(this, theme, numCards)
+        // Inicializamos el controlador con el número de pares deseados
+        controller = MemoryGameController(numPairs)
         audioManager = AudioManager(this)
 
         initViews()
@@ -59,24 +60,18 @@ class GameActivityN2 : AppCompatActivity() {
     }
 
     private fun initViews() {
-        val btnPause = findViewById<ImageView>(R.id.btnPause)
-        val btnBack = findViewById<ImageView>(R.id.btnBack)
-
-        btnBack.setOnClickListener { finish() }
-
-        btnPause.setOnClickListener {
-            PauseDialog(this).showDialog(
-                onResume = { /* El juego continúa */ },
-                onExit = { finish() }
-            )
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageView>(R.id.btnPause).setOnClickListener {
+            PauseDialog(this).showDialog(onResume = {}, onExit = { finish() })
         }
     }
 
     private fun cargarDatosDelJuego() {
         lifecycleScope.launch {
-            val success = controller.cargarDatos()
+            // Pasamos el tema actual para que el controlador busque la categoría correcta
+            val success = controller.cargarDatos(theme)
             if (success) {
-                boardCards = controller.generateBoard()
+                boardCards = controller.cards // Usamos la lista de cartas ya generada y barajada
                 if (boardCards.isEmpty()) {
                     Toast.makeText(this@GameActivityN2, "No hay cartas disponibles", Toast.LENGTH_LONG).show()
                     finish()
@@ -84,7 +79,7 @@ class GameActivityN2 : AppCompatActivity() {
                     crearTableroDinamico()
                 }
             } else {
-                Toast.makeText(this@GameActivityN2, "Error de red al cargar el tablero", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GameActivityN2, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
@@ -94,23 +89,19 @@ class GameActivityN2 : AppCompatActivity() {
         val grid = findViewById<GridLayout>(R.id.gridMemorama)
         grid.removeAllViews()
 
-        val columns = numCards / 2
+        val columns = boardCards.size / 2
         grid.columnCount = columns
         grid.rowCount = 2
 
         val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
-
-        val maxWidthPerCard = (screenWidth * 0.95f) / columns
-        val maxHeightPerCard = (screenHeight * 0.75f) / 2f
+        val maxWidthPerCard = (displayMetrics.widthPixels * 0.95f) / columns
+        val maxHeightPerCard = (displayMetrics.heightPixels * 0.70f) / 2f
 
         val baseSize = kotlin.math.min(maxWidthPerCard, maxHeightPerCard).toInt()
         val margin = (baseSize * 0.05).toInt()
         val size = baseSize - (margin * 2)
-        val padding = margin
 
-        for (i in 0 until numCards) {
+        for (i in boardCards.indices) {
             val cardData = boardCards[i]
             val view = ImageView(this).apply {
                 layoutParams = GridLayout.LayoutParams().apply {
@@ -120,23 +111,22 @@ class GameActivityN2 : AppCompatActivity() {
                     setGravity(Gravity.CENTER)
                 }
                 setBackgroundResource(R.drawable.bg_card)
-                setPadding(padding, padding, padding, padding)
+                setPadding(margin, margin, margin, margin)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
-                tag = false
+                tag = false // Estado visual: boca abajo
             }
 
-            view.setOnClickListener {
-                handleCardClick(view, cardData)
-            }
+            view.setOnClickListener { handleCardClick(view, cardData, i) }
             grid.addView(view)
         }
     }
 
-    private fun handleCardClick(view: ImageView, card: MemoryCard) {
-        if (isBusy || view.tag == true) return
+    private fun handleCardClick(view: ImageView, card: MemoryCard, position: Int) {
+        if (isBusy || view.tag == true || card.isMatched) return
 
-        uiHandler.flipCardUp(view, card.imageUrl)
+        // Volteamos la carta usando la URL del objeto universal
+        uiHandler.flipCardUp(view, card.gameObject.imageUrl)
         view.tag = true
 
         if (firstSelectedCard == null) {
@@ -144,26 +134,24 @@ class GameActivityN2 : AppCompatActivity() {
             firstSelectedView = view
         } else {
             isBusy = true
+            // Delegamos la lógica de comparación al controlador
             val isMatch = controller.isMatch(firstSelectedCard!!, card)
 
             if (isMatch) {
-                if (card.audioShortUrl != null) {
-                    val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + card.audioShortUrl
-                    networkAudio.playAudioFromUrl(urlCompleta)
-                } else {
-                    audioManager.playEffect(R.raw.win)
-                }
+                // Reproducimos el sonido corto del objeto como refuerzo positivo
+                card.gameObject.audioShortUrl?.let {
+                    networkAudio.playAudioFromUrl(RetrofitClient.BASE_URL_SOUNDS + it)
+                } ?: audioManager.playEffect(R.raw.win)
 
                 resetSelection()
                 isBusy = false
                 checkGameFinished()
             } else {
                 audioManager.playEffect(R.raw.fail)
-
                 view.postDelayed({
                     uiHandler.flipCardsDown(firstSelectedView!!, view, R.drawable.ic_logo) {
                         view.tag = false
-                        firstSelectedView!!.tag = false
+                        firstSelectedView?.tag = false
                         resetSelection()
                         isBusy = false
                     }
@@ -175,13 +163,10 @@ class GameActivityN2 : AppCompatActivity() {
     private fun checkGameFinished() {
         if (controller.isGameOver()) {
             lifecycleScope.launch {
-                kotlinx.coroutines.delay(1500)
+                kotlinx.coroutines.delay(1000)
                 audioManager.playEffect(R.raw.win)
-
                 val finalResult = controller.getFinalResult("Memorama")
-                ScoreManager(this@GameActivityN2).showResults(finalResult) {
-                    finish()
-                }
+                ScoreManager(this@GameActivityN2).showResults(finalResult) { finish() }
             }
         }
     }
@@ -194,6 +179,6 @@ class GameActivityN2 : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         audioManager.release()
-        networkAudio.stopAudio() // ✨ APAGAMOS EL REPRODUCTOR AL SALIR
+        networkAudio.stopAudio()
     }
 }

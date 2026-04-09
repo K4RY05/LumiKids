@@ -1,19 +1,17 @@
 package com.example.lumikids.minigame.core
 
 import android.content.Context
-import com.example.lumikids.model.SoundResponse
-import com.example.lumikids.network.RetrofitClient
-import com.example.lumikids.network.GamesApi
 import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.nio.charset.Charset
 
 object InstructionRepository {
 
+    /**
+     * Retorna el prefijo usado en la base de datos para los sonidos de instrucción.
+     * Esto ayuda al servidor y a la app a encontrar audios como 'clothing_pants.mp3'.
+     */
     fun getPrefix(theme: String): String {
-        return when (theme) {
+        return when (theme.lowercase()) {
             "furniure" -> "furniure_"
             "clothing" -> "clothing_"
             "emotions" -> "emotions_"
@@ -22,41 +20,22 @@ object InstructionRepository {
     }
 
     /**
-     * Descarga los audios desde el servidor (MySQL)
+     * Mapeo centralizado de IDs de categoría.
+     * Mantener esto aquí asegura que todos los minijuegos usen los mismos IDs que el SQL.
      */
-    fun getInstructionsByTheme(
-        themeName: String,
-        filter: String? = null,
-        onResult: (List<SoundResponse>?) -> Unit
-    ) {
-        val categoryId = when (themeName) {
-            "furniure" -> 8
+    fun getCategoryId(theme: String): Int {
+        return when (theme.lowercase()) {
             "clothing" -> 3
             "emotions" -> 5
-            else -> 1
+            "furniure" -> 8
+            else -> 0
         }
-
-        RetrofitClient.instance.create(GamesApi::class.java)
-            .getSoundsByCategory(categoryId, filter)
-            .enqueue(object : Callback<List<SoundResponse>> {
-
-                override fun onResponse(
-                    call: Call<List<SoundResponse>>,
-                    response: Response<List<SoundResponse>>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        onResult(response.body())
-                    } else {
-                        onResult(null)
-                    }
-                }
-
-                override fun onFailure(call: Call<List<SoundResponse>>, t: Throwable) {
-                    onResult(null)
-                }
-            })
     }
 
+    /**
+     * Carga los textos desde 'assets/instructions.json'.
+     * Útil para mostrar "Toca el pantalón" basado en el nombre del objeto.
+     */
     fun loadInstructionsByTheme(context: Context, themeName: String): Map<String, String> {
         val instructionsMap = mutableMapOf<String, String>()
 
@@ -66,7 +45,6 @@ object InstructionRepository {
                 .use { it.readText() }
 
             val jsonObject = JSONObject(jsonString)
-
             val prefix = getPrefix(themeName)
 
             if (prefix.isEmpty()) return instructionsMap
@@ -74,6 +52,7 @@ object InstructionRepository {
             val keys = jsonObject.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
+                // Si la llave empieza con 'clothing_', guardamos el texto para la clave limpia 'pants'
                 if (key.startsWith(prefix)) {
                     val cleanKey = key.removePrefix(prefix)
                     instructionsMap[cleanKey] = jsonObject.getString(key)
