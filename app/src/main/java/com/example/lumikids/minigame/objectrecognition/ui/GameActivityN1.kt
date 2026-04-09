@@ -21,6 +21,9 @@ import com.example.lumikids.minigame.utils.PauseDialog
 import com.example.lumikids.minigame.utils.ScoreManager
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 class GameActivityN1 : AppCompatActivity() {
 
@@ -36,6 +39,10 @@ class GameActivityN1 : AppCompatActivity() {
 
     private lateinit var btnPause: ImageView
     private lateinit var btnBack: ImageView
+
+    private var repeticionAudioJob: Job? = null
+    // ✨ PASO 1: Variable para recordar el audio de la ronda actual
+    private var urlAudioActual: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,16 +95,33 @@ class GameActivityN1 : AppCompatActivity() {
         btnBack.setOnClickListener { finish() }
 
         btnPause.setOnClickListener {
-            // ✨ OPTIMIZACIÓN: Congelamos el reloj interno del juego
             controller.pauseTimer()
+
+            // Cancelamos la repetición para que no suene en el menú de pausa
+            repeticionAudioJob?.cancel()
 
             PauseDialog(this).showDialog(
                 onResume = {
-                    // ✨ OPTIMIZACIÓN: El niño vuelve a jugar, el tiempo sigue corriendo
                     controller.resumeTimer()
+                    // ✨ PASO 3: Reanudamos el bucle al volver al juego
+                    iniciarBucleDeAudio()
                 },
                 onExit = { finish() }
             )
+        }
+    }
+
+    // ✨ PASO 2: Función dedicada a manejar el bucle de repetición
+    private fun iniciarBucleDeAudio() {
+        val url = urlAudioActual ?: return // Si no hay audio cargado, salimos
+
+        repeticionAudioJob?.cancel() // Detenemos cualquier proceso previo
+
+        repeticionAudioJob = lifecycleScope.launch {
+            while (isActive) {
+                networkAudio.playAudioFromUrl(url)
+                delay(8000)
+            }
         }
     }
 
@@ -129,9 +153,13 @@ class GameActivityN1 : AppCompatActivity() {
         val objetoCorrecto = round.correctObject
         tvInstruction.text = objetoCorrecto.instructionText
 
+        // ✨ ACTUALIZACIÓN: Guardamos la URL y lanzamos el bucle inicial
         if (objetoCorrecto.audioInstructionUrl != null) {
-            val urlCompleta = RetrofitClient.BASE_URL_SOUNDS + objetoCorrecto.audioInstructionUrl
-            networkAudio.playAudioFromUrl(urlCompleta)
+            urlAudioActual = RetrofitClient.BASE_URL_SOUNDS + objetoCorrecto.audioInstructionUrl
+            iniciarBucleDeAudio()
+        } else {
+            urlAudioActual = null
+            repeticionAudioJob?.cancel()
         }
 
         uiHandler.resetImagesBackground()
@@ -147,6 +175,9 @@ class GameActivityN1 : AppCompatActivity() {
                 isEnabled = true
 
                 setOnClickListener {
+                    // Si el niño toca una opción, el audio debe detenerse por completo
+                    repeticionAudioJob?.cancel()
+
                     val isCorrect = controller.checkAnswer(gameObject)
 
                     if (gameObject.audioShortUrl != null) {
@@ -168,6 +199,7 @@ class GameActivityN1 : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        repeticionAudioJob?.cancel()
         audioManager.release()
         networkAudio.stopAudio()
     }

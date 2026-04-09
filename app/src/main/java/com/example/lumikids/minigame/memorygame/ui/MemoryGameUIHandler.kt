@@ -12,19 +12,16 @@ class MemoryGameUIHandler {
     fun flipCardUp(view: ImageView, imageUrl: String) {
         val duration = 150L
 
-        // Primera mitad de la animación: girar hasta ponerse de perfil
         view.animate()
             .rotationY(90f)
             .setDuration(duration)
             .withEndAction {
-                // ✨ SINCRONIZACIÓN CON EL SERVIDOR: Cargamos usando la URL base de imágenes
                 Glide.with(view.context)
                     .load(RetrofitClient.BASE_URL_IMAGES + imageUrl)
                     .placeholder(R.drawable.ic_logo) // Imagen temporal mientras descarga
                     .transform(CenterCrop(), RoundedCorners(30)) // Estilo visual uniforme
                     .into(view)
 
-                // Segunda mitad: aparecer desde el otro lado
                 view.rotationY = -90f
                 view.animate()
                     .rotationY(0f)
@@ -37,17 +34,15 @@ class MemoryGameUIHandler {
     fun flipCardsDown(view1: ImageView, view2: ImageView, defaultImage: Int, onComplete: () -> Unit) {
         val duration = 150L
 
-        // Animamos la primera carta
         view1.animate()
             .rotationY(90f)
             .setDuration(duration)
             .withEndAction {
-                view1.setImageResource(defaultImage) // Volver a la imagen de la "espalda" de la carta
+                view1.setImageResource(defaultImage)
                 view1.rotationY = -90f
                 view1.animate().rotationY(0f).setDuration(duration).start()
             }.start()
 
-        // Animamos la segunda carta
         view2.animate()
             .rotationY(90f)
             .setDuration(duration)

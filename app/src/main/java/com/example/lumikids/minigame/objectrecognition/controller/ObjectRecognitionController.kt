@@ -44,7 +44,6 @@ class ObjectRecognitionController(
                 }.toMutableList()
 
                 if (allItems.size >= 3) {
-                    // ✨ INICIAMOS EL CRONÓMETRO CON LA NUEVA CLASE
                     gameTimer.start()
                     return@withContext true
                 }
