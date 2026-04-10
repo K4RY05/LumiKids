@@ -50,14 +50,13 @@ class MemoryGame : AppCompatActivity() {
 
         setupImmersiveMode()
 
-        // Corrección del typo: "furniture"
-        theme = intent.getStringExtra("THEME") ?: "furniture"
+        theme = intent.getStringExtra("THEME") ?: "furniure"
         numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
 
         gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
-        cargarDatosDelJuego()
+        loadGameData()
     }
 
     private fun setupImmersiveMode() {
@@ -77,7 +76,7 @@ class MemoryGame : AppCompatActivity() {
         }
     }
 
-    private fun cargarDatosDelJuego() {
+    private fun loadGameData() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
@@ -111,7 +110,7 @@ class MemoryGame : AppCompatActivity() {
             }
 
             if (success) {
-                crearTableroDinamico()
+                createDynamicBoard()
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -119,7 +118,7 @@ class MemoryGame : AppCompatActivity() {
         }
     }
 
-    private fun crearTableroDinamico() {
+    private fun createDynamicBoard() {
         val grid = findViewById<GridLayout>(R.id.gridMemorama)
         grid.removeAllViews()
 

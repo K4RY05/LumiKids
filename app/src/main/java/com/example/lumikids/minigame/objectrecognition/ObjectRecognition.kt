@@ -57,14 +57,13 @@ class ObjectRecognition : AppCompatActivity() {
 
         setupImmersiveMode()
 
-        // ✨ CORRECCIÓN: Typo solucionado ("furniture")
         theme = intent.getStringExtra("THEME") ?: "furniture"
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
 
         gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
-        cargarDatosDelJuego()
+        loadGameData()
     }
 
     private fun setupImmersiveMode() {
@@ -106,7 +105,7 @@ class ObjectRecognition : AppCompatActivity() {
         }
     }
 
-    private fun cargarDatosDelJuego() {
+    private fun loadGameData() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
@@ -146,7 +145,7 @@ class ObjectRecognition : AppCompatActivity() {
 
     private fun startNewRound() {
         if (currentRoundCount >= totalRoundsWanted) {
-            mostrarResultadosFinales()
+            showFinalResults()
             return
         }
 
@@ -232,7 +231,7 @@ class ObjectRecognition : AppCompatActivity() {
     }
 
 
-    private fun mostrarResultadosFinales() {
+    private fun showFinalResults() {
         gameAudio.playEffect(R.raw.win)
         val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, "Identificar Objeto")
         ScoreManager(this).showResults(finalResult) { finish() }
