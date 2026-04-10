@@ -2,48 +2,55 @@ package com.example.lumikids.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import com.example.lumikids.R
 import com.example.lumikids.utils.SessionManager
+import com.example.lumikids.utils.UserManager
 
 class ProfileActivity : AppCompatActivity() {
+
+    private lateinit var userManager: UserManager
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
-        val txtTitulo = findViewById<TextView>(R.id.txtTitulo)
+        userManager = UserManager(this)
+        sessionManager = SessionManager(this)
 
-        val btnDatos = findViewById<Button>(R.id.btnDatos)
-        val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)
-        val btnTemas = findViewById<Button>(R.id.btnTemas)
-        val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
+        val tvTitle = findViewById<TextView>(R.id.tvTitle)
 
-        txtTitulo.text = "Usuario Lumikids"
+        val btnDatos = findViewById<AppCompatButton>(R.id.btnDatos)
+        val btnNotificaciones = findViewById<AppCompatButton>(R.id.btnNotificaciones)
+        val btnTemas = findViewById<AppCompatButton>(R.id.btnTemas)
+        val btnCerrarSesion = findViewById<AppCompatButton>(R.id.btnCerrarSesion)
 
-        // --- VÍNCULO A LA NUEVA PANTALLA ---
+        val nombreUsuario = userManager.getUserName()
+        tvTitle.text = if (nombreUsuario.isNotEmpty()) nombreUsuario else "Usuario"
+
+
+
         btnDatos.setOnClickListener {
-            // Saltamos a la actividad de editar perfil
             val intent = Intent(this, EditProfileActivity::class.java)
             startActivity(intent)
         }
 
         btnNotificaciones.setOnClickListener {
-            // Abrir notificaciones
+            // Lógica para notificaciones en el futuro
         }
 
         btnTemas.setOnClickListener {
-            // Abrir temas de colores
+            // Lógica para temas de colores en el futuro
         }
 
         btnCerrarSesion.setOnClickListener {
-            val sessionManager = SessionManager(this)
             sessionManager.logout()
 
+            // Redirigir al Login y limpiar el historial
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)

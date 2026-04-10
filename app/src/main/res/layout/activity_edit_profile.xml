@@ -17,18 +17,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Datos de Usuario"
-            android:textSize="28sp"
+            android:textSize="@dimen/profile_title_size"
             android:textStyle="bold"
             android:textColor="@color/c_one"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
 
         <ImageView
             android:id="@+id/imgAvatar"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
+            android:layout_width="@dimen/profile_avatar_size"
+            android:layout_height="@dimen/profile_avatar_size"
             android:background="@drawable/circle_bg"
             android:clipToOutline="true"
             android:outlineProvider="background"
@@ -37,11 +37,11 @@
             app:layout_constraintTop_toBottomOf="@id/tvTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
 
         <LinearLayout
             android:id="@+id/rowName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -49,6 +49,7 @@
             android:paddingVertical="8dp"
             android:background="@drawable/bg_input_rounded_pill"
             android:elevation="4dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
             app:layout_constraintTop_toBottomOf="@id/imgAvatar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -60,8 +61,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:background="@null"
-                android:text="luis"
-                android:textSize="18sp"
+                android:textSize="@dimen/profile_input_text_size"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:enabled="false"
@@ -79,7 +79,7 @@
 
         <LinearLayout
             android:id="@+id/rowEmail"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -87,6 +87,7 @@
             android:paddingVertical="8dp"
             android:background="@drawable/bg_input_rounded_pill"
             android:elevation="4dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
             app:layout_constraintTop_toBottomOf="@id/rowName"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -98,8 +99,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:background="@null"
-                android:text="luis@gmail.com"
-                android:textSize="16sp"
+                android:textSize="@dimen/profile_label_text_size"
                 android:textColor="@android:color/darker_gray"
                 android:enabled="false"
                 android:inputType="textEmailAddress"
@@ -116,13 +116,16 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnChangePassword"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Cambiar contraseña"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:background="@drawable/bg_button"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
             app:layout_constraintTop_toBottomOf="@id/rowEmail"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="40dp"/>
 
         <TextView
@@ -132,7 +135,7 @@
             android:text="Borrar cuenta"
             android:textColor="@android:color/holo_red_dark"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="@dimen/profile_label_text_size"
             android:padding="8dp"
             android:background="?selectableItemBackground"
             android:clickable="true"
@@ -140,12 +143,12 @@
             app:layout_constraintTop_toBottomOf="@id/btnChangePassword"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnBack"
-            android:layout_width="220dp"
-            android:layout_height="55dp"
+            android:layout_width="@dimen/profile_button_width"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Volver"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
@@ -153,7 +156,7 @@
             app:layout_constraintTop_toBottomOf="@id/tvDelete"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
