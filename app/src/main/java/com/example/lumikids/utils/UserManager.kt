@@ -15,9 +15,7 @@ class UserManager(context: Context) {
         }
     }
 
-    // ==========================================
-    //   OBTENER DATOS
-    // ==========================================
+
     fun getUserName(): String {
         return prefs.getString(KEY_USER_NAME, "") ?: ""
     }
@@ -26,16 +24,12 @@ class UserManager(context: Context) {
         return prefs.getString(KEY_USER_EMAIL, "") ?: ""
     }
 
-    // ==========================================
-    //   BORRAR DATOS (Al cerrar sesión)
-    // ==========================================
+
     fun clearUserData() {
         prefs.edit().clear().apply()
     }
 
-    // ==========================================
-    //   CONSTANTES (Evita errores de dedo)
-    // ==========================================
+
     companion object {
         private const val PREF_NAME = "user_profile_prefs"
         private const val KEY_USER_NAME = "KEY_USER_NAME"

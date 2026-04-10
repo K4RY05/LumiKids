@@ -31,4 +31,16 @@
     <dimen name="text_size_result_label">32sp</dimen>
     <dimen name="text_size_result_value">64sp</dimen>
 
+
+
+    <dimen name="fab_margin">200dp</dimen>
+    <dimen name="profile_title_size">60sp</dimen>
+    <dimen name="profile_avatar_size">200dp</dimen>
+    <dimen name="profile_input_text_size">24sp</dimen>
+    <dimen name="profile_label_text_size">20sp</dimen>
+    <dimen name="profile_button_height">70dp</dimen>
+    <dimen name="profile_button_width">350dp</dimen>
+    <dimen name="profile_max_width">550dp</dimen>
+    <dimen name="profile_margin_top_standard">40dp</dimen>
+
 </resources>
