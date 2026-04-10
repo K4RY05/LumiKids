@@ -1,6 +1,5 @@
-package com.example.lumikids.minigame.memorygame.ui
+package com.example.lumikids.minigame.memorygame
 
-import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop

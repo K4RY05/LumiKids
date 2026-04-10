@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.memorygame.ui
+package com.example.lumikids.minigame.memorygame
 
 import android.os.Bundle
 import android.view.Gravity
@@ -11,26 +11,35 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
-import com.example.lumikids.minigame.memorygame.controller.MemoryGameController
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
-import com.example.lumikids.minigame.utils.AudioManager
-import com.example.lumikids.minigame.utils.NetworkAudioManager
+import com.example.lumikids.minigame.memorygame.MemoryGameUIHandler
+import com.example.lumikids.minigame.utils.GameAudioManager // ✨ Nuevo Import
+import com.example.lumikids.minigame.utils.GameTimer
 import com.example.lumikids.minigame.utils.PauseDialog
 import com.example.lumikids.minigame.utils.ScoreManager
+import com.example.lumikids.model.GameResult
+import com.example.lumikids.network.GamesApi
 import com.example.lumikids.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.awaitResponse
+import kotlin.math.min
 
-class GameActivityN2 : AppCompatActivity() {
+class MemoryGame : AppCompatActivity() {
+
+    // --- Estado del Juego ---
+    private var boardCards: List<MemoryCard> = emptyList()
+    private var errors: Int = 0
+    private val gameTimer = GameTimer()
+    private var numPairsWanted: Int = 3
 
     private lateinit var theme: String
-    private var numCards: Int = 6
-
-    private lateinit var controller: MemoryGameController
-    private lateinit var boardCards: List<MemoryCard>
-
     private val uiHandler = MemoryGameUIHandler()
-    private lateinit var audioManager: AudioManager
-    private val networkAudio = NetworkAudioManager()
+
+    // ✨ PASO 1: Usamos el nuevo gestor centralizado
+    private lateinit var gameAudio: GameAudioManager
 
     private var firstSelectedCard: MemoryCard? = null
     private var firstSelectedView: ImageView? = null
@@ -43,10 +52,10 @@ class GameActivityN2 : AppCompatActivity() {
         setupImmersiveMode()
 
         theme = intent.getStringExtra("THEME") ?: "furniure"
-        val numPairs = intent.getIntExtra("NUM_CARDS", 6) / 2 // Convertimos total de cartas a pares
+        numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
 
-        controller = MemoryGameController(numPairs)
-        audioManager = AudioManager(this)
+        // ✨ PASO 3: Inicializamos el GameAudioManager
+        gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
         cargarDatosDelJuego()
@@ -60,16 +69,10 @@ class GameActivityN2 : AppCompatActivity() {
 
     private fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
-
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
-            // ✨ OPTIMIZACIÓN: Congelamos el reloj interno del juego al pausar
-            controller.pauseTimer()
-
+            gameTimer.pause()
             PauseDialog(this).showDialog(
-                onResume = {
-                    // ✨ OPTIMIZACIÓN: Reanudamos el reloj cuando el niño vuelve a jugar
-                    controller.resumeTimer()
-                },
+                onResume = { gameTimer.resume() },
                 onExit = { finish() }
             )
         }
@@ -77,17 +80,42 @@ class GameActivityN2 : AppCompatActivity() {
 
     private fun cargarDatosDelJuego() {
         lifecycleScope.launch {
-            val success = controller.cargarDatos(theme)
-            if (success) {
-                boardCards = controller.cards
-                if (boardCards.isEmpty()) {
-                    Toast.makeText(this@GameActivityN2, "No hay cartas disponibles", Toast.LENGTH_LONG).show()
-                    finish()
-                } else {
-                    crearTableroDinamico()
+            val success = withContext(Dispatchers.IO) {
+                try {
+                    // ✨ PASO 4: Corrección del typo en el categoryId
+                    val categoryId = when (theme.lowercase()) {
+                        "clothing" -> 3
+                        "emotions" -> 5
+                        "furniure" -> 8
+                        else -> 0
+                    }
+                    val api = RetrofitClient.instance.create(GamesApi::class.java)
+                    val call = api.getGameObjects(categoryId).awaitResponse()
+
+                    if (call.isSuccessful) {
+                        val allAvailableObjects = call.body() ?: emptyList()
+                        if (allAvailableObjects.size < numPairsWanted) return@withContext false
+
+                        val selectedObjects = allAvailableObjects.shuffled().take(numPairsWanted)
+                        val memoryCards = mutableListOf<MemoryCard>()
+                        selectedObjects.forEach { obj ->
+                            memoryCards.add(MemoryCard(gameObject = obj))
+                            memoryCards.add(MemoryCard(gameObject = obj))
+                        }
+                        boardCards = memoryCards.shuffled()
+                        gameTimer.start()
+                        return@withContext true
+                    }
+                    false
+                } catch (e: Exception) {
+                    false
                 }
+            }
+
+            if (success) {
+                crearTableroDinamico()
             } else {
-                Toast.makeText(this@GameActivityN2, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
@@ -104,8 +132,7 @@ class GameActivityN2 : AppCompatActivity() {
         val displayMetrics = resources.displayMetrics
         val maxWidthPerCard = (displayMetrics.widthPixels * 0.95f) / columns
         val maxHeightPerCard = (displayMetrics.heightPixels * 0.70f) / 2f
-
-        val baseSize = kotlin.math.min(maxWidthPerCard, maxHeightPerCard).toInt()
+        val baseSize = min(maxWidthPerCard, maxHeightPerCard).toInt()
         val margin = (baseSize * 0.05).toInt()
         val size = baseSize - (margin * 2)
 
@@ -122,18 +149,16 @@ class GameActivityN2 : AppCompatActivity() {
                 setPadding(margin, margin, margin, margin)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
-                tag = false // Estado visual: boca abajo
+                tag = false
             }
-
-            view.setOnClickListener { handleCardClick(view, cardData, i) }
+            view.setOnClickListener { handleCardClick(view, cardData) }
             grid.addView(view)
         }
     }
 
-    private fun handleCardClick(view: ImageView, card: MemoryCard, position: Int) {
+    private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true || card.isMatched) return
 
-        // Volteamos la carta usando la URL del objeto universal
         uiHandler.flipCardUp(view, card.gameObject.imageUrl)
         view.tag = true
 
@@ -142,20 +167,24 @@ class GameActivityN2 : AppCompatActivity() {
             firstSelectedView = view
         } else {
             isBusy = true
-            // Delegamos la lógica de comparación al controlador
-            val isMatch = controller.isMatch(firstSelectedCard!!, card)
+            val isMatch = firstSelectedCard?.gameObject?.id == card.gameObject.id
 
             if (isMatch) {
-                // Reproducimos el sonido corto del objeto como refuerzo positivo
+                firstSelectedCard?.isMatched = true
+                card.isMatched = true
+
+                // ✨ PASO 5: Actualizamos para usar gameAudio
                 card.gameObject.audioShortUrl?.let {
-                    networkAudio.playAudioFromUrl(RetrofitClient.BASE_URL_SOUNDS + it)
-                } ?: audioManager.playEffect(R.raw.win)
+                    gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + it)
+                } ?: gameAudio.playEffect(R.raw.win)
 
                 resetSelection()
                 isBusy = false
                 checkGameFinished()
             } else {
-                audioManager.playEffect(R.raw.fail)
+                errors++
+                gameAudio.playEffect(R.raw.fail) // ✨ Efecto de fallo a través del gestor
+
                 view.postDelayed({
                     uiHandler.flipCardsDown(firstSelectedView!!, view, R.drawable.ic_logo) {
                         view.tag = false
@@ -169,12 +198,12 @@ class GameActivityN2 : AppCompatActivity() {
     }
 
     private fun checkGameFinished() {
-        if (controller.isGameOver()) {
+        if (boardCards.all { it.isMatched }) {
             lifecycleScope.launch {
-                kotlinx.coroutines.delay(1000)
-                audioManager.playEffect(R.raw.win)
-                val finalResult = controller.getFinalResult("Memorama")
-                ScoreManager(this@GameActivityN2).showResults(finalResult) { finish() }
+                delay(1000)
+                gameAudio.playEffect(R.raw.win) // ✨ Efecto de victoria
+                val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, "Memorama")
+                ScoreManager(this@MemoryGame).showResults(finalResult) { finish() }
             }
         }
     }
@@ -186,7 +215,7 @@ class GameActivityN2 : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        audioManager.release()
-        networkAudio.stopAudio()
+        // ✨ PASO 6: Limpieza en una sola línea
+        gameAudio.releaseAll()
     }
 }

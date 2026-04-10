@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.objectrecognition.ui
+package com.example.lumikids.minigame.objectrecognition
 
 import android.view.View
 import android.widget.ImageView
@@ -6,20 +6,18 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.minigame.utils.AudioPlayer
-import com.example.lumikids.network.RetrofitClient
-// ✨ CORRECCIÓN: Importamos el GameObject universal
+import com.example.lumikids.minigame.utils.GameAudioManager // ✨ Importamos el nuevo gestor
 import com.example.lumikids.model.GameObject
+import com.example.lumikids.network.RetrofitClient
 
-class GameUIHandler(
+class ObjectRecognitionUIHandler(
     private val images: List<ImageView>,
     private val resultIcons: List<ImageView>,
-    private val audioManager: AudioPlayer,
+    private val gameAudio: GameAudioManager,
     private val onNextRound: () -> Unit,
     private val onError: () -> Unit
 ) {
 
-    // ✨ CORRECCIÓN: Actualizamos el parámetro para usar el GameObject universal
     fun updateImages(options: List<GameObject>) {
         options.forEachIndexed { index, gameObject ->
             if (index < images.size) {
@@ -51,7 +49,7 @@ class GameUIHandler(
 
             view.postDelayed({
                 if (isCorrect) {
-                    audioManager.playEffect(R.raw.win)
+                    gameAudio.playEffect(R.raw.win) // ✨ Usamos la nueva clase
 
                     // Esperamos un momento antes de pasar a la siguiente ronda
                     view.postDelayed({
@@ -59,7 +57,7 @@ class GameUIHandler(
                     }, 1000)
                 } else {
                     onError()
-                    audioManager.playEffect(R.raw.fail)
+                    gameAudio.playEffect(R.raw.fail) // ✨ Usamos la nueva clase
 
                     // Ocultamos el icono de error y rehabilitamos las imágenes para reintentar
                     resultIcon.visibility = View.INVISIBLE
