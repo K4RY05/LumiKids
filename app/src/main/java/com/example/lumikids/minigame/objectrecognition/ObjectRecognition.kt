@@ -1,6 +1,7 @@
 package com.example.lumikids.minigame.objectrecognition
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -14,8 +15,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
-import com.example.lumikids.minigame.objectrecognition.ObjectRecognitionUIHandler
-import com.example.lumikids.minigame.utils.GameAudioManager // ✨ Nuevo Import
+import com.example.lumikids.minigame.utils.GameAudioManager
 import com.example.lumikids.minigame.utils.GameTimer
 import com.example.lumikids.minigame.utils.InstructionRepository
 import com.example.lumikids.minigame.utils.PauseDialog
@@ -25,6 +25,7 @@ import com.example.lumikids.model.GameResult
 import com.example.lumikids.network.GamesApi
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
@@ -38,13 +39,9 @@ class ObjectRecognition : AppCompatActivity() {
     private var currentRound: ObjectRound? = null
     private val gameTimer = GameTimer()
     private var totalRoundsWanted: Int = 3
-    // ---------------------------------------
 
-    // ✨ PASO 1: Una sola variable para gestionar todo el audio
     private lateinit var gameAudio: GameAudioManager
     private var urlAudioActual: String? = null
-
-    private lateinit var uiHandler: ObjectRecognitionUIHandler
 
     private lateinit var theme: String
     private lateinit var tvInstruction: TextView
@@ -60,21 +57,13 @@ class ObjectRecognition : AppCompatActivity() {
 
         setupImmersiveMode()
 
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+        // ✨ CORRECCIÓN: Typo solucionado ("furniture")
+        theme = intent.getStringExtra("THEME") ?: "furniture"
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
 
         gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
-
-        uiHandler = ObjectRecognitionUIHandler(
-            images = images,
-            resultIcons = resultIcons,
-            gameAudio = gameAudio,
-            onNextRound = { startNewRound() },
-            onError = { errors++ }
-        )
-
         cargarDatosDelJuego()
     }
 
@@ -105,12 +94,12 @@ class ObjectRecognition : AppCompatActivity() {
 
         btnPause.setOnClickListener {
             gameTimer.pause()
-            gameAudio.stopLoop() // ✨ Apagamos el bucle limpiamente
+            gameAudio.stopLoop()
 
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
-                    urlAudioActual?.let { gameAudio.startLoop(it) } // ✨ Reanudamos si había url
+                    urlAudioActual?.let { gameAudio.startLoop(it) }
                 },
                 onExit = { finish() }
             )
@@ -122,8 +111,7 @@ class ObjectRecognition : AppCompatActivity() {
             val success = withContext(Dispatchers.IO) {
                 try {
                     val categoryId = InstructionRepository.getCategoryId(theme)
-                    val instructionMap =
-                        InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
+                    val instructionMap = InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
                     val api = RetrofitClient.instance.create(GamesApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -171,7 +159,6 @@ class ObjectRecognition : AppCompatActivity() {
 
         tvInstruction.text = correctObject.instructionText
 
-        // ✨ PASO 4: Iniciar el bucle ahora es una sola línea
         if (correctObject.audioInstructionUrl != null) {
             urlAudioActual = RetrofitClient.BASE_URL_SOUNDS + correctObject.audioInstructionUrl
             gameAudio.startLoop(urlAudioActual!!)
@@ -180,7 +167,7 @@ class ObjectRecognition : AppCompatActivity() {
             gameAudio.stopLoop()
         }
 
-        uiHandler.resetImagesBackground()
+        resetImagesBackground() // ✨ Usamos la función integrada
 
         roundOptions.forEachIndexed { index, gameObject ->
             images[index].apply {
@@ -192,27 +179,67 @@ class ObjectRecognition : AppCompatActivity() {
 
                 isEnabled = true
                 setOnClickListener {
-                    gameAudio.stopLoop() // ✨ Detenemos el bucle al tocar
+                    gameAudio.stopLoop()
                     val isCorrect = gameObject == currentRound?.correctObject
 
                     if (gameObject.audioShortUrl != null) {
                         gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
                     }
-                    uiHandler.handleSelection(this, isCorrect)
+                    handleSelection(this, isCorrect) // ✨ Usamos la función integrada
                 }
             }
         }
     }
 
+    // --- LOGICA DE UI INTEGRADA ---
+
+    private fun handleSelection(view: ImageView, isCorrect: Boolean) {
+        // Deshabilitamos clics para evitar toques múltiples
+        images.forEach { it.isEnabled = false }
+
+        val index = images.indexOf(view)
+        if (index != -1 && index < resultIcons.size) {
+            val resultIcon = resultIcons[index]
+
+            // Mostramos el icono visual de acierto o error
+            if (isCorrect) {
+                resultIcon.setImageResource(R.drawable.ic_correct)
+            } else {
+                resultIcon.setImageResource(R.drawable.ic_error)
+            }
+            resultIcon.visibility = View.VISIBLE
+
+            // ✨ MEJORA: Usar corrutinas en lugar de view.postDelayed para mayor seguridad
+            lifecycleScope.launch {
+                delay(500) // Respuesta visual rápida
+                if (isCorrect) {
+                    gameAudio.playEffect(R.raw.win)
+                    delay(1000) // Esperamos antes de la siguiente ronda
+                    startNewRound()
+                } else {
+                    errors++
+                    gameAudio.playEffect(R.raw.fail)
+                    resultIcon.visibility = View.INVISIBLE
+                    images.forEach { it.isEnabled = true }
+                }
+            }
+        }
+    }
+
+    private fun resetImagesBackground() {
+        resultIcons.forEach { it.visibility = View.INVISIBLE }
+        images.forEach { it.isEnabled = true }
+    }
+
+
     private fun mostrarResultadosFinales() {
-        gameAudio.playEffect(R.raw.win) // ✨ Efecto de victoria a través del gestor
+        gameAudio.playEffect(R.raw.win)
         val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, "Identificar Objeto")
         ScoreManager(this).showResults(finalResult) { finish() }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // ✨ PASO 5: Una sola línea para limpiar toda la memoria de audio y corrutinas
         gameAudio.releaseAll()
     }
 }
