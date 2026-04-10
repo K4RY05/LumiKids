@@ -190,7 +190,6 @@ class ObjectRecognition : AppCompatActivity() {
         }
     }
 
-    // --- LOGICA DE UI INTEGRADA ---
 
     private fun handleSelection(view: ImageView, isCorrect: Boolean) {
         // Deshabilitamos clics para evitar toques múltiples

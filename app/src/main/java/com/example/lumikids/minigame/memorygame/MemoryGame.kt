@@ -5,21 +5,14 @@ import android.view.Gravity
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
+import com.example.lumikids.minigame.MiniGame // <- Importamos la clase Padre
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
-import com.example.lumikids.utils.GameAudioManager
-import com.example.lumikids.utils.GameTimer
 import com.example.lumikids.utils.PauseDialog
-import com.example.lumikids.utils.ScoreManager
-import com.example.lumikids.model.GameResult
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -29,43 +22,31 @@ import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 import kotlin.math.min
 
-class MemoryGame : AppCompatActivity() {
+// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity en lugar de AppCompatActivity
+class MemoryGame : MiniGame() {
 
-    // --- Estado del Juego ---
+    // --- Estado Específico del Juego ---
+    // (Hemos borrado theme, errors, gameTimer y gameAudio porque ahora los da el Padre)
     private var boardCards: List<MemoryCard> = emptyList()
-    private var errors: Int = 0
-    private val gameTimer = GameTimer()
     private var numPairsWanted: Int = 3
-
-    private lateinit var theme: String
-    private lateinit var gameAudio: GameAudioManager
 
     private var firstSelectedCard: MemoryCard? = null
     private var firstSelectedView: ImageView? = null
     private var isBusy = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n2)
 
-        setupImmersiveMode()
-
-        theme = intent.getStringExtra("THEME") ?: "furniure"
         numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
-
-        gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
         loadGameData()
     }
 
-    private fun setupImmersiveMode() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
-    }
-
-    private fun initViews() {
+    // ✨ Agregamos 'override' porque es un contrato de la clase padre
+    override fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
@@ -76,7 +57,8 @@ class MemoryGame : AppCompatActivity() {
         }
     }
 
-    private fun loadGameData() {
+    // ✨ Agregamos 'override' porque es un contrato de la clase padre
+    override fun loadGameData() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
@@ -148,7 +130,6 @@ class MemoryGame : AppCompatActivity() {
                 setImageResource(R.drawable.ic_logo)
                 tag = false
 
-                // ✨ MEJORA: Precarga de la imagen con Glide para evitar el efecto "pop"
                 Glide.with(this@MemoryGame)
                     .load(RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl)
                     .preload()
@@ -161,7 +142,6 @@ class MemoryGame : AppCompatActivity() {
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true || card.isMatched) return
 
-        // Usamos la nueva función integrada en la Activity
         flipCardUp(view, card.gameObject.imageUrl)
         view.tag = true
 
@@ -187,10 +167,8 @@ class MemoryGame : AppCompatActivity() {
                 errors++
                 gameAudio.playEffect(R.raw.fail)
 
-                // ✨ MEJORA: Usamos corrutinas en lugar de postDelayed para evitar crashes si el usuario sale
                 lifecycleScope.launch {
                     delay(1000)
-                    // Verificamos que la vista siga activa antes de animar
                     firstSelectedView?.let { firstView ->
                         flipCardsDown(firstView, view, R.drawable.ic_logo) {
                             view.tag = false
@@ -199,7 +177,6 @@ class MemoryGame : AppCompatActivity() {
                             isBusy = false
                         }
                     } ?: run {
-                        // Si firstSelectedView es nulo (el usuario salió rápido), solo reseteamos el estado
                         resetSelection()
                         isBusy = false
                     }
@@ -208,7 +185,6 @@ class MemoryGame : AppCompatActivity() {
         }
     }
 
-
     private fun flipCardUp(view: ImageView, imageUrl: String) {
         val duration = 150L
 
@@ -216,7 +192,7 @@ class MemoryGame : AppCompatActivity() {
             .rotationY(90f)
             .setDuration(duration)
             .withEndAction {
-                Glide.with(this) // Usamos 'this' (la Activity) en lugar de view.context
+                Glide.with(this)
                     .load(RetrofitClient.BASE_URL_IMAGES + imageUrl)
                     .placeholder(R.drawable.ic_logo)
                     .transform(CenterCrop(), RoundedCorners(30))
@@ -229,7 +205,6 @@ class MemoryGame : AppCompatActivity() {
                     .start()
             }.start()
     }
-
 
     private fun flipCardsDown(view1: ImageView, view2: ImageView, defaultImage: Int, onComplete: () -> Unit) {
         val duration = 150L
@@ -258,14 +233,13 @@ class MemoryGame : AppCompatActivity() {
             }.start()
     }
 
-
     private fun checkGameFinished() {
         if (boardCards.all { it.isMatched }) {
             lifecycleScope.launch {
                 delay(1000)
-                gameAudio.playEffect(R.raw.win)
-                val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, "Memorama")
-                ScoreManager(this@MemoryGame).showResults(finalResult) { finish() }
+                // ✨ MEJORA: Usamos la función integrada de la clase padre en una sola línea.
+                // (El padre ya se encarga de reproducir el sonido de victoria y calcular el ScoreManager)
+                showResults("Memorama")
             }
         }
     }
@@ -275,8 +249,5 @@ class MemoryGame : AppCompatActivity() {
         firstSelectedView = null
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        gameAudio.releaseAll()
-    }
+    // ✨ Hemos borrado 'onDestroy()' y 'setupImmersiveMode()' porque el padre lo hace en automático.
 }
