@@ -15,12 +15,12 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
-import com.example.lumikids.minigame.utils.GameAudioManager
-import com.example.lumikids.minigame.utils.GameTimer
-import com.example.lumikids.minigame.utils.PauseDialog
-import com.example.lumikids.minigame.utils.ScoreManager
+import com.example.lumikids.utils.GameAudioManager
+import com.example.lumikids.utils.GameTimer
+import com.example.lumikids.utils.PauseDialog
+import com.example.lumikids.utils.ScoreManager
 import com.example.lumikids.model.GameResult
-import com.example.lumikids.network.GamesApi
+import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -84,10 +84,10 @@ class MemoryGame : AppCompatActivity() {
                     val categoryId = when (theme.lowercase()) {
                         "clothing" -> 3
                         "emotions" -> 5
-                        "furniture" -> 8
+                        "furniure" -> 8
                         else -> 0
                     }
-                    val api = RetrofitClient.instance.create(GamesApi::class.java)
+                    val api = RetrofitClient.instance.create(AuthApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
                     if (call.isSuccessful) {
@@ -209,11 +209,7 @@ class MemoryGame : AppCompatActivity() {
         }
     }
 
-    // --- LOGICA DE UI INTEGRADA ---
 
-    /**
-     * Anima una carta girándola hacia arriba y cargando su imagen.
-     */
     private fun flipCardUp(view: ImageView, imageUrl: String) {
         val duration = 150L
 
@@ -235,9 +231,7 @@ class MemoryGame : AppCompatActivity() {
             }.start()
     }
 
-    /**
-     * Anima dos cartas girándolas hacia abajo y restaurando el logo por defecto.
-     */
+
     private fun flipCardsDown(view1: ImageView, view2: ImageView, defaultImage: Int, onComplete: () -> Unit) {
         val duration = 150L
 

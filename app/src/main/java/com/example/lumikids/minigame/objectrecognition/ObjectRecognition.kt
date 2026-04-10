@@ -15,14 +15,14 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
-import com.example.lumikids.minigame.utils.GameAudioManager
-import com.example.lumikids.minigame.utils.GameTimer
-import com.example.lumikids.minigame.utils.InstructionRepository
-import com.example.lumikids.minigame.utils.PauseDialog
-import com.example.lumikids.minigame.utils.ScoreManager
+import com.example.lumikids.utils.GameAudioManager
+import com.example.lumikids.utils.GameTimer
+import com.example.lumikids.utils.InstructionRepository
+import com.example.lumikids.utils.PauseDialog
+import com.example.lumikids.utils.ScoreManager
 import com.example.lumikids.model.GameObject
 import com.example.lumikids.model.GameResult
-import com.example.lumikids.network.GamesApi
+import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -112,7 +112,7 @@ class ObjectRecognition : AppCompatActivity() {
                 try {
                     val categoryId = InstructionRepository.getCategoryId(theme)
                     val instructionMap = InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
-                    val api = RetrofitClient.instance.create(GamesApi::class.java)
+                    val api = RetrofitClient.instance.create(AuthApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
                     if (call.isSuccessful) {
