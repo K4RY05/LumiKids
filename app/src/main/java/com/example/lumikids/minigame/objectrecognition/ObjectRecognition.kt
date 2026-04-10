@@ -5,23 +5,16 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
+import com.example.lumikids.minigame.MiniGame
 import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
-import com.example.lumikids.utils.GameAudioManager
-import com.example.lumikids.utils.GameTimer
 import com.example.lumikids.utils.InstructionRepository
 import com.example.lumikids.utils.PauseDialog
-import com.example.lumikids.utils.ScoreManager
 import com.example.lumikids.model.GameObject
-import com.example.lumikids.model.GameResult
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -30,20 +23,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 
-class ObjectRecognition : AppCompatActivity() {
+// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity
+class ObjectRecognition : MiniGame() {
 
-    // --- Estado del Juego ---
     private var allItems: MutableList<GameObject> = mutableListOf()
     private var currentRoundCount: Int = 0
-    private var errors: Int = 0
     private var currentRound: ObjectRound? = null
-    private val gameTimer = GameTimer()
     private var totalRoundsWanted: Int = 3
-
-    private lateinit var gameAudio: GameAudioManager
     private var urlAudioActual: String? = null
 
-    private lateinit var theme: String
     private lateinit var tvInstruction: TextView
     private lateinit var images: List<ImageView>
     private lateinit var resultIcons: List<ImageView>
@@ -52,27 +40,18 @@ class ObjectRecognition : AppCompatActivity() {
     private lateinit var btnBack: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n1)
 
-        setupImmersiveMode()
-
-        theme = intent.getStringExtra("THEME") ?: "furniture"
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
-
-        gameAudio = GameAudioManager(this, lifecycleScope)
 
         initViews()
         loadGameData()
     }
 
-    private fun setupImmersiveMode() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
-    }
 
-    private fun initViews() {
+    override fun initViews() {
         tvInstruction = findViewById(R.id.tvInstruction)
         btnPause = findViewById(R.id.btnPause)
         btnBack = findViewById(R.id.btnBack)
@@ -105,7 +84,7 @@ class ObjectRecognition : AppCompatActivity() {
         }
     }
 
-    private fun loadGameData() {
+    override fun loadGameData() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
@@ -145,7 +124,8 @@ class ObjectRecognition : AppCompatActivity() {
 
     private fun startNewRound() {
         if (currentRoundCount >= totalRoundsWanted) {
-            showFinalResults()
+            // ✨ MEJORA: Usamos la función integrada de la clase padre para mostrar la victoria
+            showResults("Identificar Objeto")
             return
         }
 
@@ -166,7 +146,7 @@ class ObjectRecognition : AppCompatActivity() {
             gameAudio.stopLoop()
         }
 
-        resetImagesBackground() // ✨ Usamos la función integrada
+        resetImagesBackground()
 
         roundOptions.forEachIndexed { index, gameObject ->
             images[index].apply {
@@ -184,12 +164,11 @@ class ObjectRecognition : AppCompatActivity() {
                     if (gameObject.audioShortUrl != null) {
                         gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
                     }
-                    handleSelection(this, isCorrect) // ✨ Usamos la función integrada
+                    handleSelection(this, isCorrect)
                 }
             }
         }
     }
-
 
     private fun handleSelection(view: ImageView, isCorrect: Boolean) {
         // Deshabilitamos clics para evitar toques múltiples
@@ -207,7 +186,6 @@ class ObjectRecognition : AppCompatActivity() {
             }
             resultIcon.visibility = View.VISIBLE
 
-            // ✨ MEJORA: Usar corrutinas en lugar de view.postDelayed para mayor seguridad
             lifecycleScope.launch {
                 delay(500) // Respuesta visual rápida
                 if (isCorrect) {
@@ -229,15 +207,4 @@ class ObjectRecognition : AppCompatActivity() {
         images.forEach { it.isEnabled = true }
     }
 
-
-    private fun showFinalResults() {
-        gameAudio.playEffect(R.raw.win)
-        val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, "Identificar Objeto")
-        ScoreManager(this).showResults(finalResult) { finish() }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        gameAudio.releaseAll()
-    }
 }

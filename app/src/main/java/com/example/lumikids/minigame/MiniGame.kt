@@ -1,11 +1,7 @@
 package com.example.lumikids.minigame
 
-// --- IMPORTACIONES NECESARIAS ---
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.model.GameResult
@@ -15,7 +11,6 @@ import com.example.lumikids.utils.ScoreManager
 
 abstract class MiniGame : AppCompatActivity() {
 
-    // Variables protegidas para que los hijos puedan usarlas
     protected lateinit var theme: String
     protected var errors: Int = 0
     protected val gameTimer = GameTimer()

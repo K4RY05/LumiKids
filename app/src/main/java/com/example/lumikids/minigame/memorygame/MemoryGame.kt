@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.minigame.MiniGame // <- Importamos la clase Padre
+import com.example.lumikids.minigame.MiniGame
 import com.example.lumikids.minigame.memorygame.model.MemoryCard
 import com.example.lumikids.utils.PauseDialog
 import com.example.lumikids.network.AuthApi
@@ -22,11 +22,8 @@ import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 import kotlin.math.min
 
-// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity en lugar de AppCompatActivity
 class MemoryGame : MiniGame() {
 
-    // --- Estado Específico del Juego ---
-    // (Hemos borrado theme, errors, gameTimer y gameAudio porque ahora los da el Padre)
     private var boardCards: List<MemoryCard> = emptyList()
     private var numPairsWanted: Int = 3
 
@@ -35,7 +32,6 @@ class MemoryGame : MiniGame() {
     private var isBusy = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n2)
 
@@ -57,7 +53,6 @@ class MemoryGame : MiniGame() {
         }
     }
 
-    // ✨ Agregamos 'override' porque es un contrato de la clase padre
     override fun loadGameData() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
@@ -237,8 +232,7 @@ class MemoryGame : MiniGame() {
         if (boardCards.all { it.isMatched }) {
             lifecycleScope.launch {
                 delay(1000)
-                // ✨ MEJORA: Usamos la función integrada de la clase padre en una sola línea.
-                // (El padre ya se encarga de reproducir el sonido de victoria y calcular el ScoreManager)
+
                 showResults("Memorama")
             }
         }
@@ -249,5 +243,4 @@ class MemoryGame : MiniGame() {
         firstSelectedView = null
     }
 
-    // ✨ Hemos borrado 'onDestroy()' y 'setupImmersiveMode()' porque el padre lo hace en automático.
 }
