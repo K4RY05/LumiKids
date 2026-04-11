@@ -40,7 +40,7 @@ class ProfileActivity : AppCompatActivity() {
             // Abrir temas de colores
         }
 
-        // --- SOLUCIÓN AQUÍ ---
+
         btnCerrarSesion.setOnClickListener {
             // 1. Borrar los datos de SharedPreferences
             val sessionManager = SessionManager(this)

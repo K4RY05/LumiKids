@@ -30,7 +30,6 @@ class PecsBoardActivity : AppCompatActivity() {
     private var selectedPronounFolder = "" // Guardará si es "he", "she", "men", "women"
     private var mediaPlayer: MediaPlayer? = null
 
-    // Cambia esto si la IP de tu computadora cambia
     private val BASE_URL = "http://192.168.100.132:3000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +40,6 @@ class PecsBoardActivity : AppCompatActivity() {
         sentenceBar = findViewById(R.id.sentenceBar)
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
-        // 🔥 Limpiamos la base de datos al entrar y CUANDO TERMINE, cargamos los pronombres
         clearBoardInDB {
             loadPecs("pronoun")
         }
