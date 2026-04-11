@@ -29,13 +29,13 @@ class ThemeGameActivity : AppCompatActivity() {
     // ✨ OPTIMIZACIÓN: Agrupamos todos los botones y sus clics en un solo lugar
     private fun initViews() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
-        val furniture = findViewById<ImageView>(R.id.cardFur)
+        val furniure = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
         val clothes = findViewById<ImageView>(R.id.cardClot)
 
         btnBack.setOnClickListener { finish() }
 
-        furniture.setOnClickListener { openGame("furniure") }
+        furniure.setOnClickListener { openGame("furniure") }
         emotions.setOnClickListener { openGame("emotions") }
         clothes.setOnClickListener { openGame("clothing") }
     }

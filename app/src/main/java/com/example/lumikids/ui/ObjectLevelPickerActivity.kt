@@ -6,7 +6,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.minigame.objectrecognition.ui.GameActivityN1
+import com.example.lumikids.minigame.objectrecognition.ObjectRecognition
 
 class ObjectLevelPickerActivity : AppCompatActivity() {
 
@@ -63,7 +63,7 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
     }
 
     private fun startGame() {
-        val intent = Intent(this, GameActivityN1::class.java).apply {
+        val intent = Intent(this, ObjectRecognition::class.java).apply {
             // Pasamos el String del tema directamente al juego
             putExtra("THEME", theme)
             putExtra("NUM_ROUNDS", selectedRounds)

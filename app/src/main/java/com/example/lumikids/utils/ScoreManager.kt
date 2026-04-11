@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.utils
+package com.example.lumikids.utils
 
 import android.app.Activity
 import android.app.AlertDialog
