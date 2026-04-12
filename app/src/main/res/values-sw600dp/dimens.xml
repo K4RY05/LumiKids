@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="content_max_width">580dp</dimen>
+    <dimen name="card_margin_bottom">64dp</dimen>
+
+    <dimen name="card_min_height">400dp</dimen>
+
+    <!-- Nubes -->
+    <dimen name="cloud_size">180dp</dimen>
+
+    <!-- Titulo main -->
+    <dimen name="title_size">60sp</dimen>
+
+
+    <dimen name="ic_top_corner">120dp</dimen>
+
+
+    <dimen name="tarjeta_memorama">130dp</dimen>
+
+    <dimen name="selector_arrow_size">120dp</dimen>
+    <dimen name="selector_card_size">220dp</dimen>
+    <dimen name="selector_number_text">140sp</dimen>
+    <dimen name="selector_title_text">42sp</dimen>
+    <dimen name="button_start_text">48sp</dimen>
+    <dimen name="button_start_padding">64dp</dimen>
+
+
+    <dimen name="pause_title_size">36sp</dimen>
+
+    <dimen name="text_size_result_title">42sp</dimen>
+    <dimen name="text_size_result_label">32sp</dimen>
+    <dimen name="text_size_result_value">64sp</dimen>
+
+</resources>

@@ -1,19 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
-    android:layout_width="match_parent"
+    android:id="@+id/main" android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/c_four"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/c_three"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.30">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:contentDescription="Logotipo de LumiKids"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_logo"/>
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_toStartOf="@id/ivProfile"
+            android:layout_toEndOf="@id/ivLogo"
+            app:autoSizeMaxTextSize="@dimen/title_size"
+            app:autoSizeMinTextSize="22sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="LumiKids"
+            android:textColor="@color/c_one"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="16dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:contentDescription="Perfil de usuario"
+            android:src="@drawable/ic_user"/>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/btnTablero"
+        android:contentDescription="Botón para abrir el tablero"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_tablero"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnMinijuegos"
+        app:layout_constraintDimensionRatio="1:1"/>
+
+    <ImageView
+        android:id="@+id/btnMinijuegos"
+        android:contentDescription="Botón para abrir el modulo de minijuegos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_minijuegos"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnTablero"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="1:1"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

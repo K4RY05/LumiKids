@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="content_max_width">420dp</dimen>
+    <dimen name="card_margin_bottom">24dp</dimen>
+
+    <dimen name="card_min_height">300dp</dimen>
+
+
+    <!-- Nubes -->
+    <dimen name="cloud_size">120dp</dimen>
+
+    <!-- Titulo main -->
+    <dimen name="title_size">32sp</dimen>
+
+    <dimen name="margen_perfil">16dp</dimen>
+    <dimen name="tamano_user">30sp</dimen>
+    <dimen name="tamano_avatar">180dp</dimen>
+    <dimen name="tallButton">50dp</dimen>
+    <dimen name="buttonFontSize">16sp</dimen>
+
+    <dimen name="icono_esquina">60dp</dimen>
+    <dimen name="esquina_ancho">140dp</dimen>
+    <dimen name="esquina_alto">100dp</dimen>
+
+
+    <dimen name="tarjeta_memorama">120dp</dimen>
+
+
+    <dimen name="ic_top_corner">60dp</dimen>
+
+
+    <dimen name="selector_arrow_size">64dp</dimen>
+    <dimen name="selector_card_size">120dp</dimen>
+    <dimen name="selector_number_text">80sp</dimen>
+    <dimen name="selector_title_text">26sp</dimen>
+    <dimen name="button_start_text">28sp</dimen>
+    <dimen name="button_start_padding">32dp</dimen>
+
+    <dimen name="pause_title_size">24sp</dimen>
+
+    <dimen name="text_size_result_title">28sp</dimen>
+    <dimen name="text_size_result_label">20sp</dimen>
+    <dimen name="text_size_result_value">40sp</dimen>
+
+</resources>

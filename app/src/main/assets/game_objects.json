@@ -1,0 +1,34 @@
+{
+
+
+  "EMOTIONS": [
+    "emo_confusion",
+    "emo_enojo",
+    "emo_felicidad",
+    "emo_sorpresa",
+    "emo_tristeza",
+    "emo_enfermo"
+  ],
+
+  "CLOTHES": [
+    "clother_calceta",
+    "clother_camisa",
+    "clother_chaleco",
+    "clother_gorra",
+    "clother_pantalon"
+  ],
+
+  "FURNITURE": [
+    "furniture_cama",
+    "furniture_lampara",
+    "furniture_mesa",
+    "furniture_refrigerador",
+    "furniture_silla",
+    "furniture_television",
+    "furniture_horno",
+    "furniture_ventana",
+    "furniture_puerta",
+    "furniture_lavadora",
+    "furniture_ventilador"
+  ]
+}
