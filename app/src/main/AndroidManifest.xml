@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -13,43 +19,90 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids">
 
+        <!-- Receiver -->
+        <receiver
+            android:name=".utils.NotificationReceiver"
+            android:exported="false" />
 
+        <!-- Main -->
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="sensorLandscape" />
 
-
-        <activity android:name=".MainActivity"
-            android:screenOrientation="sensorLandscape"/>
+        <!-- Auth -->
         <activity
             android:name=".ui.LoginActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".ui.RegisterActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".ui.TermsActivity"
-            android:screenOrientation="portrait"/>
 
-        <activity android:name=".ui.GameTypeActivity"
-            android:screenOrientation="sensorLandscape"/>
-        <activity android:name=".ui.ThemeGameActivity"
-            android:screenOrientation="sensorLandscape"/>
-        <activity android:name=".ui.MemoryLevelActivity"
-            android:screenOrientation="sensorLandscape"/>
-        <activity android:name=".ui.ObjectLevelPickerActivity"
-            android:screenOrientation="sensorLandscape"/>
-
-        <activity android:name=".minigame.objectrecognition.ui.GameActivityN1"
-            android:screenOrientation="landscape"/>
-        <activity android:name=".minigame.memorygame.ui.GameActivityN2"
-            android:screenOrientation="landscape"/>
-
-        <activity android:name=".ui.ProfileActivity"
+        <activity
+            android:name=".ui.RegisterActivity"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.TermsActivity"
+            android:screenOrientation="portrait" />
+
+        <!-- Games / Flow -->
+        <activity
+            android:name=".ui.GameTypeActivity"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.ThemeGameActivity"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.MemoryLevelActivity"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".ui.ObjectLevelPickerActivity"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- Minigames (version 1) -->
+        <activity
+            android:name=".ui.ObjectRecognition"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name=".ui.MemoryGame"
+            android:screenOrientation="landscape" />
+        <!-- Profile -->
+        <activity
+            android:name=".ui.ProfileActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.EditProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ChangePasswordActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <!-- Extra screens -->
+        <activity
+            android:name=".ui.NotificationActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.PecsBoardActivity"
+            android:screenOrientation="landscape" />
+
+        <!-- Splash / Launcher -->
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
     </application>
 
 </manifest>

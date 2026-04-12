@@ -32,22 +32,16 @@ class SessionManager(context: Context) {
 
         return id
     }
+    fun getUserEmail(): String? {
+        val email = prefs.getString("user_email", null)
+        if (email == "null" || email.isNullOrEmpty()) {
+            return null
+        }
+        return email
+    }
 
     // Limpia las preferencias al cerrar sesión
     fun logout() {
         prefs.edit().clear().apply()
     }
-
-
-    fun saveUserId(userId: String) {
-        prefs.edit().putString("user_id", userId).apply()
-    }
-
-
-    fun getUserId(): String? {
-        return prefs.getString("user_id", null)
-    }
-
-
-
 }

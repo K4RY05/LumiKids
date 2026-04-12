@@ -16,7 +16,7 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile)
 
         val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
-        val txtTitulo = findViewById<TextView>(R.id.txtTitulo)
+        val txtTitulo = findViewById<TextView>(R.id.tvTitle)
 
         val btnDatos = findViewById<Button>(R.id.btnDatos)
         val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)

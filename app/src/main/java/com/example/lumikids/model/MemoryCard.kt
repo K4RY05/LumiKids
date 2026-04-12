@@ -1,6 +1,5 @@
-package com.example.lumikids.minigame.memorygame.model
+package com.example.lumikids.model
 
-import com.example.lumikids.model.GameObject
 data class MemoryCard(
     val gameObject: GameObject,
     var isFaceUp: Boolean = false,

@@ -22,7 +22,6 @@ import com.example.lumikids.model.UpdateProfileRequest
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.utils.SessionManager
-import com.example.lumikids.utils.UserManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +32,6 @@ import retrofit2.Response as RetrofitResponse
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
-    private lateinit var userManager: UserManager
 
     private var verifiedPassword = ""
     private var fieldWaitingToUnlock = ""
@@ -49,7 +47,6 @@ class EditProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_profile)
 
         sessionManager = SessionManager(this)
-        userManager = UserManager(this)
 
         etName = findViewById(R.id.etName)
         etEmail = findViewById(R.id.etEmail)
@@ -60,8 +57,9 @@ class EditProfileActivity : AppCompatActivity() {
         val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
         val tvDelete = findViewById<TextView>(R.id.tvDelete)
 
-        etName.setText(userManager.getUserName())
-        etEmail.setText(userManager.getUserEmail())
+        // 👉 Obtener datos desde SessionManager
+        etEmail.setText(sessionManager.getUserEmail() ?: "")
+        etName.setText("") // Si no tienes nombre guardado, puedes dejarlo vacío
 
         btnEditName.setOnClickListener {
             if (!etName.isEnabled) {
@@ -77,7 +75,6 @@ class EditProfileActivity : AppCompatActivity() {
             } else saveChanges()
         }
 
-        // 👉 NUEVO: Ahora el botón de Contraseña usa el Pop-up también
         btnChangePassword.setOnClickListener {
             if (verifiedPassword.isEmpty()) {
                 fieldWaitingToUnlock = "password"
@@ -115,12 +112,13 @@ class EditProfileActivity : AppCompatActivity() {
             val password = input.text.toString().trim()
             if (password.isNotEmpty()) verifyPassword(password)
         }
+
         builder.setNegativeButton("Cancelar", null)
         builder.show()
     }
 
     private fun verifyPassword(password: String) {
-        val email = userManager.getUserEmail()
+        val email = sessionManager.getUserEmail() ?: return
         val request = LoginRequest(email, password)
 
         val api = RetrofitClient.instance.create(AuthApi::class.java)
@@ -141,24 +139,26 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun unlockField() {
-        if (fieldWaitingToUnlock == "name") {
-            etName.isEnabled = true
-            etName.requestFocus()
-            showKeyboard(etName)
-            btnEditName.setImageResource(android.R.drawable.ic_menu_save)
-        } else if (fieldWaitingToUnlock == "email") {
-            etEmail.isEnabled = true
-            etEmail.requestFocus()
-            showKeyboard(etEmail)
-            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
-        } else if (fieldWaitingToUnlock == "password") {
-            // 👉 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla
-            goToChangePasswordScreen()
+        when (fieldWaitingToUnlock) {
+            "name" -> {
+                etName.isEnabled = true
+                etName.requestFocus()
+                showKeyboard(etName)
+                btnEditName.setImageResource(android.R.drawable.ic_menu_save)
+            }
+            "email" -> {
+                etEmail.isEnabled = true
+                etEmail.requestFocus()
+                showKeyboard(etEmail)
+                btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
+            }
+            "password" -> {
+                goToChangePasswordScreen()
+            }
         }
         fieldWaitingToUnlock = ""
     }
 
-    // 👉 Función que abre la pantalla y le pasa la contraseña verificada en secreto
     private fun goToChangePasswordScreen() {
         val intent = Intent(this, ChangePasswordActivity::class.java)
         intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
@@ -170,6 +170,7 @@ class EditProfileActivity : AppCompatActivity() {
         val newEmail = etEmail.text.toString().trim()
 
         if (newName.isEmpty() || newEmail.isEmpty()) return
+
         val userId = sessionManager.getUserId() ?: return
 
         btnEditName.isEnabled = false
@@ -178,13 +179,25 @@ class EditProfileActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
+                val request = UpdateProfileRequest(
+                    userId,
+                    newName,
+                    newEmail,
+                    verifiedPassword,
+                    null
+                )
+
+                val response = RetrofitClient.instance
+                    .create(AuthApi::class.java)
+                    .updateProfile(request)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
                         Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
-                        userManager.saveUserData(newName, newEmail)
+
+                        // 👉 Guardar cambios en sesión
+                        sessionManager.saveLogin(newEmail, userId)
+
                         lockAllFields()
                     } else {
                         Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
@@ -192,6 +205,7 @@ class EditProfileActivity : AppCompatActivity() {
                         btnEditEmail.isEnabled = true
                     }
                 }
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
@@ -207,6 +221,7 @@ class EditProfileActivity : AppCompatActivity() {
         etName.isEnabled = false
         btnEditName.isEnabled = true
         btnEditName.setImageResource(android.R.drawable.ic_menu_edit)
+
         etEmail.isEnabled = false
         btnEditEmail.isEnabled = true
         btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)
