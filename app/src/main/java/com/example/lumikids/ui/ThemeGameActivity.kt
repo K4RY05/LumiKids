@@ -19,14 +19,12 @@ class ThemeGameActivity : AppCompatActivity() {
         initViews()
     }
 
-    // ✨ OPTIMIZACIÓN: Sacamos la configuración de pantalla completa a su propia función
     private fun setupImmersiveMode() {
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-    // ✨ OPTIMIZACIÓN: Agrupamos todos los botones y sus clics en un solo lugar
     private fun initViews() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val furniure = findViewById<ImageView>(R.id.cardFur)
@@ -40,7 +38,6 @@ class ThemeGameActivity : AppCompatActivity() {
         clothes.setOnClickListener { openGame("clothing") }
     }
 
-    // Pasa la categoría seleccionada a la siguiente pantalla (GameTypeActivity)
     private fun openGame(theme: String) {
         val intent = Intent(this, GameTypeActivity::class.java)
         intent.putExtra("THEME", theme)

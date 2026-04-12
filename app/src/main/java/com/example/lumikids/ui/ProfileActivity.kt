@@ -17,7 +17,6 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
         val txtTitulo = findViewById<TextView>(R.id.tvTitle)
 
         val btnDatos = findViewById<Button>(R.id.btnDatos)

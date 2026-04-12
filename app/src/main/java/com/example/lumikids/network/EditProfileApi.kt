@@ -2,7 +2,7 @@ package com.example.lumikids.network
 
 import com.example.lumikids.model.ApiResponse
 import com.example.lumikids.model.UpdateProfileRequest
-import com.example.lumikids.model.UserProfileResponse
+import com.example.lumikids.model.UserProfileResponse // 👈 Importa tu nuevo modelo
 import retrofit2.Response
 import retrofit2.http.*
 

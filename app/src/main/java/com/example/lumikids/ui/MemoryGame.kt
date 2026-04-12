@@ -57,10 +57,8 @@ class MemoryGame : MiniGame() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
-                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
-                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 

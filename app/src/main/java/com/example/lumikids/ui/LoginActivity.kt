@@ -41,7 +41,7 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 🔥 LÓGICA PARA EL BOTÓN DE VER CONTRASEÑA
+        // LÓGICA PARA EL BOTÓN DE VER CONTRASEÑA
         binding.ivTogglePassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
 
@@ -58,7 +58,7 @@ class LoginActivity : AppCompatActivity() {
             binding.etPassword.setSelection(binding.etPassword.text.length)
         }
 
-        // 🔥 LÓGICA DEL BOTÓN DE LOGIN
+        //  LÓGICA DEL BOTÓN DE LOGIN
         binding.btnLogin.setOnClickListener {
 
             val email = binding.etEmail.text.toString().trim()
@@ -81,11 +81,10 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Si todo está bien, llamamos al servidor
             loginUsuario(email, password)
         }
 
-        // 🔥 NAVEGACIÓN AL REGISTRO
+        //  NAVEGACIÓN AL REGISTRO
         binding.tvSignUp.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }

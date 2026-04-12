@@ -4,10 +4,8 @@ import android.content.Context
 
 class SessionManager(context: Context) {
 
-    // Archivo de preferencias para toda la app
     private val prefs = context.getSharedPreferences("lumikids_session", Context.MODE_PRIVATE)
 
-    // Guarda los datos de inicio de sesión
     fun saveLogin(email: String, userId: String) {
         prefs.edit().apply {
             putBoolean("is_logged_in", true)
@@ -40,7 +38,6 @@ class SessionManager(context: Context) {
         return email
     }
 
-    // Limpia las preferencias al cerrar sesión
     fun logout() {
         prefs.edit().clear().apply()
     }

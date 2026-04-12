@@ -1,8 +1,10 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.text.InputType
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -16,6 +18,9 @@ import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
 
+    private var isPassVisible = false
+    private var isPass2Visible = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -25,6 +30,19 @@ class RegisterActivity : AppCompatActivity() {
         val etPass = findViewById<EditText>(R.id.etPass)
         val etPassConfirm = findViewById<EditText>(R.id.etPass2)
         val btnContinuar = findViewById<AppCompatButton>(R.id.btnContinue)
+
+        val ivTogglePass = findViewById<ImageButton>(R.id.ivTogglePass)
+        val ivTogglePass2 = findViewById<ImageButton>(R.id.ivTogglePass2)
+
+        ivTogglePass.setOnClickListener {
+            isPassVisible = !isPassVisible
+            togglePasswordVisibility(etPass, ivTogglePass, isPassVisible)
+        }
+
+        ivTogglePass2.setOnClickListener {
+            isPass2Visible = !isPass2Visible
+            togglePasswordVisibility(etPassConfirm, ivTogglePass2, isPass2Visible)
+        }
 
         btnContinuar.setOnClickListener {
 
@@ -58,7 +76,17 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    // Función para generar ID (3 letras + 3 números)
+    private fun togglePasswordVisibility(editText: EditText, button: ImageButton, isVisible: Boolean) {
+        if (isVisible) {
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_open)
+        } else {
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_closed)
+        }
+        editText.setSelection(editText.text.length)
+    }
+
     private fun generarUserId(nombre: String): String {
 
         val letras = if (nombre.length >= 3) {

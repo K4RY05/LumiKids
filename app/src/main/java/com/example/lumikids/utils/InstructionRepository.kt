@@ -6,10 +6,7 @@ import java.nio.charset.Charset
 
 object InstructionRepository {
 
-    /**
-     * Retorna el prefijo usado en la base de datos para los sonidos de instrucción.
-     * Esto ayuda al servidor y a la app a encontrar audios como 'clothing_pants.mp3'.
-     */
+
     fun getPrefix(theme: String): String {
         return when (theme.lowercase()) {
             "furniure" -> "furniure_"
@@ -19,10 +16,7 @@ object InstructionRepository {
         }
     }
 
-    /**
-     * Mapeo centralizado de IDs de categoría.
-     * Mantener esto aquí asegura que todos los minijuegos usen los mismos IDs que el SQL.
-     */
+
     fun getCategoryId(theme: String): Int {
         return when (theme.lowercase()) {
             "clothing" -> 3
@@ -32,10 +26,7 @@ object InstructionRepository {
         }
     }
 
-    /**
-     * Carga los textos desde 'assets/instructions.json'.
-     * Útil para mostrar "Toca el pantalón" basado en el nombre del objeto.
-     */
+
     fun loadInstructionsByTheme(context: Context, themeName: String): Map<String, String> {
         val instructionsMap = mutableMapOf<String, String>()
 

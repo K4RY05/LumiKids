@@ -34,7 +34,7 @@ class PecsBoardActivity : AppCompatActivity() {
     private var selectedPronounFolder = "" // Guardará si es "he", "she", "men", "women"
     private var mediaPlayer: MediaPlayer? = null
 
-    private val BASE_URL = "http://192.168.100.132:3000"
+    private val BASE_URL = "http://192.168.100.251:3000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
