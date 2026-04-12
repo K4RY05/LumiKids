@@ -1,0 +1,2319 @@
+Index: app/src/main/java/com/example/lumikids/ui/LoginActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.text.InputType\r\nimport android.util.Patterns\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.MainActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.databinding.ActivityLoginBinding\r\nimport com.example.lumikids.model.ApiResponse\r\nimport com.example.lumikids.model.LoginRequest\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.utils.SessionManager\r\nimport retrofit2.Call\r\nimport retrofit2.Callback\r\nimport retrofit2.Response\r\n\r\nclass LoginActivity : AppCompatActivity() {\r\n\r\n    private lateinit var binding: ActivityLoginBinding\r\n    private lateinit var sessionManager: SessionManager\r\n    private var isPasswordVisible = false\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n\r\n        sessionManager = SessionManager(this)\r\n\r\n        // 1. Verificar sesión primero\r\n        if (sessionManager.isLoggedIn()) {\r\n            startActivity(Intent(this, MainActivity::class.java))\r\n            finish()\r\n            return\r\n        }\r\n\r\n        // 2. Inflar el binding UNA SOLA VEZ\r\n        binding = ActivityLoginBinding.inflate(layoutInflater)\r\n        setContentView(binding.root)\r\n\r\n        // 3. Configurar lógica del botón de Login\r\n        binding.btnLogin.setOnClickListener {\r\n            val email = binding.etEmail.text.toString().trim()\r\n            val password = binding.etPassword.text.toString().trim()\r\n\r\n            if (email.isEmpty() || password.isEmpty()) {\r\n                Toast.makeText(this, \"Completa todos los campos\", Toast.LENGTH_SHORT).show()\r\n                return@setOnClickListener\r\n            }\r\n\r\n            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {\r\n                Toast.makeText(this, \"Correo electrónico inválido\", Toast.LENGTH_SHORT).show()\r\n                return@setOnClickListener\r\n            }\r\n\r\n            loginUsuario(email, password)\r\n        }\r\n\r\n        // 4. Configurar lógica para ir al Registro\r\n        binding.tvSignUp.setOnClickListener {\r\n            startActivity(Intent(this, RegisterActivity::class.java))\r\n        }\r\n\r\n        // 5. Lógica para mostrar/ocultar contraseña (Ojo)\r\n        binding.ivTogglePassword.setOnClickListener {\r\n            isPasswordVisible = !isPasswordVisible\r\n\r\n            if (isPasswordVisible) {\r\n                // Mostrar contraseña\r\n                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or\r\n                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD\r\n                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)\r\n            } else {\r\n                // Ocultar contraseña\r\n                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or\r\n                        InputType.TYPE_TEXT_VARIATION_PASSWORD\r\n                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)\r\n            }\r\n\r\n            // Mantener el cursor al final del texto\r\n            binding.etPassword.setSelection(binding.etPassword.text.length)\r\n        }\r\n    }\r\n\r\n    private fun loginUsuario(email: String, password: String) {\r\n        val api = RetrofitClient.instance.create(AuthApi::class.java)\r\n        val request = LoginRequest(email, password)\r\n\r\n        api.login(request).enqueue(object : Callback<ApiResponse> {\r\n            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {\r\n                if (response.isSuccessful && response.body()?.success == true) {\r\n                    sessionManager.saveLogin(email)\r\n                    Toast.makeText(this@LoginActivity, response.body()?.message ?: \"Bienvenido\", Toast.LENGTH_SHORT).show()\r\n                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))\r\n                    finish()\r\n                } else {\r\n                    Toast.makeText(this@LoginActivity, response.body()?.message ?: \"Credenciales incorrectas\", Toast.LENGTH_LONG).show()\r\n                }\r\n            }\r\n\r\n            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {\r\n                Toast.makeText(this@LoginActivity, \"Error de conexión: ${t.message}\", Toast.LENGTH_LONG).show()\r\n            }\r\n        })\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt b/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt	(date 1775958345083)
+@@ -2,7 +2,8 @@
+ 
+ import android.content.Intent
+ import android.os.Bundle
+-import android.text.InputType
++import android.text.method.HideReturnsTransformationMethod
++import android.text.method.PasswordTransformationMethod
+ import android.util.Patterns
+ import android.widget.Toast
+ import androidx.appcompat.app.AppCompatActivity
+@@ -14,6 +15,7 @@
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.utils.SessionManager
++import com.google.android.material.snackbar.Snackbar
+ import retrofit2.Call
+ import retrofit2.Callback
+ import retrofit2.Response
+@@ -29,79 +31,115 @@
+ 
+         sessionManager = SessionManager(this)
+ 
+-        // 1. Verificar sesión primero
++        // Si ya está logueado, ir directo a Main
+         if (sessionManager.isLoggedIn()) {
+             startActivity(Intent(this, MainActivity::class.java))
+             finish()
+             return
+         }
+ 
+-        // 2. Inflar el binding UNA SOLA VEZ
+         binding = ActivityLoginBinding.inflate(layoutInflater)
+         setContentView(binding.root)
+ 
+-        // 3. Configurar lógica del botón de Login
++        // 🔥 LÓGICA PARA EL BOTÓN DE VER CONTRASEÑA
++        binding.ivTogglePassword.setOnClickListener {
++            isPasswordVisible = !isPasswordVisible
++
++            if (isPasswordVisible) {
++                // Mostrar texto
++                binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
++                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open) // Verifica tener este ícono en res/drawable
++            } else {
++                // Ocultar texto
++                binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
++                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
++            }
++            // Mantener el cursor al final
++            binding.etPassword.setSelection(binding.etPassword.text.length)
++        }
++
++        // 🔥 LÓGICA DEL BOTÓN DE LOGIN
+         binding.btnLogin.setOnClickListener {
++
+             val email = binding.etEmail.text.toString().trim()
+             val password = binding.etPassword.text.toString().trim()
+ 
+-            if (email.isEmpty() || password.isEmpty()) {
+-                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
++            // 1. Limpiar errores previos visuales
++            binding.etEmail.error = null
++            binding.etPassword.error = null
++
++            // 2. Validaciones con feedback visual (UX)
++            if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
++                binding.etEmail.error = "Ingresa un correo electrónico válido"
++                binding.etEmail.requestFocus()
+                 return@setOnClickListener
+             }
+ 
+-            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+-                Toast.makeText(this, "Correo electrónico inválido", Toast.LENGTH_SHORT).show()
++            if (password.isEmpty()) {
++                binding.etPassword.error = "Ingresa tu contraseña"
++                binding.etPassword.requestFocus()
+                 return@setOnClickListener
+             }
+ 
++            // Si todo está bien, llamamos al servidor
+             loginUsuario(email, password)
+         }
+ 
+-        // 4. Configurar lógica para ir al Registro
++        // 🔥 NAVEGACIÓN AL REGISTRO
+         binding.tvSignUp.setOnClickListener {
+             startActivity(Intent(this, RegisterActivity::class.java))
+         }
+-
+-        // 5. Lógica para mostrar/ocultar contraseña (Ojo)
+-        binding.ivTogglePassword.setOnClickListener {
+-            isPasswordVisible = !isPasswordVisible
+-
+-            if (isPasswordVisible) {
+-                // Mostrar contraseña
+-                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or
+-                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+-                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
+-            } else {
+-                // Ocultar contraseña
+-                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or
+-                        InputType.TYPE_TEXT_VARIATION_PASSWORD
+-                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
+-            }
+-
+-            // Mantener el cursor al final del texto
+-            binding.etPassword.setSelection(binding.etPassword.text.length)
+-        }
+     }
+ 
+     private fun loginUsuario(email: String, password: String) {
++
+         val api = RetrofitClient.instance.create(AuthApi::class.java)
+         val request = LoginRequest(email, password)
+ 
+         api.login(request).enqueue(object : Callback<ApiResponse> {
+-            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
++
++            override fun onResponse(
++                call: Call<ApiResponse>,
++                response: Response<ApiResponse>
++            ) {
+                 if (response.isSuccessful && response.body()?.success == true) {
+-                    sessionManager.saveLogin(email)
+-                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
++
++                    // 1. Obtenemos el userId de la respuesta
++                    val userId = response.body()?.userId.toString()
++
++                    // 2. Guardamos la sesión con ambos datos
++                    sessionManager.saveLogin(email, userId)
++
++                    // 3. Mostramos mensaje de éxito y cambiamos de pantalla
++                    Toast.makeText(
++                        this@LoginActivity,
++                        response.body()?.message ?: "Bienvenido",
++                        Toast.LENGTH_SHORT
++                    ).show()
++
+                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                     finish()
++
+                 } else {
+-                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
++                    // Usamos Snackbar para mostrar que las credenciales son incorrectas
++                    Snackbar.make(
++                        binding.root,
++                        response.body()?.message ?: "Credenciales incorrectas",
++                        Snackbar.LENGTH_LONG
++                    ).show()
+                 }
+             }
+ 
+-            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
+-                Toast.makeText(this@LoginActivity, "Error de conexión: ${t.message}", Toast.LENGTH_LONG).show()
++            override fun onFailure(
++                call: Call<ApiResponse>,
++                t: Throwable
++            ) {
++                // Snackbar para errores de red o servidor caído
++                Snackbar.make(
++                    binding.root,
++                    "Error de conexión: Verifica tu internet o el servidor local",
++                    Snackbar.LENGTH_LONG
++                ).show()
+             }
+         })
+     }
+Index: app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent // Asegúrate de importar Intent\r\nimport android.os.Bundle\r\nimport android.widget.Button\r\nimport android.widget.ImageView\r\nimport android.widget.TextView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.utils.SessionManager // Importa tu SessionManager\r\n\r\nclass ProfileActivity : AppCompatActivity() {\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_profile)\r\n\r\n        val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)\r\n        val txtTitulo = findViewById<TextView>(R.id.txtTitulo)\r\n\r\n        val btnDatos = findViewById<Button>(R.id.btnDatos)\r\n        val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)\r\n        val btnTemas = findViewById<Button>(R.id.btnTemas)\r\n        val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)\r\n\r\n        txtTitulo.text = \"Usuario Lumikids\"\r\n\r\n        btnDatos.setOnClickListener {\r\n            // Abrir datos personales\r\n        }\r\n\r\n        btnNotificaciones.setOnClickListener {\r\n            // Abrir notificaciones\r\n        }\r\n\r\n        btnTemas.setOnClickListener {\r\n            // Abrir temas de colores\r\n        }\r\n\r\n        // --- SOLUCIÓN AQUÍ ---\r\n        btnCerrarSesion.setOnClickListener {\r\n            // 1. Borrar los datos de SharedPreferences\r\n            val sessionManager = SessionManager(this)\r\n            sessionManager.logout()\r\n\r\n            // 2. Redirigir a LoginActivity y limpiar la pila de actividades\r\n            val intent = Intent(this, LoginActivity::class.java)\r\n            // Estas flags evitan que el usuario regrese a la app si presiona el botón \"Atrás\"\r\n            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK\r\n            startActivity(intent)\r\n            finish()\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt b/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt	(date 1775960099241)
+@@ -1,13 +1,14 @@
+ package com.example.lumikids.ui
+ 
+-import android.content.Intent // Asegúrate de importar Intent
++import android.content.Intent
+ import android.os.Bundle
+ import android.widget.Button
+ import android.widget.ImageView
+ import android.widget.TextView
++import android.widget.Toast
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.lumikids.R
+-import com.example.lumikids.utils.SessionManager // Importa tu SessionManager
++import com.example.lumikids.utils.SessionManager
+ 
+ class ProfileActivity : AppCompatActivity() {
+ 
+@@ -16,36 +17,39 @@
+         setContentView(R.layout.activity_profile)
+ 
+         val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
+-        val txtTitulo = findViewById<TextView>(R.id.txtTitulo)
++        val txtTitulo = findViewById<TextView>(R.id.tvTitle)
+ 
+         val btnDatos = findViewById<Button>(R.id.btnDatos)
+         val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)
+         val btnTemas = findViewById<Button>(R.id.btnTemas)
+         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
+ 
++        // Texto combinado de ambos códigos
+         txtTitulo.text = "Usuario Lumikids"
+ 
+         btnDatos.setOnClickListener {
+-            // Abrir datos personales
++            // Abrir datos personales (pendiente de implementar)
+         }
+ 
+         btnNotificaciones.setOnClickListener {
+-            // Abrir notificaciones
++            // Funcionalidad del primer código + feedback
++            Toast.makeText(this, "Notificaciones", Toast.LENGTH_SHORT).show()
++
++            val intent = Intent(this, NotificationActivity::class.java)
++            startActivity(intent)
+         }
+ 
+         btnTemas.setOnClickListener {
+-            // Abrir temas de colores
++            // Abrir temas de colores (pendiente de implementar)
+         }
+ 
+-        // --- SOLUCIÓN AQUÍ ---
+         btnCerrarSesion.setOnClickListener {
+-            // 1. Borrar los datos de SharedPreferences
++            // 1. Borrar sesión
+             val sessionManager = SessionManager(this)
+             sessionManager.logout()
+ 
+-            // 2. Redirigir a LoginActivity y limpiar la pila de actividades
++            // 2. Ir a Login y limpiar pila
+             val intent = Intent(this, LoginActivity::class.java)
+-            // Estas flags evitan que el usuario regrese a la app si presiona el botón "Atrás"
+             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+             startActivity(intent)
+             finish()
+Index: app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.app.AlertDialog\r\nimport android.content.Context\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.text.InputType\r\nimport android.view.View\r\nimport android.view.inputmethod.InputMethodManager\r\nimport android.widget.EditText\r\nimport android.widget.FrameLayout\r\nimport android.widget.ImageButton\r\nimport android.widget.TextView\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.appcompat.widget.AppCompatButton\r\nimport androidx.lifecycle.lifecycleScope\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.model.ApiResponse\r\nimport com.example.lumikids.model.LoginRequest\r\nimport com.example.lumikids.model.UpdateProfileRequest\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\nimport kotlinx.coroutines.Dispatchers\r\nimport kotlinx.coroutines.launch\r\nimport kotlinx.coroutines.withContext\r\nimport retrofit2.Call\r\nimport retrofit2.Callback\r\nimport retrofit2.Response as RetrofitResponse\r\n\r\nclass EditProfileActivity : AppCompatActivity() {\r\n\r\n    private lateinit var sessionManager: SessionManager\r\n    private lateinit var userManager: UserManager\r\n\r\n    private var verifiedPassword = \"\"\r\n    private var fieldWaitingToUnlock = \"\"\r\n\r\n    private lateinit var etName: EditText\r\n    private lateinit var etEmail: EditText\r\n    private lateinit var btnEditName: ImageButton\r\n    private lateinit var btnEditEmail: ImageButton\r\n    private lateinit var btnChangePassword: AppCompatButton\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_edit_profile)\r\n\r\n        sessionManager = SessionManager(this)\r\n        userManager = UserManager(this)\r\n\r\n        etName = findViewById(R.id.etName)\r\n        etEmail = findViewById(R.id.etEmail)\r\n        btnEditName = findViewById(R.id.btnEditName)\r\n        btnEditEmail = findViewById(R.id.btnEditEmail)\r\n        btnChangePassword = findViewById(R.id.btnChangePassword)\r\n\r\n        val btnBack = findViewById<AppCompatButton>(R.id.btnBack)\r\n        val tvDelete = findViewById<TextView>(R.id.tvDelete)\r\n\r\n        etName.setText(userManager.getUserName())\r\n        etEmail.setText(userManager.getUserEmail())\r\n\r\n        btnEditName.setOnClickListener {\r\n            if (!etName.isEnabled) {\r\n                fieldWaitingToUnlock = \"name\"\r\n                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()\r\n            } else saveChanges()\r\n        }\r\n\r\n        btnEditEmail.setOnClickListener {\r\n            if (!etEmail.isEnabled) {\r\n                fieldWaitingToUnlock = \"email\"\r\n                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()\r\n            } else saveChanges()\r\n        }\r\n\r\n        // \uD83D\uDC49 NUEVO: Ahora el botón de Contraseña usa el Pop-up también\r\n        btnChangePassword.setOnClickListener {\r\n            if (verifiedPassword.isEmpty()) {\r\n                fieldWaitingToUnlock = \"password\"\r\n                showPasswordDialog()\r\n            } else {\r\n                goToChangePasswordScreen()\r\n            }\r\n        }\r\n\r\n        btnBack.setOnClickListener {\r\n            hideKeyboard()\r\n            finish()\r\n        }\r\n\r\n        tvDelete.setOnClickListener {\r\n            Toast.makeText(this, \"Borrar cuenta en construcción\", Toast.LENGTH_SHORT).show()\r\n        }\r\n    }\r\n\r\n    private fun showPasswordDialog() {\r\n        val builder = AlertDialog.Builder(this)\r\n        builder.setTitle(\"Verificación de Identidad\")\r\n        builder.setMessage(\"Por seguridad, ingresa tu contraseña actual:\")\r\n\r\n        val input = EditText(this)\r\n        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD\r\n        input.hint = \"Contraseña\"\r\n\r\n        val layout = FrameLayout(this)\r\n        layout.setPadding(60, 20, 60, 0)\r\n        layout.addView(input)\r\n        builder.setView(layout)\r\n\r\n        builder.setPositiveButton(\"Verificar\") { _, _ ->\r\n            val password = input.text.toString().trim()\r\n            if (password.isNotEmpty()) verifyPassword(password)\r\n        }\r\n        builder.setNegativeButton(\"Cancelar\", null)\r\n        builder.show()\r\n    }\r\n\r\n    private fun verifyPassword(password: String) {\r\n        val email = userManager.getUserEmail()\r\n        val request = LoginRequest(email, password)\r\n\r\n        val api = RetrofitClient.instance.create(AuthApi::class.java)\r\n        api.login(request).enqueue(object : Callback<ApiResponse> {\r\n            override fun onResponse(call: Call<ApiResponse>, response: RetrofitResponse<ApiResponse>) {\r\n                if (response.isSuccessful && response.body()?.success == true) {\r\n                    verifiedPassword = password\r\n                    unlockField()\r\n                } else {\r\n                    Toast.makeText(this@EditProfileActivity, \"Contraseña incorrecta\", Toast.LENGTH_LONG).show()\r\n                }\r\n            }\r\n\r\n            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {\r\n                Toast.makeText(this@EditProfileActivity, \"Error de red\", Toast.LENGTH_SHORT).show()\r\n            }\r\n        })\r\n    }\r\n\r\n    private fun unlockField() {\r\n        if (fieldWaitingToUnlock == \"name\") {\r\n            etName.isEnabled = true\r\n            etName.requestFocus()\r\n            showKeyboard(etName)\r\n            btnEditName.setImageResource(android.R.drawable.ic_menu_save)\r\n        } else if (fieldWaitingToUnlock == \"email\") {\r\n            etEmail.isEnabled = true\r\n            etEmail.requestFocus()\r\n            showKeyboard(etEmail)\r\n            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)\r\n        } else if (fieldWaitingToUnlock == \"password\") {\r\n            // \uD83D\uDC49 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla\r\n            goToChangePasswordScreen()\r\n        }\r\n        fieldWaitingToUnlock = \"\"\r\n    }\r\n\r\n    // \uD83D\uDC49 Función que abre la pantalla y le pasa la contraseña verificada en secreto\r\n    private fun goToChangePasswordScreen() {\r\n        val intent = Intent(this, ChangePasswordActivity::class.java)\r\n        intent.putExtra(\"CURRENT_PASSWORD\", verifiedPassword)\r\n        startActivity(intent)\r\n    }\r\n\r\n    private fun saveChanges() {\r\n        val newName = etName.text.toString().trim()\r\n        val newEmail = etEmail.text.toString().trim()\r\n\r\n        if (newName.isEmpty() || newEmail.isEmpty()) return\r\n        val userId = sessionManager.getUserId() ?: return\r\n\r\n        btnEditName.isEnabled = false\r\n        btnEditEmail.isEnabled = false\r\n        hideKeyboard()\r\n\r\n        lifecycleScope.launch(Dispatchers.IO) {\r\n            try {\r\n                val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)\r\n                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)\r\n\r\n                withContext(Dispatchers.Main) {\r\n                    if (response.isSuccessful && response.body()?.success == true) {\r\n                        Toast.makeText(this@EditProfileActivity, \"Perfil actualizado\", Toast.LENGTH_SHORT).show()\r\n                        userManager.saveUserData(newName, newEmail)\r\n                        lockAllFields()\r\n                    } else {\r\n                        Toast.makeText(this@EditProfileActivity, response.body()?.message ?: \"Error\", Toast.LENGTH_SHORT).show()\r\n                        btnEditName.isEnabled = true\r\n                        btnEditEmail.isEnabled = true\r\n                    }\r\n                }\r\n            } catch (e: Exception) {\r\n                withContext(Dispatchers.Main) {\r\n                    Toast.makeText(this@EditProfileActivity, \"Error de red\", Toast.LENGTH_SHORT).show()\r\n                    btnEditName.isEnabled = true\r\n                    btnEditEmail.isEnabled = true\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun lockAllFields() {\r\n        verifiedPassword = \"\"\r\n        etName.isEnabled = false\r\n        btnEditName.isEnabled = true\r\n        btnEditName.setImageResource(android.R.drawable.ic_menu_edit)\r\n        etEmail.isEnabled = false\r\n        btnEditEmail.isEnabled = true\r\n        btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)\r\n    }\r\n\r\n    private fun showKeyboard(view: View) {\r\n        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager\r\n        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)\r\n    }\r\n\r\n    private fun hideKeyboard() {\r\n        val view = this.currentFocus\r\n        if (view != null) {\r\n            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager\r\n            imm.hideSoftInputFromWindow(view.windowToken, 0)\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt b/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt	(date 1775958230561)
+@@ -22,7 +22,6 @@
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+ import kotlinx.coroutines.withContext
+@@ -33,7 +32,6 @@
+ class EditProfileActivity : AppCompatActivity() {
+ 
+     private lateinit var sessionManager: SessionManager
+-    private lateinit var userManager: UserManager
+ 
+     private var verifiedPassword = ""
+     private var fieldWaitingToUnlock = ""
+@@ -49,7 +47,6 @@
+         setContentView(R.layout.activity_edit_profile)
+ 
+         sessionManager = SessionManager(this)
+-        userManager = UserManager(this)
+ 
+         etName = findViewById(R.id.etName)
+         etEmail = findViewById(R.id.etEmail)
+@@ -60,8 +57,9 @@
+         val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
+         val tvDelete = findViewById<TextView>(R.id.tvDelete)
+ 
+-        etName.setText(userManager.getUserName())
+-        etEmail.setText(userManager.getUserEmail())
++        // 👉 Obtener datos desde SessionManager
++        etEmail.setText(sessionManager.getUserEmail() ?: "")
++        etName.setText("") // Si no tienes nombre guardado, puedes dejarlo vacío
+ 
+         btnEditName.setOnClickListener {
+             if (!etName.isEnabled) {
+@@ -77,7 +75,6 @@
+             } else saveChanges()
+         }
+ 
+-        // 👉 NUEVO: Ahora el botón de Contraseña usa el Pop-up también
+         btnChangePassword.setOnClickListener {
+             if (verifiedPassword.isEmpty()) {
+                 fieldWaitingToUnlock = "password"
+@@ -115,12 +112,13 @@
+             val password = input.text.toString().trim()
+             if (password.isNotEmpty()) verifyPassword(password)
+         }
++
+         builder.setNegativeButton("Cancelar", null)
+         builder.show()
+     }
+ 
+     private fun verifyPassword(password: String) {
+-        val email = userManager.getUserEmail()
++        val email = sessionManager.getUserEmail() ?: return
+         val request = LoginRequest(email, password)
+ 
+         val api = RetrofitClient.instance.create(AuthApi::class.java)
+@@ -141,24 +139,26 @@
+     }
+ 
+     private fun unlockField() {
+-        if (fieldWaitingToUnlock == "name") {
+-            etName.isEnabled = true
+-            etName.requestFocus()
+-            showKeyboard(etName)
+-            btnEditName.setImageResource(android.R.drawable.ic_menu_save)
+-        } else if (fieldWaitingToUnlock == "email") {
+-            etEmail.isEnabled = true
+-            etEmail.requestFocus()
+-            showKeyboard(etEmail)
+-            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
+-        } else if (fieldWaitingToUnlock == "password") {
+-            // 👉 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla
+-            goToChangePasswordScreen()
++        when (fieldWaitingToUnlock) {
++            "name" -> {
++                etName.isEnabled = true
++                etName.requestFocus()
++                showKeyboard(etName)
++                btnEditName.setImageResource(android.R.drawable.ic_menu_save)
++            }
++            "email" -> {
++                etEmail.isEnabled = true
++                etEmail.requestFocus()
++                showKeyboard(etEmail)
++                btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
++            }
++            "password" -> {
++                goToChangePasswordScreen()
++            }
+         }
+         fieldWaitingToUnlock = ""
+     }
+ 
+-    // 👉 Función que abre la pantalla y le pasa la contraseña verificada en secreto
+     private fun goToChangePasswordScreen() {
+         val intent = Intent(this, ChangePasswordActivity::class.java)
+         intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
+@@ -170,6 +170,7 @@
+         val newEmail = etEmail.text.toString().trim()
+ 
+         if (newName.isEmpty() || newEmail.isEmpty()) return
++
+         val userId = sessionManager.getUserId() ?: return
+ 
+         btnEditName.isEnabled = false
+@@ -178,13 +179,25 @@
+ 
+         lifecycleScope.launch(Dispatchers.IO) {
+             try {
+-                val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
+-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
++                val request = UpdateProfileRequest(
++                    userId,
++                    newName,
++                    newEmail,
++                    verifiedPassword,
++                    null
++                )
++
++                val response = RetrofitClient.instance
++                    .create(AuthApi::class.java)
++                    .updateProfile(request)
+ 
+                 withContext(Dispatchers.Main) {
+                     if (response.isSuccessful && response.body()?.success == true) {
+                         Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
+-                        userManager.saveUserData(newName, newEmail)
++
++                        // 👉 Guardar cambios en sesión
++                        sessionManager.saveLogin(newEmail, userId)
++
+                         lockAllFields()
+                     } else {
+                         Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+@@ -192,6 +205,7 @@
+                         btnEditEmail.isEnabled = true
+                     }
+                 }
++
+             } catch (e: Exception) {
+                 withContext(Dispatchers.Main) {
+                     Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
+@@ -207,6 +221,7 @@
+         etName.isEnabled = false
+         btnEditName.isEnabled = true
+         btnEditName.setImageResource(android.R.drawable.ic_menu_edit)
++
+         etEmail.isEnabled = false
+         btnEditEmail.isEnabled = true
+         btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)
+Index: app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.os.Bundle\r\nimport android.widget.EditText\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.appcompat.widget.AppCompatButton\r\nimport androidx.lifecycle.lifecycleScope\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.model.UpdateProfileRequest\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\nimport kotlinx.coroutines.Dispatchers\r\nimport kotlinx.coroutines.launch\r\nimport kotlinx.coroutines.withContext\r\n\r\nclass ChangePasswordActivity : AppCompatActivity() {\r\n\r\n    private lateinit var sessionManager: SessionManager\r\n    private lateinit var userManager: UserManager\r\n\r\n    private var verifiedPassword = \"\"\r\n\r\n    private lateinit var etNewPassword: EditText\r\n    private lateinit var etConfirmNewPassword: EditText // Agregamos la variable\r\n    private lateinit var btnConfirm: AppCompatButton\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_change_password)\r\n\r\n        sessionManager = SessionManager(this)\r\n        userManager = UserManager(this)\r\n\r\n        verifiedPassword = intent.getStringExtra(\"CURRENT_PASSWORD\") ?: \"\"\r\n\r\n        if (verifiedPassword.isEmpty()) {\r\n            Toast.makeText(this, \"Error de seguridad. Vuelve a intentarlo.\", Toast.LENGTH_SHORT).show()\r\n            finish()\r\n        }\r\n\r\n        // Vinculamos el nuevo campo\r\n        etNewPassword = findViewById(R.id.etNewPassword)\r\n        etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword)\r\n        btnConfirm = findViewById(R.id.btnConfirm)\r\n        val btnBack = findViewById<AppCompatButton>(R.id.btnBack)\r\n\r\n        btnConfirm.setOnClickListener {\r\n            changePassword()\r\n        }\r\n\r\n        btnBack.setOnClickListener {\r\n            finish()\r\n        }\r\n    }\r\n\r\n    private fun changePassword() {\r\n        val newPass = etNewPassword.text.toString().trim()\r\n        val confirmPass = etConfirmNewPassword.text.toString().trim() // Leemos la confirmación\r\n\r\n        // 1. Validar que no estén vacíos\r\n        if (newPass.isEmpty() || confirmPass.isEmpty()) {\r\n            Toast.makeText(this, \"Por favor completa ambos campos\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        // 2. \uD83D\uDC49 NUEVO: Validar que las contraseñas coincidan\r\n        if (newPass != confirmPass) {\r\n            Toast.makeText(this, \"Las contraseñas no coinciden\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        // 3. Validar que no sea igual a la actual\r\n        if (verifiedPassword == newPass) {\r\n            Toast.makeText(this, \"La nueva contraseña debe ser diferente a la actual\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        val userId = sessionManager.getUserId() ?: return\r\n        val name = userManager.getUserName()\r\n        val email = userManager.getUserEmail()\r\n\r\n        btnConfirm.text = \"Actualizando...\"\r\n        btnConfirm.isEnabled = false\r\n\r\n        lifecycleScope.launch(Dispatchers.IO) {\r\n            try {\r\n                val request = UpdateProfileRequest(userId, name, email, verifiedPassword, newPass)\r\n                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)\r\n\r\n                withContext(Dispatchers.Main) {\r\n                    if (response.isSuccessful && response.body()?.success == true) {\r\n                        Toast.makeText(this@ChangePasswordActivity, \"¡Contraseña actualizada con éxito!\", Toast.LENGTH_LONG).show()\r\n                        finish()\r\n                    } else {\r\n                        btnConfirm.text = \"Guardar nueva contraseña\"\r\n                        btnConfirm.isEnabled = true\r\n                        Toast.makeText(this@ChangePasswordActivity, response.body()?.message ?: \"Error al actualizar\", Toast.LENGTH_LONG).show()\r\n                    }\r\n                }\r\n            } catch (e: Exception) {\r\n                withContext(Dispatchers.Main) {\r\n                    btnConfirm.text = \"Guardar nueva contraseña\"\r\n                    btnConfirm.isEnabled = true\r\n                    Toast.makeText(this@ChangePasswordActivity, \"Error de conexión\", Toast.LENGTH_SHORT).show()\r\n                }\r\n            }\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt b/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt	(date 1775958066394)
+@@ -11,7 +11,6 @@
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+ import kotlinx.coroutines.withContext
+@@ -19,12 +18,11 @@
+ class ChangePasswordActivity : AppCompatActivity() {
+ 
+     private lateinit var sessionManager: SessionManager
+-    private lateinit var userManager: UserManager
+ 
+     private var verifiedPassword = ""
+ 
+     private lateinit var etNewPassword: EditText
+-    private lateinit var etConfirmNewPassword: EditText // Agregamos la variable
++    private lateinit var etConfirmNewPassword: EditText
+     private lateinit var btnConfirm: AppCompatButton
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+@@ -32,16 +30,15 @@
+         setContentView(R.layout.activity_change_password)
+ 
+         sessionManager = SessionManager(this)
+-        userManager = UserManager(this)
+ 
+         verifiedPassword = intent.getStringExtra("CURRENT_PASSWORD") ?: ""
+ 
+         if (verifiedPassword.isEmpty()) {
+             Toast.makeText(this, "Error de seguridad. Vuelve a intentarlo.", Toast.LENGTH_SHORT).show()
+             finish()
++            return
+         }
+ 
+-        // Vinculamos el nuevo campo
+         etNewPassword = findViewById(R.id.etNewPassword)
+         etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword)
+         btnConfirm = findViewById(R.id.btnConfirm)
+@@ -58,53 +55,88 @@
+ 
+     private fun changePassword() {
+         val newPass = etNewPassword.text.toString().trim()
+-        val confirmPass = etConfirmNewPassword.text.toString().trim() // Leemos la confirmación
++        val confirmPass = etConfirmNewPassword.text.toString().trim()
+ 
+-        // 1. Validar que no estén vacíos
++        // 1. Validar campos vacíos
+         if (newPass.isEmpty() || confirmPass.isEmpty()) {
+             Toast.makeText(this, "Por favor completa ambos campos", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        // 2. 👉 NUEVO: Validar que las contraseñas coincidan
++        // 2. Validar coincidencia
+         if (newPass != confirmPass) {
+             Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        // 3. Validar que no sea igual a la actual
++        // 3. Validar longitud mínima
++        if (newPass.length < 6) {
++            Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
++            return
++        }
++
++        // 4. Validar que sea diferente a la actual
+         if (verifiedPassword == newPass) {
+             Toast.makeText(this, "La nueva contraseña debe ser diferente a la actual", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        val userId = sessionManager.getUserId() ?: return
+-        val name = userManager.getUserName()
+-        val email = userManager.getUserEmail()
++        val userId = sessionManager.getUserId()
++
++        if (userId == null) {
++            Toast.makeText(this, "Error: usuario no identificado", Toast.LENGTH_SHORT).show()
++            return
++        }
++
++        // Si tu API requiere estos campos, se envían vacíos
++        val name = ""
++        val email = ""
+ 
+         btnConfirm.text = "Actualizando..."
+         btnConfirm.isEnabled = false
+ 
+         lifecycleScope.launch(Dispatchers.IO) {
+             try {
+-                val request = UpdateProfileRequest(userId, name, email, verifiedPassword, newPass)
+-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
++                val request = UpdateProfileRequest(
++                    userId,
++                    name,
++                    email,
++                    verifiedPassword,
++                    newPass
++                )
++
++                val response = RetrofitClient.instance
++                    .create(AuthApi::class.java)
++                    .updateProfile(request)
+ 
+                 withContext(Dispatchers.Main) {
+                     if (response.isSuccessful && response.body()?.success == true) {
+-                        Toast.makeText(this@ChangePasswordActivity, "¡Contraseña actualizada con éxito!", Toast.LENGTH_LONG).show()
++                        Toast.makeText(
++                            this@ChangePasswordActivity,
++                            "¡Contraseña actualizada con éxito!",
++                            Toast.LENGTH_LONG
++                        ).show()
+                         finish()
+                     } else {
+                         btnConfirm.text = "Guardar nueva contraseña"
+                         btnConfirm.isEnabled = true
+-                        Toast.makeText(this@ChangePasswordActivity, response.body()?.message ?: "Error al actualizar", Toast.LENGTH_LONG).show()
++                        Toast.makeText(
++                            this@ChangePasswordActivity,
++                            response.body()?.message ?: "Error al actualizar",
++                            Toast.LENGTH_LONG
++                        ).show()
+                     }
+                 }
++
+             } catch (e: Exception) {
+                 withContext(Dispatchers.Main) {
+                     btnConfirm.text = "Guardar nueva contraseña"
+                     btnConfirm.isEnabled = true
+-                    Toast.makeText(this@ChangePasswordActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
++                    Toast.makeText(
++                        this@ChangePasswordActivity,
++                        "Error de conexión",
++                        Toast.LENGTH_SHORT
++                    ).show()
+                 }
+             }
+         }
+Index: app/src/main/java/com/example/lumikids/model/ApiResponse.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.model\r\n\r\ndata class ApiResponse(\r\n    val success: Boolean,\r\n    val message: String\r\n)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/ApiResponse.kt b/app/src/main/java/com/example/lumikids/model/ApiResponse.kt
+--- a/app/src/main/java/com/example/lumikids/model/ApiResponse.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/model/ApiResponse.kt	(date 1775958373875)
+@@ -1,6 +1,10 @@
+ package com.example.lumikids.model
+ 
++import com.google.gson.annotations.SerializedName
++
+ data class ApiResponse(
+     val success: Boolean,
+-    val message: String
++    val message: String,
++    @SerializedName("ID_user")
++    val userId: String? = null
+ )
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    alias(libs.plugins.android.application)\r\n}\r\n\r\nandroid {\r\n    namespace = \"com.example.lumikids\"\r\n    compileSdk {\r\n        version = release(36)\r\n    }\r\n\r\n    defaultConfig {\r\n        applicationId = \"com.example.lumikids\"\r\n        minSdk = 24\r\n        targetSdk = 36\r\n        versionCode = 1\r\n        versionName = \"1.0\"\r\n\r\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            isMinifyEnabled = false\r\n            proguardFiles(\r\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\r\n                \"proguard-rules.pro\"\r\n            )\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility = JavaVersion.VERSION_11\r\n        targetCompatibility = JavaVersion.VERSION_11\r\n    }\r\n\r\n    buildFeatures {\r\n        dataBinding = true\r\n    }\r\n}\r\n\r\ndependencies {\r\n    implementation(libs.androidx.core.ktx)\r\n    implementation(libs.androidx.appcompat)\r\n    implementation(libs.material)\r\n    implementation(libs.androidx.activity)\r\n    implementation(libs.androidx.constraintlayout)\r\n    testImplementation(libs.junit)\r\n    androidTestImplementation(libs.androidx.junit)\r\n    androidTestImplementation(libs.androidx.espresso.core)\r\n    implementation(\"com.squareup.okhttp3:okhttp:4.12.0\")\r\n    implementation(\"androidx.core:core-splashscreen:1.0.1\")\r\n    implementation(\"com.squareup.retrofit2:retrofit:2.9.0\")\r\n    implementation(\"com.squareup.retrofit2:converter-gson:2.9.0\")\r\n    implementation(\"com.squareup.okhttp3:logging-interceptor:4.12.0\")\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/build.gradle.kts	(date 1775959709616)
+@@ -27,6 +27,7 @@
+             )
+         }
+     }
++
+     compileOptions {
+         sourceCompatibility = JavaVersion.VERSION_11
+         targetCompatibility = JavaVersion.VERSION_11
+@@ -43,12 +44,21 @@
+     implementation(libs.material)
+     implementation(libs.androidx.activity)
+     implementation(libs.androidx.constraintlayout)
++
+     testImplementation(libs.junit)
+     androidTestImplementation(libs.androidx.junit)
+     androidTestImplementation(libs.androidx.espresso.core)
++
++    // Networking
+     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+-    implementation("androidx.core:core-splashscreen:1.0.1")
++    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+     implementation("com.squareup.retrofit2:retrofit:2.9.0")
+     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
++
++    // UI / Utils
++    implementation("androidx.core:core-splashscreen:1.0.1")
++
++    // Image loading (ambas librerías conservadas)
++    implementation("com.github.bumptech.glide:glide:4.16.0")
++    implementation("io.coil-kt:coil:2.6.0")
+ }
+\ No newline at end of file
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n    <uses-permission android:name=\"android.permission.INTERNET\"/>\r\n    <application\r\n        android:usesCleartextTraffic=\"true\"\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_app\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_app\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.LumiKids\">\r\n\r\n\r\n\r\n\r\n        <activity android:name=\".MainActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity\r\n            android:name=\".ui.LoginActivity\"\r\n            android:screenOrientation=\"portrait\" />\r\n        <activity android:name=\".ui.RegisterActivity\"\r\n            android:screenOrientation=\"portrait\"/>\r\n        <activity android:name=\".ui.TermsActivity\"\r\n            android:screenOrientation=\"portrait\"/>\r\n\r\n        <activity android:name=\".ui.GameTypeActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.ThemeGameActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.MemoryLevelActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.ObjectLevelPickerActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n\r\n        <activity android:name=\".minigame.objectrecognition.ui.GameActivityN1\"\r\n            android:screenOrientation=\"landscape\"/>\r\n        <activity android:name=\".minigame.memorygame.ui.GameActivityN2\"\r\n            android:screenOrientation=\"landscape\"/>\r\n\r\n        <activity android:name=\".ui.ProfileActivity\"\r\n            android:screenOrientation=\"portrait\" />\r\n        <activity\r\n            android:name=\".ui.SplashActivity\"\r\n            android:exported=\"true\">\r\n            <intent-filter>\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n                <category android:name=\"android.intent.category.LAUNCHER\" />\r\n            </intent-filter>\r\n        </activity>\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/AndroidManifest.xml	(date 1775957373338)
+@@ -1,7 +1,14 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
++
++    <!-- Permisos -->
+     <uses-permission android:name="android.permission.INTERNET"/>
++    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
++    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
++    <uses-permission android:name="android.permission.WAKE_LOCK" />
++    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:ignore="ProtectedPermissions" />
++
+     <application
+         android:usesCleartextTraffic="true"
+         android:allowBackup="true"
+@@ -13,35 +20,78 @@
+         android:supportsRtl="true"
+         android:theme="@style/Theme.LumiKids">
+ 
+-
++        <!-- Receiver -->
++        <receiver
++            android:name=".utils.NotificationReceiver"
++            android:exported="false"/>
+ 
+-
+-        <activity android:name=".MainActivity"
++        <!-- Activities comunes -->
++        <activity
++            android:name=".MainActivity"
+             android:screenOrientation="sensorLandscape"/>
++
+         <activity
+             android:name=".ui.LoginActivity"
+             android:screenOrientation="portrait" />
+-        <activity android:name=".ui.RegisterActivity"
++
++        <activity
++            android:name=".ui.RegisterActivity"
+             android:screenOrientation="portrait"/>
+-        <activity android:name=".ui.TermsActivity"
++
++        <activity
++            android:name=".ui.TermsActivity"
+             android:screenOrientation="portrait"/>
+ 
+-        <activity android:name=".ui.GameTypeActivity"
++        <activity
++            android:name=".ui.GameTypeActivity"
+             android:screenOrientation="sensorLandscape"/>
+-        <activity android:name=".ui.ThemeGameActivity"
++
++        <activity
++            android:name=".ui.ThemeGameActivity"
+             android:screenOrientation="sensorLandscape"/>
+-        <activity android:name=".ui.MemoryLevelActivity"
++
++        <activity
++            android:name=".ui.MemoryLevelActivity"
+             android:screenOrientation="sensorLandscape"/>
+-        <activity android:name=".ui.ObjectLevelPickerActivity"
++
++        <activity
++            android:name=".ui.ObjectLevelPickerActivity"
+             android:screenOrientation="sensorLandscape"/>
+ 
+-        <activity android:name=".minigame.objectrecognition.ui.GameActivityN1"
+-            android:screenOrientation="landscape"/>
+-        <activity android:name=".minigame.memorygame.ui.GameActivityN2"
++        <activity
++            android:name=".ui.ProfileActivity"
++            android:screenOrientation="portrait" />
++
++        <!-- Activities del primer manifest -->
++
++        <activity
++            android:name=".ui.NotificationActivity"
++            android:screenOrientation="portrait" />
++
++        <activity
++            android:name=".ui.PecsBoardActivity"
++            android:screenOrientation="landscape" />
++
++        <!-- Activities del segundo manifest -->
++        <activity
++            android:name=".ui.ObjectRecognition"
+             android:screenOrientation="landscape"/>
+ 
+-        <activity android:name=".ui.ProfileActivity"
+-            android:screenOrientation="portrait" />
++        <activity
++            android:name=".ui.MemoryGame"
++            android:screenOrientation="landscape"/>
++
++        <activity
++            android:name=".ui.EditProfileActivity"
++            android:screenOrientation="portrait"
++            android:exported="false" />
++
++        <activity
++            android:name=".ui.ChangePasswordActivity"
++            android:screenOrientation="portrait"
++            android:exported="false" />
++
++        <!-- Launcher -->
+         <activity
+             android:name=".ui.SplashActivity"
+             android:exported="true">
+@@ -50,6 +100,7 @@
+                 <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
+         </activity>
++
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/RetrofitClient.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.network\r\n\r\nimport okhttp3.OkHttpClient\r\nimport okhttp3.logging.HttpLoggingInterceptor\r\nimport retrofit2.Retrofit\r\nimport retrofit2.converter.gson.GsonConverterFactory\r\n\r\nobject RetrofitClient {\r\n\r\n    private const val BASE_URL = \"http://192.168.100.251:3000/\" // My home Carlos\r\n   //private const val BASE_URL = \"http://10.100.77.90:3000/\"   //School\r\n   //private const val BASE_URL = \"http://10.106.250.40:3000/\" // Phone\r\n\r\n   // private const val BASE_URL = \"http://192.168.208.104:3000/\" // Phone 2\r\n\r\n\r\n    private val logging = HttpLoggingInterceptor().apply {\r\n        level = HttpLoggingInterceptor.Level.BODY\r\n    }\r\n\r\n    private val client = OkHttpClient.Builder()\r\n        .addInterceptor(logging)\r\n        .build()\r\n\r\n    val instance: Retrofit by lazy {\r\n        Retrofit.Builder()\r\n            .baseUrl(BASE_URL)\r\n            .client(client)\r\n            .addConverterFactory(GsonConverterFactory.create())\r\n            .build()\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt b/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt
+--- a/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt	(date 1775959316115)
+@@ -1,5 +1,7 @@
+ package com.example.lumikids.network
+ 
++
++import com.example.lumikids.network.NotificationApiService
+ import okhttp3.OkHttpClient
+ import okhttp3.logging.HttpLoggingInterceptor
+ import retrofit2.Retrofit
+@@ -7,13 +9,10 @@
+ 
+ object RetrofitClient {
+ 
+-    private const val BASE_URL = "http://192.168.100.251:3000/" // My home Carlos
+-   //private const val BASE_URL = "http://10.100.77.90:3000/"   //School
+-   //private const val BASE_URL = "http://10.106.250.40:3000/" // Phone
+-
+-   // private const val BASE_URL = "http://192.168.208.104:3000/" // Phone 2
++    private const val BASE_URL = "http://192.168.100.132:3000/" // My home
+ 
+-
++    const val BASE_URL_IMAGES = "${BASE_URL}images/"
++    const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"
+     private val logging = HttpLoggingInterceptor().apply {
+         level = HttpLoggingInterceptor.Level.BODY
+     }
+@@ -29,4 +28,8 @@
+             .addConverterFactory(GsonConverterFactory.create())
+             .build()
+     }
+-}
++
++    val apiService: NotificationApiService by lazy {
++        instance.create(NotificationApiService::class.java)
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/GameActivityN1.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/GameActivityN1.kt b/app/src/main/java/com/example/lumikids/GameActivityN1.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/GameActivityN1.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,163 +0,0 @@
+-package com.example.lumikids
+-
+-import android.media.MediaPlayer
+-import android.os.Bundle
+-import android.widget.ImageView
+-import android.widget.Toast
+-import androidx.appcompat.app.AppCompatActivity
+-
+-// Modelo de datos actualizado con audioResId
+-data class LumiObject(val name: String, val imageResId: Int, val audioResId: Int)
+-
+-class GameActivityN1 : AppCompatActivity() {
+-
+-    private lateinit var imgOption1: ImageView
+-    private lateinit var imgOption2: ImageView
+-    private lateinit var imgOption3: ImageView
+-    private lateinit var btnBack: ImageView
+-
+-    private var mediaPlayer: MediaPlayer? = null
+-
+-    private var currentCorrectObject: LumiObject? = null
+-    private var currentThemeItems: List<LumiObject> = emptyList()
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        super.onCreate(savedInstanceState)
+-        setContentView(R.layout.activity_game_n1)
+-
+-        // 2. Vincular las vistas
+-        imgOption1 = findViewById(R.id.imgOption1)
+-        imgOption2 = findViewById(R.id.imgOption2)
+-        imgOption3 = findViewById(R.id.imgOption3)
+-        btnBack = findViewById(R.id.btnBack)
+-
+-        btnBack.setOnClickListener { finish() }
+-
+-        // 3. Recibir los datos de la pantalla anterior
+-        val theme = intent.getStringExtra("THEME") ?: "FOOD"
+-        val gameType = intent.getStringExtra("GAME_TYPE") ?: "OBJECT"
+-
+-        if (gameType == "OBJECT") {
+-            // Cargar la lista de objetos de forma dinámica
+-            currentThemeItems = getItemsForTheme(theme)
+-
+-            // Verificamos si se encontraron elementos antes de jugar
+-            if (currentThemeItems.isEmpty()) {
+-                Toast.makeText(this, "Agrega imágenes en drawable y audios en raw", Toast.LENGTH_LONG).show()
+-            } else {
+-                startNewRound()
+-            }
+-        } else {
+-            // Aquí irá el código del memorama en el futuro
+-            Toast.makeText(this, "Memorama en construcción", Toast.LENGTH_SHORT).show()
+-        }
+-    }
+-
+-    private fun startNewRound() {
+-        if (currentThemeItems.size < 3) {
+-            Toast.makeText(this, "Se necesitan al menos 3 objetos para jugar", Toast.LENGTH_SHORT).show()
+-            return
+-        }
+-
+-        // 4. Elegir 3 objetos al azar
+-        val shuffledItems = currentThemeItems.shuffled()
+-        val roundOptions = shuffledItems.take(3)
+-
+-        // 5. De esos 3, elegir 1 como la respuesta correcta
+-        currentCorrectObject = roundOptions.random()
+-
+-                // 6. REPRODUCIR EL AUDIO DE LA INSTRUCCIÓN
+-                // Libera el audio anterior si existía para no amontonar sonidos
+-                mediaPlayer?.release()
+-                currentCorrectObject?.let { correctObj ->
+-                    // Crea el reproductor con el audio del objeto ganador y lo inicia
+-                    mediaPlayer = MediaPlayer.create(this, correctObj.audioResId)
+-                    mediaPlayer?.start()
+-                }
+-
+-
+-
+-        // 7. Poner las imágenes en los botones
+-        imgOption1.setImageResource(roundOptions[0].imageResId)
+-        imgOption2.setImageResource(roundOptions[1].imageResId)
+-        imgOption3.setImageResource(roundOptions[2].imageResId)
+-
+-        // 8. Configurar los clics
+-        setupOptionClick(imgOption1, roundOptions[0])
+-        setupOptionClick(imgOption2, roundOptions[1])
+-        setupOptionClick(imgOption3, roundOptions[2])
+-    }
+-
+-    private fun setupOptionClick(imageView: ImageView, clickedObject: LumiObject) {
+-        imageView.setOnClickListener {
+-            if (clickedObject == currentCorrectObject) {
+-                reproducirEfecto(R.raw.win)
+-                Toast.makeText(this, "¡Muy bien!", Toast.LENGTH_SHORT).show()
+-                // Iniciar nueva ronda después de un pequeño retraso
+-                imageView.postDelayed({
+-                    startNewRound()
+-                }, 1000) // Espera 1 segundo
+-            } else {
+-                reproducirEfecto(R.raw.fail)
+-                Toast.makeText(this, "Intenta de nuevo", Toast.LENGTH_SHORT).show()
+-            }
+-        }
+-
+-    }
+-
+-    // LECTURA DINÁMICA AUTOMÁTICA
+-    private fun getItemsForTheme(theme: String): List<LumiObject> {
+-        val prefijo = when (theme) {
+-            "FOOD" -> "food_"
+-            "EMOTIONS" -> "emo_"
+-            "CLOTHES" -> "clother_"
+-            else -> return emptyList()
+-        }
+-
+-        val listaAutomatica = mutableListOf<LumiObject>()
+-        val todosLosDrawables = R.drawable::class.java.fields
+-
+-        for (archivo in todosLosDrawables) {
+-            val nombreArchivo = archivo.name
+-
+-            if (nombreArchivo.startsWith(prefijo)) {
+-                try {
+-                    val idImagen = archivo.getInt(null)
+-                    // Busca el audio con el mismo nombre en la carpeta res/raw/
+-                    val idAudio = resources.getIdentifier(nombreArchivo, "raw", packageName)
+-
+-                    //if (idAudio != 0)
+-                    if (idAudio != 0) {
+-                        // Limpia el nombre por si necesitas imprimirlo (convierte food_manzana -> Manzana)
+-                        val nombreLimpio = nombreArchivo.removePrefix(prefijo)
+-                            .replace("_", " ")
+-                            .replaceFirstChar { it.uppercase() }
+-
+-                        listaAutomatica.add(LumiObject(nombreLimpio, idImagen, idAudio))
+-                    }
+-                } catch (e: Exception) {
+-                    e.printStackTrace()
+-                }
+-            }
+-        }
+-
+-        return listaAutomatica
+-    }
+-
+-    private fun reproducirEfecto(sonidoResId: Int) {
+-        val efectoPlayer = MediaPlayer.create(this, sonidoResId)
+-        efectoPlayer.setOnCompletionListener {
+-            it.release() // Destruye el reproductor en cuanto termina el sonido
+-        }
+-        efectoPlayer.start()
+-    }
+-
+-
+-
+-    //  liberar el reproductor cuando se cierra la pantalla
+-    override fun onDestroy() {
+-        super.onDestroy()
+-        mediaPlayer?.release()
+-        mediaPlayer = null
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt b/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,7 +0,0 @@
+-package com.example.lumikids.minigame.objectrecognition.model
+-import com.example.lumikids.model.GameObject
+-
+-data class ObjectRound(
+-    val options: List<GameObject>,
+-    val correctObject: GameObject
+-)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/MiniGame.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/MiniGame.kt b/app/src/main/java/com/example/lumikids/minigame/MiniGame.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/MiniGame.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,41 +0,0 @@
+-package com.example.lumikids.minigame
+-
+-import android.os.Bundle
+-import androidx.appcompat.app.AppCompatActivity
+-import androidx.lifecycle.lifecycleScope
+-import com.example.lumikids.R
+-import com.example.lumikids.model.GameResult
+-import com.example.lumikids.utils.GameAudioManager
+-import com.example.lumikids.utils.GameTimer
+-import com.example.lumikids.utils.ScoreManager
+-
+-abstract class MiniGame : AppCompatActivity() {
+-
+-    protected lateinit var theme: String
+-    protected var errors: Int = 0
+-    protected val gameTimer = GameTimer()
+-    protected lateinit var gameAudio: GameAudioManager
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        super.onCreate(savedInstanceState)
+-
+-
+-        theme = intent.getStringExtra("THEME") ?: "furniture"
+-
+-        gameAudio = GameAudioManager(this, lifecycleScope)
+-    }
+-
+-    protected fun showResults(gameTitle: String) {
+-        gameAudio.playEffect(R.raw.win)
+-        val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, gameTitle)
+-        ScoreManager(this).showResults(finalResult) { finish() }
+-    }
+-
+-    override fun onDestroy() {
+-        super.onDestroy()
+-        gameAudio.releaseAll()
+-    }
+-
+-    abstract fun initViews()
+-    abstract fun loadGameData()
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/utils/UserManager.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/utils/UserManager.kt b/app/src/main/java/com/example/lumikids/utils/UserManager.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/utils/UserManager.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,38 +0,0 @@
+-package com.example.lumikids.utils
+-
+-import android.content.Context
+-import android.content.SharedPreferences
+-
+-class UserManager(context: Context) {
+-
+-    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+-
+-    fun saveUserData(name: String, email: String) {
+-        prefs.edit().apply {
+-            putString(KEY_USER_NAME, name)
+-            putString(KEY_USER_EMAIL, email)
+-            apply() // Lo guarda en segundo plano para no congelar la app
+-        }
+-    }
+-
+-
+-    fun getUserName(): String {
+-        return prefs.getString(KEY_USER_NAME, "") ?: ""
+-    }
+-
+-    fun getUserEmail(): String {
+-        return prefs.getString(KEY_USER_EMAIL, "") ?: ""
+-    }
+-
+-
+-    fun clearUserData() {
+-        prefs.edit().clear().apply()
+-    }
+-
+-
+-    companion object {
+-        private const val PREF_NAME = "user_profile_prefs"
+-        private const val KEY_USER_NAME = "KEY_USER_NAME"
+-        private const val KEY_USER_EMAIL = "KEY_USER_EMAIL"
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt b/app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,246 +0,0 @@
+-package com.example.lumikids.minigame.memorygame
+-
+-import android.os.Bundle
+-import android.view.Gravity
+-import android.widget.GridLayout
+-import android.widget.ImageView
+-import android.widget.Toast
+-import androidx.lifecycle.lifecycleScope
+-import com.bumptech.glide.Glide
+-import com.bumptech.glide.load.resource.bitmap.CenterCrop
+-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+-import com.example.lumikids.R
+-import com.example.lumikids.minigame.MiniGame
+-import com.example.lumikids.minigame.memorygame.model.MemoryCard
+-import com.example.lumikids.utils.PauseDialog
+-import com.example.lumikids.network.AuthApi
+-import com.example.lumikids.network.RetrofitClient
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.delay
+-import kotlinx.coroutines.launch
+-import kotlinx.coroutines.withContext
+-import retrofit2.awaitResponse
+-import kotlin.math.min
+-
+-class MemoryGame : MiniGame() {
+-
+-    private var boardCards: List<MemoryCard> = emptyList()
+-    private var numPairsWanted: Int = 3
+-
+-    private var firstSelectedCard: MemoryCard? = null
+-    private var firstSelectedView: ImageView? = null
+-    private var isBusy = false
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        super.onCreate(savedInstanceState)
+-        setContentView(R.layout.activity_game_n2)
+-
+-        numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
+-
+-        initViews()
+-        loadGameData()
+-    }
+-
+-    // ✨ Agregamos 'override' porque es un contrato de la clase padre
+-    override fun initViews() {
+-        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+-        findViewById<ImageView>(R.id.btnPause).setOnClickListener {
+-            gameTimer.pause()
+-            PauseDialog(this).showDialog(
+-                onResume = { gameTimer.resume() },
+-                onExit = { finish() }
+-            )
+-        }
+-    }
+-
+-    override fun loadGameData() {
+-        lifecycleScope.launch {
+-            val success = withContext(Dispatchers.IO) {
+-                try {
+-                    val categoryId = when (theme.lowercase()) {
+-                        "clothing" -> 3
+-                        "emotions" -> 5
+-                        "furniure" -> 8
+-                        else -> 0
+-                    }
+-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
+-                    val call = api.getGameObjects(categoryId).awaitResponse()
+-
+-                    if (call.isSuccessful) {
+-                        val allAvailableObjects = call.body() ?: emptyList()
+-                        if (allAvailableObjects.size < numPairsWanted) return@withContext false
+-
+-                        val selectedObjects = allAvailableObjects.shuffled().take(numPairsWanted)
+-                        val memoryCards = mutableListOf<MemoryCard>()
+-                        selectedObjects.forEach { obj ->
+-                            memoryCards.add(MemoryCard(gameObject = obj))
+-                            memoryCards.add(MemoryCard(gameObject = obj))
+-                        }
+-                        boardCards = memoryCards.shuffled()
+-                        gameTimer.start()
+-                        return@withContext true
+-                    }
+-                    false
+-                } catch (e: Exception) {
+-                    false
+-                }
+-            }
+-
+-            if (success) {
+-                createDynamicBoard()
+-            } else {
+-                Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
+-                finish()
+-            }
+-        }
+-    }
+-
+-    private fun createDynamicBoard() {
+-        val grid = findViewById<GridLayout>(R.id.gridMemorama)
+-        grid.removeAllViews()
+-
+-        val columns = boardCards.size / 2
+-        grid.columnCount = columns
+-        grid.rowCount = 2
+-
+-        val displayMetrics = resources.displayMetrics
+-        val maxWidthPerCard = (displayMetrics.widthPixels * 0.95f) / columns
+-        val maxHeightPerCard = (displayMetrics.heightPixels * 0.70f) / 2f
+-        val baseSize = min(maxWidthPerCard, maxHeightPerCard).toInt()
+-        val margin = (baseSize * 0.05).toInt()
+-        val size = baseSize - (margin * 2)
+-
+-        for (i in boardCards.indices) {
+-            val cardData = boardCards[i]
+-            val view = ImageView(this).apply {
+-                layoutParams = GridLayout.LayoutParams().apply {
+-                    width = size
+-                    height = size
+-                    setMargins(margin, margin, margin, margin)
+-                    setGravity(Gravity.CENTER)
+-                }
+-                setBackgroundResource(R.drawable.bg_card)
+-                setPadding(margin, margin, margin, margin)
+-                scaleType = ImageView.ScaleType.FIT_CENTER
+-                setImageResource(R.drawable.ic_logo)
+-                tag = false
+-
+-                Glide.with(this@MemoryGame)
+-                    .load(RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl)
+-                    .preload()
+-            }
+-            view.setOnClickListener { handleCardClick(view, cardData) }
+-            grid.addView(view)
+-        }
+-    }
+-
+-    private fun handleCardClick(view: ImageView, card: MemoryCard) {
+-        if (isBusy || view.tag == true || card.isMatched) return
+-
+-        flipCardUp(view, card.gameObject.imageUrl)
+-        view.tag = true
+-
+-        if (firstSelectedCard == null) {
+-            firstSelectedCard = card
+-            firstSelectedView = view
+-        } else {
+-            isBusy = true
+-            val isMatch = firstSelectedCard?.gameObject?.id == card.gameObject.id
+-
+-            if (isMatch) {
+-                firstSelectedCard?.isMatched = true
+-                card.isMatched = true
+-
+-                card.gameObject.audioShortUrl?.let {
+-                    gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + it)
+-                } ?: gameAudio.playEffect(R.raw.win)
+-
+-                resetSelection()
+-                isBusy = false
+-                checkGameFinished()
+-            } else {
+-                errors++
+-                gameAudio.playEffect(R.raw.fail)
+-
+-                lifecycleScope.launch {
+-                    delay(1000)
+-                    firstSelectedView?.let { firstView ->
+-                        flipCardsDown(firstView, view, R.drawable.ic_logo) {
+-                            view.tag = false
+-                            firstView.tag = false
+-                            resetSelection()
+-                            isBusy = false
+-                        }
+-                    } ?: run {
+-                        resetSelection()
+-                        isBusy = false
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    private fun flipCardUp(view: ImageView, imageUrl: String) {
+-        val duration = 150L
+-
+-        view.animate()
+-            .rotationY(90f)
+-            .setDuration(duration)
+-            .withEndAction {
+-                Glide.with(this)
+-                    .load(RetrofitClient.BASE_URL_IMAGES + imageUrl)
+-                    .placeholder(R.drawable.ic_logo)
+-                    .transform(CenterCrop(), RoundedCorners(30))
+-                    .into(view)
+-
+-                view.rotationY = -90f
+-                view.animate()
+-                    .rotationY(0f)
+-                    .setDuration(duration)
+-                    .start()
+-            }.start()
+-    }
+-
+-    private fun flipCardsDown(view1: ImageView, view2: ImageView, defaultImage: Int, onComplete: () -> Unit) {
+-        val duration = 150L
+-
+-        view1.animate()
+-            .rotationY(90f)
+-            .setDuration(duration)
+-            .withEndAction {
+-                view1.setImageResource(defaultImage)
+-                view1.rotationY = -90f
+-                view1.animate().rotationY(0f).setDuration(duration).start()
+-            }.start()
+-
+-        view2.animate()
+-            .rotationY(90f)
+-            .setDuration(duration)
+-            .withEndAction {
+-                view2.setImageResource(defaultImage)
+-                view2.rotationY = -90f
+-                view2.animate()
+-                    .rotationY(0f)
+-                    .setDuration(duration)
+-                    .withEndAction {
+-                        onComplete()
+-                    }.start()
+-            }.start()
+-    }
+-
+-    private fun checkGameFinished() {
+-        if (boardCards.all { it.isMatched }) {
+-            lifecycleScope.launch {
+-                delay(1000)
+-
+-                showResults("Memorama")
+-            }
+-        }
+-    }
+-
+-    private fun resetSelection() {
+-        firstSelectedCard = null
+-        firstSelectedView = null
+-    }
+-
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt b/app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,8 +0,0 @@
+-package com.example.lumikids.minigame.memorygame.model
+-
+-import com.example.lumikids.model.GameObject
+-data class MemoryCard(
+-    val gameObject: GameObject,
+-    var isFaceUp: Boolean = false,
+-    var isMatched: Boolean = false
+-)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/GameActivityN2.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/GameActivityN2.kt b/app/src/main/java/com/example/lumikids/GameActivityN2.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/GameActivityN2.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,23 +0,0 @@
+-package com.example.lumikids
+-
+-import android.os.Bundle
+-import android.widget.ImageView
+-import androidx.appcompat.app.AppCompatActivity
+-
+-class GameActivityN2 : AppCompatActivity() {
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        super.onCreate(savedInstanceState)
+-        // Aquí conectamos tu nuevo diseño XML (asegúrate de que el archivo XML se llame activity_game_n2)
+-        setContentView(R.layout.activity_game_n2)
+-
+-        // Botón para regresar
+-        val btnBack = findViewById<ImageView>(R.id.btnBack)
+-        btnBack.setOnClickListener {
+-            finish() // Cierra esta pantalla y vuelve a la anterior
+-        }
+-
+-        // (El botón de pausa y las 10 tarjetas ya están en pantalla,
+-        //  pero aún no harán nada al tocarlas).
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt b/app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ /dev/null	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
+@@ -1,210 +0,0 @@
+-package com.example.lumikids.minigame.objectrecognition
+-
+-import android.os.Bundle
+-import android.view.View
+-import android.widget.ImageView
+-import android.widget.TextView
+-import android.widget.Toast
+-import androidx.lifecycle.lifecycleScope
+-import com.bumptech.glide.Glide
+-import com.bumptech.glide.load.resource.bitmap.CenterCrop
+-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+-import com.example.lumikids.R
+-import com.example.lumikids.minigame.MiniGame
+-import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
+-import com.example.lumikids.utils.InstructionRepository
+-import com.example.lumikids.utils.PauseDialog
+-import com.example.lumikids.model.GameObject
+-import com.example.lumikids.network.AuthApi
+-import com.example.lumikids.network.RetrofitClient
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.delay
+-import kotlinx.coroutines.launch
+-import kotlinx.coroutines.withContext
+-import retrofit2.awaitResponse
+-
+-// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity
+-class ObjectRecognition : MiniGame() {
+-
+-    private var allItems: MutableList<GameObject> = mutableListOf()
+-    private var currentRoundCount: Int = 0
+-    private var currentRound: ObjectRound? = null
+-    private var totalRoundsWanted: Int = 3
+-    private var urlAudioActual: String? = null
+-
+-    private lateinit var tvInstruction: TextView
+-    private lateinit var images: List<ImageView>
+-    private lateinit var resultIcons: List<ImageView>
+-
+-    private lateinit var btnPause: ImageView
+-    private lateinit var btnBack: ImageView
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
+-        super.onCreate(savedInstanceState)
+-        setContentView(R.layout.activity_game_n1)
+-
+-        totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
+-
+-        initViews()
+-        loadGameData()
+-    }
+-
+-
+-    override fun initViews() {
+-        tvInstruction = findViewById(R.id.tvInstruction)
+-        btnPause = findViewById(R.id.btnPause)
+-        btnBack = findViewById(R.id.btnBack)
+-
+-        images = listOf(
+-            findViewById(R.id.imgOption1),
+-            findViewById(R.id.imgOption2),
+-            findViewById(R.id.imgOption3)
+-        )
+-
+-        resultIcons = listOf(
+-            findViewById(R.id.imgResult1),
+-            findViewById(R.id.imgResult2),
+-            findViewById(R.id.imgResult3)
+-        )
+-
+-        btnBack.setOnClickListener { finish() }
+-
+-        btnPause.setOnClickListener {
+-            gameTimer.pause()
+-            gameAudio.stopLoop()
+-
+-            PauseDialog(this).showDialog(
+-                onResume = {
+-                    gameTimer.resume()
+-                    urlAudioActual?.let { gameAudio.startLoop(it) }
+-                },
+-                onExit = { finish() }
+-            )
+-        }
+-    }
+-
+-    override fun loadGameData() {
+-        lifecycleScope.launch {
+-            val success = withContext(Dispatchers.IO) {
+-                try {
+-                    val categoryId = InstructionRepository.getCategoryId(theme)
+-                    val instructionMap = InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
+-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
+-                    val call = api.getGameObjects(categoryId).awaitResponse()
+-
+-                    if (call.isSuccessful) {
+-                        val downloadedObjects = call.body() ?: emptyList()
+-                        if (downloadedObjects.isEmpty()) return@withContext false
+-
+-                        allItems = downloadedObjects.map { item ->
+-                            val localText = instructionMap[item.name] ?: "Selecciona el objeto"
+-                            item.copy(instructionText = localText)
+-                        }.toMutableList()
+-
+-                        if (allItems.size >= 3) {
+-                            gameTimer.start()
+-                            return@withContext true
+-                        }
+-                    }
+-                    false
+-                } catch (e: Exception) {
+-                    false
+-                }
+-            }
+-
+-            if (success) {
+-                startNewRound()
+-            } else {
+-                Toast.makeText(this@ObjectRecognition, "Error al cargar datos", Toast.LENGTH_SHORT).show()
+-                finish()
+-            }
+-        }
+-    }
+-
+-    private fun startNewRound() {
+-        if (currentRoundCount >= totalRoundsWanted) {
+-            // ✨ MEJORA: Usamos la función integrada de la clase padre para mostrar la victoria
+-            showResults("Identificar Objeto")
+-            return
+-        }
+-
+-        if (allItems.size < 3) return
+-
+-        currentRoundCount++
+-        val roundOptions = allItems.shuffled().take(3)
+-        val correctObject = roundOptions.random()
+-        currentRound = ObjectRound(roundOptions, correctObject)
+-
+-        tvInstruction.text = correctObject.instructionText
+-
+-        if (correctObject.audioInstructionUrl != null) {
+-            urlAudioActual = RetrofitClient.BASE_URL_SOUNDS + correctObject.audioInstructionUrl
+-            gameAudio.startLoop(urlAudioActual!!)
+-        } else {
+-            urlAudioActual = null
+-            gameAudio.stopLoop()
+-        }
+-
+-        resetImagesBackground()
+-
+-        roundOptions.forEachIndexed { index, gameObject ->
+-            images[index].apply {
+-                Glide.with(this@ObjectRecognition)
+-                    .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
+-                    .placeholder(R.drawable.ic_logo)
+-                    .transform(CenterCrop(), RoundedCorners(30))
+-                    .into(this)
+-
+-                isEnabled = true
+-                setOnClickListener {
+-                    gameAudio.stopLoop()
+-                    val isCorrect = gameObject == currentRound?.correctObject
+-
+-                    if (gameObject.audioShortUrl != null) {
+-                        gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
+-                    }
+-                    handleSelection(this, isCorrect)
+-                }
+-            }
+-        }
+-    }
+-
+-    private fun handleSelection(view: ImageView, isCorrect: Boolean) {
+-        // Deshabilitamos clics para evitar toques múltiples
+-        images.forEach { it.isEnabled = false }
+-
+-        val index = images.indexOf(view)
+-        if (index != -1 && index < resultIcons.size) {
+-            val resultIcon = resultIcons[index]
+-
+-            // Mostramos el icono visual de acierto o error
+-            if (isCorrect) {
+-                resultIcon.setImageResource(R.drawable.ic_correct)
+-            } else {
+-                resultIcon.setImageResource(R.drawable.ic_error)
+-            }
+-            resultIcon.visibility = View.VISIBLE
+-
+-            lifecycleScope.launch {
+-                delay(500) // Respuesta visual rápida
+-                if (isCorrect) {
+-                    gameAudio.playEffect(R.raw.win)
+-                    delay(1000) // Esperamos antes de la siguiente ronda
+-                    startNewRound()
+-                } else {
+-                    errors++
+-                    gameAudio.playEffect(R.raw.fail)
+-                    resultIcon.visibility = View.INVISIBLE
+-                    images.forEach { it.isEnabled = true }
+-                }
+-            }
+-        }
+-    }
+-
+-    private fun resetImagesBackground() {
+-        resultIcons.forEach { it.visibility = View.INVISIBLE }
+-        images.forEach { it.isEnabled = true }
+-    }
+-
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/EditProfileApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt b/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt
+new file mode 100644
+--- /dev/null	(date 1775959049595)
++++ b/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt	(date 1775959049595)
+@@ -0,0 +1,19 @@
++package com.example.lumikids.network
++
++import com.example.lumikids.model.ApiResponse
++import com.example.lumikids.model.UpdateProfileRequest
++import com.example.lumikids.model.UserProfileResponse
++import retrofit2.Response
++import retrofit2.http.*
++
++interface EditProfileApi {
++
++    @GET("api/auth/user/{id}")
++    suspend fun getUserProfile(@Path("id") userId: String): Response<UserProfileResponse>
++
++    @PUT("api/auth/update")
++    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<ApiResponse>
++
++    @DELETE("api/auth/delete/{id}")
++    suspend fun deleteAccount(@Path("id") userId: String): Response<ApiResponse>
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt b/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt
+new file mode 100644
+--- /dev/null	(date 1775959049558)
++++ b/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt	(date 1775959049558)
+@@ -0,0 +1,7 @@
++package com.example.lumikids.model
++
++data class UserProfileResponse(
++    val userId: String,
++    val name: String,
++    val email: String
++)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/GameApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/GameApi.kt b/app/src/main/java/com/example/lumikids/network/GameApi.kt
+new file mode 100644
+--- /dev/null	(date 1775958804146)
++++ b/app/src/main/java/com/example/lumikids/network/GameApi.kt	(date 1775958804146)
+@@ -0,0 +1,14 @@
++package com.example.lumikids.network
++
++import com.example.lumikids.model.GameObject
++import retrofit2.Call
++import retrofit2.http.GET
++import retrofit2.http.Path
++
++interface GameApi {
++
++    @GET("api/games/game-objects/{id_category}")
++    fun getGameObjects(
++        @Path("id_category") categoryId: Int
++    ): Call<List<GameObject>>
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.widget.ImageView\r\nimport android.widget.TextView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.minigame.objectrecognition.ObjectRecognition\r\n\r\nclass ObjectLevelPickerActivity : AppCompatActivity() {\r\n\r\n    // Estado\r\n    private var selectedRounds: Int = 3\r\n    private val minRounds = 1\r\n    private val maxRounds = 10\r\n\r\n    // UI\r\n    private lateinit var tvRoundCount: TextView\r\n\r\n    // Ahora el tema es un String directamente\r\n    private lateinit var theme: String\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_object_level)\r\n\r\n        // Recibimos el String directamente.\r\n        // Mantenemos \"furniure\" como valor por defecto para evitar nulos y coincidir con tu servidor.\r\n        theme = intent.getStringExtra(\"THEME\") ?: \"furniure\"\r\n\r\n        tvRoundCount = findViewById(R.id.tvRoundCount)\r\n        val btnBack = findViewById<ImageView>(R.id.btnBack)\r\n        val btnDecrease = findViewById<ImageView>(R.id.btnDecrease)\r\n        val btnIncrease = findViewById<ImageView>(R.id.btnIncrease)\r\n        val btnStart = findViewById<TextView>(R.id.btnStart)\r\n\r\n        updateUi()\r\n\r\n        btnDecrease.setOnClickListener {\r\n            if (selectedRounds > minRounds) {\r\n                selectedRounds--\r\n                updateUi()\r\n            }\r\n        }\r\n\r\n        btnIncrease.setOnClickListener {\r\n            if (selectedRounds < maxRounds) {\r\n                selectedRounds++\r\n                updateUi()\r\n            }\r\n        }\r\n\r\n        btnBack.setOnClickListener { finish() }\r\n\r\n        btnStart.setOnClickListener {\r\n            startGame()\r\n        }\r\n    }\r\n\r\n    private fun updateUi() {\r\n        tvRoundCount.text = selectedRounds.toString()\r\n    }\r\n\r\n    private fun startGame() {\r\n        val intent = Intent(this, ObjectRecognition::class.java).apply {\r\n            // Pasamos el String del tema directamente al juego\r\n            putExtra(\"THEME\", theme)\r\n            putExtra(\"NUM_ROUNDS\", selectedRounds)\r\n        }\r\n        startActivity(intent)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt b/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt	(date 1775957373378)
+@@ -6,7 +6,7 @@
+ import android.widget.TextView
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.objectrecognition.ObjectRecognition
++import com.example.lumikids.ui.ObjectRecognition
+ 
+ class ObjectLevelPickerActivity : AppCompatActivity() {
+ 
+Index: app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.widget.ImageView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.minigame.memorygame.MemoryGame\r\n\r\nclass MemoryLevelActivity : AppCompatActivity() {\r\n\r\n    // Ahora usamos String para el tema\r\n    private lateinit var theme: String\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_memory_level)\r\n\r\n        // Recibir el String directamente.\r\n        // Si es nulo, usamos \"emotions\" como valor por defecto.\r\n        theme = intent.getStringExtra(\"THEME\") ?: \"furniure\"\r\n\r\n        // Botón regresar\r\n        findViewById<ImageView>(R.id.btnBack).setOnClickListener {\r\n            finish()\r\n        }\r\n\r\n        // Eventos de dificultad\r\n        setupCard(R.id.card6, 6)\r\n        setupCard(R.id.card8, 8)\r\n        setupCard(R.id.card10, 10)\r\n    }\r\n\r\n    private fun setupCard(viewId: Int, numCards: Int) {\r\n        findViewById<ImageView>(viewId).setOnClickListener {\r\n            iniciarMemorama(numCards)\r\n        }\r\n    }\r\n\r\n    private fun iniciarMemorama(numeroDeCartas: Int) {\r\n        val intent = Intent(this, MemoryGame::class.java).apply {\r\n            // Pasamos el String tal cual lo recibimos\r\n            putExtra(\"THEME\", theme)\r\n            putExtra(\"NUM_CARDS\", numeroDeCartas)\r\n        }\r\n        startActivity(intent)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt b/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt	(date 1775957373309)
+@@ -5,7 +5,7 @@
+ import android.widget.ImageView
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.memorygame.MemoryGame
++import com.example.lumikids.ui.MemoryGame
+ 
+ class MemoryLevelActivity : AppCompatActivity() {
+ 
+Index: app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt b/app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt
+new file mode 100644
+--- /dev/null	(date 1775959784301)
++++ b/app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt	(date 1775959784301)
+@@ -0,0 +1,211 @@
++package com.example.lumikids.ui
++
++import android.os.Bundle
++import android.view.View
++import android.widget.ImageView
++import android.widget.TextView
++import android.widget.Toast
++import androidx.lifecycle.lifecycleScope
++import com.bumptech.glide.Glide
++import com.bumptech.glide.load.resource.bitmap.CenterCrop
++import com.bumptech.glide.load.resource.bitmap.RoundedCorners
++import com.example.lumikids.R
++import com.example.lumikids.ui.MiniGame
++import com.example.lumikids.model.ObjectRound
++import com.example.lumikids.model.GameObject
++import com.example.lumikids.network.AuthApi
++import com.example.lumikids.network.RetrofitClient
++import com.example.lumikids.utils.InstructionRepository
++import com.example.lumikids.utils.PauseDialog
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.delay
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++import retrofit2.awaitResponse
++
++// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity
++class ObjectRecognition : MiniGame() {
++
++    private var allItems: MutableList<GameObject> = mutableListOf()
++    private var currentRoundCount: Int = 0
++    private var currentRound: ObjectRound? = null
++    private var totalRoundsWanted: Int = 3
++    private var urlAudioActual: String? = null
++
++    private lateinit var tvInstruction: TextView
++    private lateinit var images: List<ImageView>
++    private lateinit var resultIcons: List<ImageView>
++
++    private lateinit var btnPause: ImageView
++    private lateinit var btnBack: ImageView
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_game_n1)
++
++        totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
++
++        initViews()
++        loadGameData()
++    }
++
++
++    override fun initViews() {
++        tvInstruction = findViewById(R.id.tvInstruction)
++        btnPause = findViewById(R.id.btnPause)
++        btnBack = findViewById(R.id.btnBack)
++
++        images = listOf(
++            findViewById(R.id.imgOption1),
++            findViewById(R.id.imgOption2),
++            findViewById(R.id.imgOption3)
++        )
++
++        resultIcons = listOf(
++            findViewById(R.id.imgResult1),
++            findViewById(R.id.imgResult2),
++            findViewById(R.id.imgResult3)
++        )
++
++        btnBack.setOnClickListener { finish() }
++
++        btnPause.setOnClickListener {
++            gameTimer.pause()
++            gameAudio.stopLoop()
++
++            PauseDialog(this).showDialog(
++                onResume = {
++                    gameTimer.resume()
++                    urlAudioActual?.let { gameAudio.startLoop(it) }
++                },
++                onExit = { finish() }
++            )
++        }
++    }
++
++    override fun loadGameData() {
++        lifecycleScope.launch {
++            val success = withContext(Dispatchers.IO) {
++                try {
++                    val categoryId = InstructionRepository.getCategoryId(theme)
++                    val instructionMap =
++                        InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
++                    val api = RetrofitClient.instance.create(AuthApi::class.java)
++                    val call = api.getGameObjects(categoryId).awaitResponse()
++
++                    if (call.isSuccessful) {
++                        val downloadedObjects = call.body() ?: emptyList()
++                        if (downloadedObjects.isEmpty()) return@withContext false
++
++                        allItems = downloadedObjects.map { item ->
++                            val localText = instructionMap[item.name] ?: "Selecciona el objeto"
++                            item.copy(instructionText = localText)
++                        }.toMutableList()
++
++                        if (allItems.size >= 3) {
++                            gameTimer.start()
++                            return@withContext true
++                        }
++                    }
++                    false
++                } catch (e: Exception) {
++                    false
++                }
++            }
++
++            if (success) {
++                startNewRound()
++            } else {
++                Toast.makeText(this@ObjectRecognition, "Error al cargar datos", Toast.LENGTH_SHORT).show()
++                finish()
++            }
++        }
++    }
++
++    private fun startNewRound() {
++        if (currentRoundCount >= totalRoundsWanted) {
++            // ✨ MEJORA: Usamos la función integrada de la clase padre para mostrar la victoria
++            showResults("Identificar Objeto")
++            return
++        }
++
++        if (allItems.size < 3) return
++
++        currentRoundCount++
++        val roundOptions = allItems.shuffled().take(3)
++        val correctObject = roundOptions.random()
++        currentRound = ObjectRound(roundOptions, correctObject)
++
++        tvInstruction.text = correctObject.instructionText
++
++        if (correctObject.audioInstructionUrl != null) {
++            urlAudioActual = RetrofitClient.BASE_URL_SOUNDS + correctObject.audioInstructionUrl
++            gameAudio.startLoop(urlAudioActual!!)
++        } else {
++            urlAudioActual = null
++            gameAudio.stopLoop()
++        }
++
++        resetImagesBackground()
++
++        roundOptions.forEachIndexed { index, gameObject ->
++            images[index].apply {
++                Glide.with(this@ObjectRecognition)
++                    .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
++                    .placeholder(R.drawable.ic_logo)
++                    .transform(CenterCrop(), RoundedCorners(30))
++                    .into(this)
++
++                isEnabled = true
++                setOnClickListener {
++                    gameAudio.stopLoop()
++                    val isCorrect = gameObject == currentRound?.correctObject
++
++                    if (gameObject.audioShortUrl != null) {
++                        gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
++                    }
++                    handleSelection(this, isCorrect)
++                }
++            }
++        }
++    }
++
++    private fun handleSelection(view: ImageView, isCorrect: Boolean) {
++        // Deshabilitamos clics para evitar toques múltiples
++        images.forEach { it.isEnabled = false }
++
++        val index = images.indexOf(view)
++        if (index != -1 && index < resultIcons.size) {
++            val resultIcon = resultIcons[index]
++
++            // Mostramos el icono visual de acierto o error
++            if (isCorrect) {
++                resultIcon.setImageResource(R.drawable.ic_correct)
++            } else {
++                resultIcon.setImageResource(R.drawable.ic_error)
++            }
++            resultIcon.visibility = View.VISIBLE
++
++            lifecycleScope.launch {
++                delay(500) // Respuesta visual rápida
++                if (isCorrect) {
++                    gameAudio.playEffect(R.raw.win)
++                    delay(1000) // Esperamos antes de la siguiente ronda
++                    startNewRound()
++                } else {
++                    errors++
++                    gameAudio.playEffect(R.raw.fail)
++                    resultIcon.visibility = View.INVISIBLE
++                    images.forEach { it.isEnabled = true }
++                }
++            }
++        }
++    }
++
++    private fun resetImagesBackground() {
++        resultIcons.forEach { it.visibility = View.INVISIBLE }
++        images.forEach { it.isEnabled = true }
++    }
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/model/ObjectRound.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/ObjectRound.kt b/app/src/main/java/com/example/lumikids/model/ObjectRound.kt
+new file mode 100644
+--- /dev/null	(date 1775957373417)
++++ b/app/src/main/java/com/example/lumikids/model/ObjectRound.kt	(date 1775957373417)
+@@ -0,0 +1,6 @@
++package com.example.lumikids.model
++
++data class ObjectRound(
++    val options: List<GameObject>,
++    val correctObject: GameObject
++)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/model/MemoryCard.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/MemoryCard.kt b/app/src/main/java/com/example/lumikids/model/MemoryCard.kt
+new file mode 100644
+--- /dev/null	(date 1775957373397)
++++ b/app/src/main/java/com/example/lumikids/model/MemoryCard.kt	(date 1775957373397)
+@@ -0,0 +1,7 @@
++package com.example.lumikids.model
++
++data class MemoryCard(
++    val gameObject: GameObject,
++    var isFaceUp: Boolean = false,
++    var isMatched: Boolean = false
++)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/ui/MiniGame.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/MiniGame.kt b/app/src/main/java/com/example/lumikids/ui/MiniGame.kt
+new file mode 100644
+--- /dev/null	(date 1775957451298)
++++ b/app/src/main/java/com/example/lumikids/ui/MiniGame.kt	(date 1775957451298)
+@@ -0,0 +1,41 @@
++package com.example.lumikids.ui
++
++import android.os.Bundle
++import androidx.appcompat.app.AppCompatActivity
++import androidx.lifecycle.lifecycleScope
++import com.example.lumikids.R
++import com.example.lumikids.model.GameResult
++import com.example.lumikids.utils.GameAudioManager
++import com.example.lumikids.utils.GameTimer
++import com.example.lumikids.utils.ScoreManager
++
++abstract class MiniGame : AppCompatActivity() {
++
++    protected lateinit var theme: String
++    protected var errors: Int = 0
++    protected val gameTimer = GameTimer()
++    protected lateinit var gameAudio: GameAudioManager
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++
++
++        theme = intent.getStringExtra("THEME") ?: "furniture"
++
++        gameAudio = GameAudioManager(this, lifecycleScope)
++    }
++
++    protected fun showResults(gameTitle: String) {
++        gameAudio.playEffect(R.raw.win)
++        val finalResult = GameResult(gameTimer.getTotalSeconds(), errors, gameTitle)
++        ScoreManager(this).showResults(finalResult) { finish() }
++    }
++
++    override fun onDestroy() {
++        super.onDestroy()
++        gameAudio.releaseAll()
++    }
++
++    abstract fun initViews()
++    abstract fun loadGameData()
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/utils/SessionManager.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.utils\r\n\r\nimport android.content.Context\r\n\r\nclass SessionManager(context: Context) {\r\n\r\n    // Archivo de preferencias para toda la app\r\n    private val prefs = context.getSharedPreferences(\"lumikids_session\", Context.MODE_PRIVATE)\r\n\r\n    // Guarda los datos de inicio de sesión\r\n    fun saveLogin(email: String, userId: String) {\r\n        prefs.edit().apply {\r\n            putBoolean(\"is_logged_in\", true)\r\n            putString(\"user_email\", email)\r\n            putString(\"user_id\", userId)\r\n            apply()\r\n        }\r\n    }\r\n\r\n    // Verifica si hay una sesión activa\r\n    fun isLoggedIn(): Boolean {\r\n        return prefs.getBoolean(\"is_logged_in\", false)\r\n    }\r\n\r\n    // Recupera el ID de forma segura y limpia\r\n    fun getUserId(): String? {\r\n        val id = prefs.getString(\"user_id\", null)\r\n\r\n        if (id == \"null\" || id.isNullOrEmpty()) {\r\n            return null\r\n        }\r\n\r\n        return id\r\n    }\r\n\r\n    // Limpia las preferencias al cerrar sesión\r\n    fun logout() {\r\n        prefs.edit().clear().apply()\r\n    }\r\n\r\n\r\n    fun saveUserId(userId: String) {\r\n        prefs.edit().putString(\"user_id\", userId).apply()\r\n    }\r\n\r\n\r\n    fun getUserId(): String? {\r\n        return prefs.getString(\"user_id\", null)\r\n    }\r\n\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/utils/SessionManager.kt b/app/src/main/java/com/example/lumikids/utils/SessionManager.kt
+--- a/app/src/main/java/com/example/lumikids/utils/SessionManager.kt	(revision a00e4cea63658bdb0885e6e78795be237ff724b0)
++++ b/app/src/main/java/com/example/lumikids/utils/SessionManager.kt	(date 1775958210544)
+@@ -33,21 +33,15 @@
+         return id
+     }
+ 
++    fun getUserEmail(): String? {
++        val email = prefs.getString("user_email", null)
++        if (email == "null" || email.isNullOrEmpty()) {
++            return null
++        }
++        return email
++    }
+     // Limpia las preferencias al cerrar sesión
+     fun logout() {
+         prefs.edit().clear().apply()
+     }
+-
+-
+-    fun saveUserId(userId: String) {
+-        prefs.edit().putString("user_id", userId).apply()
+-    }
+-
+-
+-    fun getUserId(): String? {
+-        return prefs.getString("user_id", null)
+-    }
+-
+-
+-
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/ui/MemoryGame.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/MemoryGame.kt b/app/src/main/java/com/example/lumikids/ui/MemoryGame.kt
+new file mode 100644
+--- /dev/null	(date 1775958737943)
++++ b/app/src/main/java/com/example/lumikids/ui/MemoryGame.kt	(date 1775958737943)
+@@ -0,0 +1,242 @@
++package com.example.lumikids.ui
++
++import android.os.Bundle
++import android.view.Gravity
++import android.widget.GridLayout
++import android.widget.ImageView
++import android.widget.Toast
++import androidx.lifecycle.lifecycleScope
++import com.bumptech.glide.Glide
++import com.bumptech.glide.load.resource.bitmap.CenterCrop
++import com.bumptech.glide.load.resource.bitmap.RoundedCorners
++import com.example.lumikids.R
++import com.example.lumikids.ui.MiniGame
++import com.example.lumikids.model.MemoryCard
++import com.example.lumikids.network.GameApi
++import com.example.lumikids.network.RetrofitClient
++import com.example.lumikids.utils.InstructionRepository
++import com.example.lumikids.utils.PauseDialog
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.delay
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++import retrofit2.awaitResponse
++import kotlin.math.min
++
++class MemoryGame : MiniGame() {
++
++    private var boardCards: List<MemoryCard> = emptyList()
++    private var numPairsWanted: Int = 3
++
++    private var firstSelectedCard: MemoryCard? = null
++    private var firstSelectedView: ImageView? = null
++    private var isBusy = false
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_game_n2)
++
++        numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
++
++        initViews()
++        loadGameData()
++    }
++
++    override fun initViews() {
++        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
++        findViewById<ImageView>(R.id.btnPause).setOnClickListener {
++            gameTimer.pause()
++            PauseDialog(this).showDialog(
++                onResume = { gameTimer.resume() },
++                onExit = { finish() }
++            )
++        }
++    }
++
++    override fun loadGameData() {
++        lifecycleScope.launch {
++            val success = withContext(Dispatchers.IO) {
++                try {
++                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
++                    val categoryId = InstructionRepository.getCategoryId(theme)
++
++                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
++                    val api = RetrofitClient.instance.create(GameApi::class.java)
++                    val call = api.getGameObjects(categoryId).awaitResponse()
++
++                    if (call.isSuccessful) {
++                        val allAvailableObjects = call.body() ?: emptyList()
++                        if (allAvailableObjects.size < numPairsWanted) return@withContext false
++
++                        val selectedObjects = allAvailableObjects.shuffled().take(numPairsWanted)
++                        val memoryCards = mutableListOf<MemoryCard>()
++                        selectedObjects.forEach { obj ->
++                            memoryCards.add(MemoryCard(gameObject = obj))
++                            memoryCards.add(MemoryCard(gameObject = obj))
++                        }
++                        boardCards = memoryCards.shuffled()
++                        gameTimer.start()
++                        return@withContext true
++                    }
++                    false
++                } catch (e: Exception) {
++                    false
++                }
++            }
++
++            if (success) {
++                createDynamicBoard()
++            } else {
++                Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
++                finish()
++            }
++        }
++    }
++
++    private fun createDynamicBoard() {
++        val grid = findViewById<GridLayout>(R.id.gridMemorama)
++        grid.removeAllViews()
++
++        val columns = boardCards.size / 2
++        grid.columnCount = columns
++        grid.rowCount = 2
++
++        val displayMetrics = resources.displayMetrics
++        val maxWidthPerCard = (displayMetrics.widthPixels * 0.95f) / columns
++        val maxHeightPerCard = (displayMetrics.heightPixels * 0.70f) / 2f
++        val baseSize = min(maxWidthPerCard, maxHeightPerCard).toInt()
++        val margin = (baseSize * 0.05).toInt()
++        val size = baseSize - (margin * 2)
++
++        for (i in boardCards.indices) {
++            val cardData = boardCards[i]
++            val view = ImageView(this).apply {
++                layoutParams = GridLayout.LayoutParams().apply {
++                    width = size
++                    height = size
++                    setMargins(margin, margin, margin, margin)
++                    setGravity(Gravity.CENTER)
++                }
++                setBackgroundResource(R.drawable.bg_card)
++                setPadding(margin, margin, margin, margin)
++                scaleType = ImageView.ScaleType.FIT_CENTER
++                setImageResource(R.drawable.ic_logo)
++                tag = false
++
++                Glide.with(this@MemoryGame)
++                    .load(RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl)
++                    .preload()
++            }
++            view.setOnClickListener { handleCardClick(view, cardData) }
++            grid.addView(view)
++        }
++    }
++
++    private fun handleCardClick(view: ImageView, card: MemoryCard) {
++        if (isBusy || view.tag == true || card.isMatched) return
++
++        flipCardUp(view, card.gameObject.imageUrl)
++        view.tag = true
++
++        if (firstSelectedCard == null) {
++            firstSelectedCard = card
++            firstSelectedView = view
++        } else {
++            isBusy = true
++            val isMatch = firstSelectedCard?.gameObject?.id == card.gameObject.id
++
++            if (isMatch) {
++                firstSelectedCard?.isMatched = true
++                card.isMatched = true
++
++                card.gameObject.audioShortUrl?.let {
++                    gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + it)
++                } ?: gameAudio.playEffect(R.raw.win)
++
++                resetSelection()
++                isBusy = false
++                checkGameFinished()
++            } else {
++                errors++
++                gameAudio.playEffect(R.raw.fail)
++
++                lifecycleScope.launch {
++                    delay(1000)
++                    firstSelectedView?.let { firstView ->
++                        flipCardsDown(firstView, view, R.drawable.ic_logo) {
++                            view.tag = false
++                            firstView.tag = false
++                            resetSelection()
++                            isBusy = false
++                        }
++                    } ?: run {
++                        resetSelection()
++                        isBusy = false
++                    }
++                }
++            }
++        }
++    }
++
++    private fun flipCardUp(view: ImageView, imageUrl: String) {
++        val duration = 150L
++
++        view.animate()
++            .rotationY(90f)
++            .setDuration(duration)
++            .withEndAction {
++                Glide.with(this)
++                    .load(RetrofitClient.BASE_URL_IMAGES + imageUrl)
++                    .placeholder(R.drawable.ic_logo)
++                    .transform(CenterCrop(), RoundedCorners(30))
++                    .into(view)
++
++                view.rotationY = -90f
++                view.animate()
++                    .rotationY(0f)
++                    .setDuration(duration)
++                    .start()
++            }.start()
++    }
++
++    private fun flipCardsDown(view1: ImageView, view2: ImageView, defaultImage: Int, onComplete: () -> Unit) {
++        val duration = 150L
++
++        view1.animate()
++            .rotationY(90f)
++            .setDuration(duration)
++            .withEndAction {
++                view1.setImageResource(defaultImage)
++                view1.rotationY = -90f
++                view1.animate().rotationY(0f).setDuration(duration).start()
++            }.start()
++
++        view2.animate()
++            .rotationY(90f)
++            .setDuration(duration)
++            .withEndAction {
++                view2.setImageResource(defaultImage)
++                view2.rotationY = -90f
++                view2.animate()
++                    .rotationY(0f)
++                    .setDuration(duration)
++                    .withEndAction {
++                        onComplete()
++                    }.start()
++            }.start()
++    }
++
++    private fun checkGameFinished() {
++        if (boardCards.all { it.isMatched }) {
++            lifecycleScope.launch {
++                delay(1000)
++                showResults("Memorama")
++            }
++        }
++    }
++
++    private fun resetSelection() {
++        firstSelectedCard = null
++        firstSelectedView = null
++    }
++}
+\ No newline at end of file

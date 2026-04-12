@@ -1,0 +1,978 @@
+Index: app/src/main/java/com/example/lumikids/utils/UserManager.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/utils/UserManager.kt b/app/src/main/java/com/example/lumikids/utils/UserManager.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/utils/UserManager.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ /dev/null	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
+@@ -1,38 +0,0 @@
+-package com.example.lumikids.utils
+-
+-import android.content.Context
+-import android.content.SharedPreferences
+-
+-class UserManager(context: Context) {
+-
+-    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+-
+-    fun saveUserData(name: String, email: String) {
+-        prefs.edit().apply {
+-            putString(KEY_USER_NAME, name)
+-            putString(KEY_USER_EMAIL, email)
+-            apply() // Lo guarda en segundo plano para no congelar la app
+-        }
+-    }
+-
+-
+-    fun getUserName(): String {
+-        return prefs.getString(KEY_USER_NAME, "") ?: ""
+-    }
+-
+-    fun getUserEmail(): String {
+-        return prefs.getString(KEY_USER_EMAIL, "") ?: ""
+-    }
+-
+-
+-    fun clearUserData() {
+-        prefs.edit().clear().apply()
+-    }
+-
+-
+-    companion object {
+-        private const val PREF_NAME = "user_profile_prefs"
+-        private const val KEY_USER_NAME = "KEY_USER_NAME"
+-        private const val KEY_USER_EMAIL = "KEY_USER_EMAIL"
+-    }
+-}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt b/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt
+deleted file mode 100644
+--- a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/model/ObjectRound.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ /dev/null	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
+@@ -1,7 +0,0 @@
+-package com.example.lumikids.minigame.objectrecognition.model
+-import com.example.lumikids.model.GameObject
+-
+-data class ObjectRound(
+-    val options: List<GameObject>,
+-    val correctObject: GameObject
+-)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/ui/LoginActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.text.InputType\r\nimport android.util.Patterns\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.MainActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.databinding.ActivityLoginBinding\r\nimport com.example.lumikids.model.ApiResponse\r\nimport com.example.lumikids.model.LoginRequest\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\nimport retrofit2.Call\r\nimport retrofit2.Callback\r\nimport retrofit2.Response\r\n\r\nclass LoginActivity : AppCompatActivity() {\r\n\r\n    private lateinit var binding: ActivityLoginBinding\r\n    private lateinit var sessionManager: SessionManager\r\n    private lateinit var userManager: UserManager\r\n    private var isPasswordVisible = false\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n\r\n        sessionManager = SessionManager(this)\r\n        userManager = UserManager(this)\r\n\r\n        // 1. Verificar sesión primero\r\n        if (sessionManager.isLoggedIn()) {\r\n            startActivity(Intent(this, MainActivity::class.java))\r\n            finish()\r\n            return\r\n        }\r\n\r\n        // 2. Inflar el binding UNA SOLA VEZ\r\n        binding = ActivityLoginBinding.inflate(layoutInflater)\r\n        setContentView(binding.root)\r\n\r\n        // 3. Configurar lógica del botón de Login\r\n        binding.btnLogin.setOnClickListener {\r\n            val email = binding.etEmail.text.toString().trim()\r\n            val password = binding.etPassword.text.toString().trim()\r\n\r\n            if (email.isEmpty() || password.isEmpty()) {\r\n                Toast.makeText(this, \"Completa todos los campos\", Toast.LENGTH_SHORT).show()\r\n                return@setOnClickListener\r\n            }\r\n\r\n            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {\r\n                Toast.makeText(this, \"Correo electrónico inválido\", Toast.LENGTH_SHORT).show()\r\n                return@setOnClickListener\r\n            }\r\n\r\n            loginUsuario(email, password)\r\n        }\r\n\r\n        // 4. Configurar lógica para ir al Registro\r\n        binding.tvSignUp.setOnClickListener {\r\n            startActivity(Intent(this, RegisterActivity::class.java))\r\n        }\r\n\r\n        // 5. Lógica para mostrar/ocultar contraseña (Ojo)\r\n        binding.ivTogglePassword.setOnClickListener {\r\n            isPasswordVisible = !isPasswordVisible\r\n\r\n            if (isPasswordVisible) {\r\n                // Mostrar contraseña\r\n                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or\r\n                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD\r\n                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)\r\n            } else {\r\n                // Ocultar contraseña\r\n                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or\r\n                        InputType.TYPE_TEXT_VARIATION_PASSWORD\r\n                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)\r\n            }\r\n\r\n            // Mantener el cursor al final del texto\r\n            binding.etPassword.setSelection(binding.etPassword.text.length)\r\n        }\r\n    }\r\n\r\n    private fun loginUsuario(email: String, password: String) {\r\n        val api = RetrofitClient.instance.create(AuthApi::class.java)\r\n        val request = LoginRequest(email, password)\r\n\r\n        api.login(request).enqueue(object : Callback<ApiResponse> {\r\n            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {\r\n                val body = response.body() // Guardamos el cuerpo de la respuesta\r\n\r\n                if (response.isSuccessful && body?.success == true) {\r\n                    // --- LO QUE SE AÑADIÓ ---\r\n                    sessionManager.saveLogin(email)\r\n\r\n                    // Guardamos el ID del usuario para futuras ediciones\r\n                    body.ID_user?.let { sessionManager.saveUserId(it) }\r\n\r\n                    // Guardamos Nombre y Correo en UserManager para que se vean en el Perfil\r\n                    userManager.saveUserData(\r\n                        body.name ?: \"Usuario\",\r\n                        body.email ?: email\r\n                    )\r\n                    // -------------------------\r\n\r\n                    Toast.makeText(this@LoginActivity, body.message ?: \"Bienvenido\", Toast.LENGTH_SHORT).show()\r\n                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))\r\n                    finish()\r\n                } else {\r\n                    Toast.makeText(this@LoginActivity, body?.message ?: \"Credenciales incorrectas\", Toast.LENGTH_LONG).show()\r\n                }\r\n            }\r\n\r\n            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {\r\n                Toast.makeText(this@LoginActivity, \"Error de conexión: ${t.message}\", Toast.LENGTH_LONG).show()\r\n            }\r\n        })\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt b/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/LoginActivity.kt	(date 1775966816029)
+@@ -14,7 +14,6 @@
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
+ import retrofit2.Call
+ import retrofit2.Callback
+ import retrofit2.Response
+@@ -23,14 +22,12 @@
+ 
+     private lateinit var binding: ActivityLoginBinding
+     private lateinit var sessionManager: SessionManager
+-    private lateinit var userManager: UserManager
+     private var isPasswordVisible = false
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+ 
+         sessionManager = SessionManager(this)
+-        userManager = UserManager(this)
+ 
+         // 1. Verificar sesión primero
+         if (sessionManager.isLoggedIn()) {
+@@ -93,27 +90,13 @@
+ 
+         api.login(request).enqueue(object : Callback<ApiResponse> {
+             override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
+-                val body = response.body() // Guardamos el cuerpo de la respuesta
+-
+-                if (response.isSuccessful && body?.success == true) {
+-                    // --- LO QUE SE AÑADIÓ ---
++                if (response.isSuccessful && response.body()?.success == true) {
+                     sessionManager.saveLogin(email)
+-
+-                    // Guardamos el ID del usuario para futuras ediciones
+-                    body.ID_user?.let { sessionManager.saveUserId(it) }
+-
+-                    // Guardamos Nombre y Correo en UserManager para que se vean en el Perfil
+-                    userManager.saveUserData(
+-                        body.name ?: "Usuario",
+-                        body.email ?: email
+-                    )
+-                    // -------------------------
+-
+-                    Toast.makeText(this@LoginActivity, body.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
++                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
+                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                     finish()
+                 } else {
+-                    Toast.makeText(this@LoginActivity, body?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
++                    Toast.makeText(this@LoginActivity, response.body()?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                 }
+             }
+ 
+Index: app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.widget.ImageView\r\nimport android.widget.TextView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.minigame.objectrecognition.ObjectRecognition\r\n\r\nclass ObjectLevelPickerActivity : AppCompatActivity() {\r\n\r\n    // Estado\r\n    private var selectedRounds: Int = 3\r\n    private val minRounds = 1\r\n    private val maxRounds = 10\r\n\r\n    // UI\r\n    private lateinit var tvRoundCount: TextView\r\n\r\n    // Ahora el tema es un String directamente\r\n    private lateinit var theme: String\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_object_level)\r\n\r\n        // Recibimos el String directamente.\r\n        // Mantenemos \"furniure\" como valor por defecto para evitar nulos y coincidir con tu servidor.\r\n        theme = intent.getStringExtra(\"THEME\") ?: \"furniure\"\r\n\r\n        tvRoundCount = findViewById(R.id.tvRoundCount)\r\n        val btnBack = findViewById<ImageView>(R.id.btnBack)\r\n        val btnDecrease = findViewById<ImageView>(R.id.btnDecrease)\r\n        val btnIncrease = findViewById<ImageView>(R.id.btnIncrease)\r\n        val btnStart = findViewById<TextView>(R.id.btnStart)\r\n\r\n        updateUi()\r\n\r\n        btnDecrease.setOnClickListener {\r\n            if (selectedRounds > minRounds) {\r\n                selectedRounds--\r\n                updateUi()\r\n            }\r\n        }\r\n\r\n        btnIncrease.setOnClickListener {\r\n            if (selectedRounds < maxRounds) {\r\n                selectedRounds++\r\n                updateUi()\r\n            }\r\n        }\r\n\r\n        btnBack.setOnClickListener { finish() }\r\n\r\n        btnStart.setOnClickListener {\r\n            startGame()\r\n        }\r\n    }\r\n\r\n    private fun updateUi() {\r\n        tvRoundCount.text = selectedRounds.toString()\r\n    }\r\n\r\n    private fun startGame() {\r\n        val intent = Intent(this, ObjectRecognition::class.java).apply {\r\n            // Pasamos el String del tema directamente al juego\r\n            putExtra(\"THEME\", theme)\r\n            putExtra(\"NUM_ROUNDS\", selectedRounds)\r\n        }\r\n        startActivity(intent)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt b/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/ObjectLevelPickerActivity.kt	(date 1775966848581)
+@@ -6,7 +6,7 @@
+ import android.widget.TextView
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.objectrecognition.ObjectRecognition
++import com.example.lumikids.ui.ObjectRecognition
+ 
+ class ObjectLevelPickerActivity : AppCompatActivity() {
+ 
+Index: app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.widget.ImageView\r\nimport android.widget.TextView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.appcompat.widget.AppCompatButton\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\n\r\nclass ProfileActivity : AppCompatActivity() {\r\n\r\n    private lateinit var userManager: UserManager\r\n    private lateinit var sessionManager: SessionManager\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_profile)\r\n\r\n        userManager = UserManager(this)\r\n        sessionManager = SessionManager(this)\r\n\r\n        val tvTitle = findViewById<TextView>(R.id.tvTitle)\r\n\r\n        val btnDatos = findViewById<AppCompatButton>(R.id.btnDatos)\r\n        val btnNotificaciones = findViewById<AppCompatButton>(R.id.btnNotificaciones)\r\n        val btnTemas = findViewById<AppCompatButton>(R.id.btnTemas)\r\n        val btnCerrarSesion = findViewById<AppCompatButton>(R.id.btnCerrarSesion)\r\n\r\n        val nombreUsuario = userManager.getUserName()\r\n        tvTitle.text = if (nombreUsuario.isNotEmpty()) nombreUsuario else \"Usuario\"\r\n\r\n\r\n\r\n        btnDatos.setOnClickListener {\r\n            val intent = Intent(this, EditProfileActivity::class.java)\r\n            startActivity(intent)\r\n        }\r\n\r\n        btnNotificaciones.setOnClickListener {\r\n            // Lógica para notificaciones en el futuro\r\n        }\r\n\r\n        btnTemas.setOnClickListener {\r\n            // Lógica para temas de colores en el futuro\r\n        }\r\n\r\n        btnCerrarSesion.setOnClickListener {\r\n            sessionManager.logout()\r\n\r\n            // Redirigir al Login y limpiar el historial\r\n            val intent = Intent(this, LoginActivity::class.java)\r\n            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK\r\n            startActivity(intent)\r\n            finish()\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt b/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/ProfileActivity.kt	(date 1775966821853)
+@@ -1,57 +1,51 @@
+ package com.example.lumikids.ui
+ 
+-import android.content.Intent
++import android.content.Intent // Asegúrate de importar Intent
+ import android.os.Bundle
++import android.widget.Button
+ import android.widget.ImageView
+ import android.widget.TextView
+ import androidx.appcompat.app.AppCompatActivity
+-import androidx.appcompat.widget.AppCompatButton
+ import com.example.lumikids.R
+-import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
++import com.example.lumikids.utils.SessionManager // Importa tu SessionManager
+ 
+ class ProfileActivity : AppCompatActivity() {
+ 
+-    private lateinit var userManager: UserManager
+-    private lateinit var sessionManager: SessionManager
+-
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+         setContentView(R.layout.activity_profile)
+ 
+-        userManager = UserManager(this)
+-        sessionManager = SessionManager(this)
+-
+-        val tvTitle = findViewById<TextView>(R.id.tvTitle)
++        val imgUsuario = findViewById<ImageView>(R.id.imgUsuario)
++        val txtTitulo = findViewById<TextView>(R.id.txtTitulo)
+ 
+-        val btnDatos = findViewById<AppCompatButton>(R.id.btnDatos)
+-        val btnNotificaciones = findViewById<AppCompatButton>(R.id.btnNotificaciones)
+-        val btnTemas = findViewById<AppCompatButton>(R.id.btnTemas)
+-        val btnCerrarSesion = findViewById<AppCompatButton>(R.id.btnCerrarSesion)
++        val btnDatos = findViewById<Button>(R.id.btnDatos)
++        val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)
++        val btnTemas = findViewById<Button>(R.id.btnTemas)
++        val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
+ 
+-        val nombreUsuario = userManager.getUserName()
+-        tvTitle.text = if (nombreUsuario.isNotEmpty()) nombreUsuario else "Usuario"
+-
+-
++        txtTitulo.text = "Usuario Lumikids"
+ 
+         btnDatos.setOnClickListener {
+-            val intent = Intent(this, EditProfileActivity::class.java)
+-            startActivity(intent)
++            // Abrir datos personales
+         }
+ 
+         btnNotificaciones.setOnClickListener {
+-            // Lógica para notificaciones en el futuro
++            // Abrir notificaciones
+         }
+ 
+         btnTemas.setOnClickListener {
+-            // Lógica para temas de colores en el futuro
++            // Abrir temas de colores
+         }
+ 
++        // --- SOLUCIÓN AQUÍ ---
+         btnCerrarSesion.setOnClickListener {
++            // 1. Borrar los datos de SharedPreferences
++            val sessionManager = SessionManager(this)
+             sessionManager.logout()
+ 
+-            // Redirigir al Login y limpiar el historial
++            // 2. Redirigir a LoginActivity y limpiar la pila de actividades
+             val intent = Intent(this, LoginActivity::class.java)
++            // Estas flags evitan que el usuario regrese a la app si presiona el botón "Atrás"
+             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+             startActivity(intent)
+             finish()
+Index: app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.app.AlertDialog\r\nimport android.content.Context\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.text.InputType\r\nimport android.view.View\r\nimport android.view.inputmethod.InputMethodManager\r\nimport android.widget.EditText\r\nimport android.widget.FrameLayout\r\nimport android.widget.ImageButton\r\nimport android.widget.TextView\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.appcompat.widget.AppCompatButton\r\nimport androidx.lifecycle.lifecycleScope\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.model.ApiResponse\r\nimport com.example.lumikids.model.LoginRequest\r\nimport com.example.lumikids.model.UpdateProfileRequest\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\nimport kotlinx.coroutines.Dispatchers\r\nimport kotlinx.coroutines.launch\r\nimport kotlinx.coroutines.withContext\r\nimport retrofit2.Call\r\nimport retrofit2.Callback\r\nimport retrofit2.Response as RetrofitResponse\r\n\r\nclass EditProfileActivity : AppCompatActivity() {\r\n\r\n    private lateinit var sessionManager: SessionManager\r\n    private lateinit var userManager: UserManager\r\n\r\n    private var verifiedPassword = \"\"\r\n    private var fieldWaitingToUnlock = \"\"\r\n\r\n    private lateinit var etName: EditText\r\n    private lateinit var etEmail: EditText\r\n    private lateinit var btnEditName: ImageButton\r\n    private lateinit var btnEditEmail: ImageButton\r\n    private lateinit var btnChangePassword: AppCompatButton\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_edit_profile)\r\n\r\n        sessionManager = SessionManager(this)\r\n        userManager = UserManager(this)\r\n\r\n        etName = findViewById(R.id.etName)\r\n        etEmail = findViewById(R.id.etEmail)\r\n        btnEditName = findViewById(R.id.btnEditName)\r\n        btnEditEmail = findViewById(R.id.btnEditEmail)\r\n        btnChangePassword = findViewById(R.id.btnChangePassword)\r\n\r\n        val btnBack = findViewById<AppCompatButton>(R.id.btnBack)\r\n        val tvDelete = findViewById<TextView>(R.id.tvDelete)\r\n\r\n        etName.setText(userManager.getUserName())\r\n        etEmail.setText(userManager.getUserEmail())\r\n\r\n        btnEditName.setOnClickListener {\r\n            if (!etName.isEnabled) {\r\n                fieldWaitingToUnlock = \"name\"\r\n                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()\r\n            } else saveChanges()\r\n        }\r\n\r\n        btnEditEmail.setOnClickListener {\r\n            if (!etEmail.isEnabled) {\r\n                fieldWaitingToUnlock = \"email\"\r\n                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()\r\n            } else saveChanges()\r\n        }\r\n\r\n        // \uD83D\uDC49 NUEVO: Ahora el botón de Contraseña usa el Pop-up también\r\n        btnChangePassword.setOnClickListener {\r\n            if (verifiedPassword.isEmpty()) {\r\n                fieldWaitingToUnlock = \"password\"\r\n                showPasswordDialog()\r\n            } else {\r\n                goToChangePasswordScreen()\r\n            }\r\n        }\r\n\r\n        btnBack.setOnClickListener {\r\n            hideKeyboard()\r\n            finish()\r\n        }\r\n\r\n        tvDelete.setOnClickListener {\r\n            Toast.makeText(this, \"Borrar cuenta en construcción\", Toast.LENGTH_SHORT).show()\r\n        }\r\n    }\r\n\r\n    private fun showPasswordDialog() {\r\n        val builder = AlertDialog.Builder(this)\r\n        builder.setTitle(\"Verificación de Identidad\")\r\n        builder.setMessage(\"Por seguridad, ingresa tu contraseña actual:\")\r\n\r\n        val input = EditText(this)\r\n        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD\r\n        input.hint = \"Contraseña\"\r\n\r\n        val layout = FrameLayout(this)\r\n        layout.setPadding(60, 20, 60, 0)\r\n        layout.addView(input)\r\n        builder.setView(layout)\r\n\r\n        builder.setPositiveButton(\"Verificar\") { _, _ ->\r\n            val password = input.text.toString().trim()\r\n            if (password.isNotEmpty()) verifyPassword(password)\r\n        }\r\n        builder.setNegativeButton(\"Cancelar\", null)\r\n        builder.show()\r\n    }\r\n\r\n    private fun verifyPassword(password: String) {\r\n        val email = userManager.getUserEmail()\r\n        val request = LoginRequest(email, password)\r\n\r\n        val api = RetrofitClient.instance.create(AuthApi::class.java)\r\n        api.login(request).enqueue(object : Callback<ApiResponse> {\r\n            override fun onResponse(call: Call<ApiResponse>, response: RetrofitResponse<ApiResponse>) {\r\n                if (response.isSuccessful && response.body()?.success == true) {\r\n                    verifiedPassword = password\r\n                    unlockField()\r\n                } else {\r\n                    Toast.makeText(this@EditProfileActivity, \"Contraseña incorrecta\", Toast.LENGTH_LONG).show()\r\n                }\r\n            }\r\n\r\n            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {\r\n                Toast.makeText(this@EditProfileActivity, \"Error de red\", Toast.LENGTH_SHORT).show()\r\n            }\r\n        })\r\n    }\r\n\r\n    private fun unlockField() {\r\n        if (fieldWaitingToUnlock == \"name\") {\r\n            etName.isEnabled = true\r\n            etName.requestFocus()\r\n            showKeyboard(etName)\r\n            btnEditName.setImageResource(android.R.drawable.ic_menu_save)\r\n        } else if (fieldWaitingToUnlock == \"email\") {\r\n            etEmail.isEnabled = true\r\n            etEmail.requestFocus()\r\n            showKeyboard(etEmail)\r\n            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)\r\n        } else if (fieldWaitingToUnlock == \"password\") {\r\n            // \uD83D\uDC49 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla\r\n            goToChangePasswordScreen()\r\n        }\r\n        fieldWaitingToUnlock = \"\"\r\n    }\r\n\r\n    // \uD83D\uDC49 Función que abre la pantalla y le pasa la contraseña verificada en secreto\r\n    private fun goToChangePasswordScreen() {\r\n        val intent = Intent(this, ChangePasswordActivity::class.java)\r\n        intent.putExtra(\"CURRENT_PASSWORD\", verifiedPassword)\r\n        startActivity(intent)\r\n    }\r\n\r\n    private fun saveChanges() {\r\n        val newName = etName.text.toString().trim()\r\n        val newEmail = etEmail.text.toString().trim()\r\n\r\n        if (newName.isEmpty() || newEmail.isEmpty()) return\r\n        val userId = sessionManager.getUserId() ?: return\r\n\r\n        btnEditName.isEnabled = false\r\n        btnEditEmail.isEnabled = false\r\n        hideKeyboard()\r\n\r\n        lifecycleScope.launch(Dispatchers.IO) {\r\n            try {\r\n                val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)\r\n                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)\r\n\r\n                withContext(Dispatchers.Main) {\r\n                    if (response.isSuccessful && response.body()?.success == true) {\r\n                        Toast.makeText(this@EditProfileActivity, \"Perfil actualizado\", Toast.LENGTH_SHORT).show()\r\n                        userManager.saveUserData(newName, newEmail)\r\n                        lockAllFields()\r\n                    } else {\r\n                        Toast.makeText(this@EditProfileActivity, response.body()?.message ?: \"Error\", Toast.LENGTH_SHORT).show()\r\n                        btnEditName.isEnabled = true\r\n                        btnEditEmail.isEnabled = true\r\n                    }\r\n                }\r\n            } catch (e: Exception) {\r\n                withContext(Dispatchers.Main) {\r\n                    Toast.makeText(this@EditProfileActivity, \"Error de red\", Toast.LENGTH_SHORT).show()\r\n                    btnEditName.isEnabled = true\r\n                    btnEditEmail.isEnabled = true\r\n                }\r\n            }\r\n        }\r\n    }\r\n\r\n    private fun lockAllFields() {\r\n        verifiedPassword = \"\"\r\n        etName.isEnabled = false\r\n        btnEditName.isEnabled = true\r\n        btnEditName.setImageResource(android.R.drawable.ic_menu_edit)\r\n        etEmail.isEnabled = false\r\n        btnEditEmail.isEnabled = true\r\n        btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)\r\n    }\r\n\r\n    private fun showKeyboard(view: View) {\r\n        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager\r\n        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)\r\n    }\r\n\r\n    private fun hideKeyboard() {\r\n        val view = this.currentFocus\r\n        if (view != null) {\r\n            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager\r\n            imm.hideSoftInputFromWindow(view.windowToken, 0)\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt b/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/EditProfileActivity.kt	(date 1775966821908)
+@@ -22,7 +22,6 @@
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+ import kotlinx.coroutines.withContext
+@@ -33,7 +32,6 @@
+ class EditProfileActivity : AppCompatActivity() {
+ 
+     private lateinit var sessionManager: SessionManager
+-    private lateinit var userManager: UserManager
+ 
+     private var verifiedPassword = ""
+     private var fieldWaitingToUnlock = ""
+@@ -49,7 +47,6 @@
+         setContentView(R.layout.activity_edit_profile)
+ 
+         sessionManager = SessionManager(this)
+-        userManager = UserManager(this)
+ 
+         etName = findViewById(R.id.etName)
+         etEmail = findViewById(R.id.etEmail)
+@@ -60,8 +57,9 @@
+         val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
+         val tvDelete = findViewById<TextView>(R.id.tvDelete)
+ 
+-        etName.setText(userManager.getUserName())
+-        etEmail.setText(userManager.getUserEmail())
++        // 👉 Obtener datos desde SessionManager
++        etEmail.setText(sessionManager.getUserEmail() ?: "")
++        etName.setText("") // Si no tienes nombre guardado, puedes dejarlo vacío
+ 
+         btnEditName.setOnClickListener {
+             if (!etName.isEnabled) {
+@@ -77,7 +75,6 @@
+             } else saveChanges()
+         }
+ 
+-        // 👉 NUEVO: Ahora el botón de Contraseña usa el Pop-up también
+         btnChangePassword.setOnClickListener {
+             if (verifiedPassword.isEmpty()) {
+                 fieldWaitingToUnlock = "password"
+@@ -115,12 +112,13 @@
+             val password = input.text.toString().trim()
+             if (password.isNotEmpty()) verifyPassword(password)
+         }
++
+         builder.setNegativeButton("Cancelar", null)
+         builder.show()
+     }
+ 
+     private fun verifyPassword(password: String) {
+-        val email = userManager.getUserEmail()
++        val email = sessionManager.getUserEmail() ?: return
+         val request = LoginRequest(email, password)
+ 
+         val api = RetrofitClient.instance.create(AuthApi::class.java)
+@@ -141,24 +139,26 @@
+     }
+ 
+     private fun unlockField() {
+-        if (fieldWaitingToUnlock == "name") {
+-            etName.isEnabled = true
+-            etName.requestFocus()
+-            showKeyboard(etName)
+-            btnEditName.setImageResource(android.R.drawable.ic_menu_save)
+-        } else if (fieldWaitingToUnlock == "email") {
+-            etEmail.isEnabled = true
+-            etEmail.requestFocus()
+-            showKeyboard(etEmail)
+-            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
+-        } else if (fieldWaitingToUnlock == "password") {
+-            // 👉 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla
+-            goToChangePasswordScreen()
++        when (fieldWaitingToUnlock) {
++            "name" -> {
++                etName.isEnabled = true
++                etName.requestFocus()
++                showKeyboard(etName)
++                btnEditName.setImageResource(android.R.drawable.ic_menu_save)
++            }
++            "email" -> {
++                etEmail.isEnabled = true
++                etEmail.requestFocus()
++                showKeyboard(etEmail)
++                btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
++            }
++            "password" -> {
++                goToChangePasswordScreen()
++            }
+         }
+         fieldWaitingToUnlock = ""
+     }
+ 
+-    // 👉 Función que abre la pantalla y le pasa la contraseña verificada en secreto
+     private fun goToChangePasswordScreen() {
+         val intent = Intent(this, ChangePasswordActivity::class.java)
+         intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
+@@ -170,6 +170,7 @@
+         val newEmail = etEmail.text.toString().trim()
+ 
+         if (newName.isEmpty() || newEmail.isEmpty()) return
++
+         val userId = sessionManager.getUserId() ?: return
+ 
+         btnEditName.isEnabled = false
+@@ -178,13 +179,25 @@
+ 
+         lifecycleScope.launch(Dispatchers.IO) {
+             try {
+-                val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
+-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
++                val request = UpdateProfileRequest(
++                    userId,
++                    newName,
++                    newEmail,
++                    verifiedPassword,
++                    null
++                )
++
++                val response = RetrofitClient.instance
++                    .create(AuthApi::class.java)
++                    .updateProfile(request)
+ 
+                 withContext(Dispatchers.Main) {
+                     if (response.isSuccessful && response.body()?.success == true) {
+                         Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
+-                        userManager.saveUserData(newName, newEmail)
++
++                        // 👉 Guardar cambios en sesión
++                        sessionManager.saveLogin(newEmail, userId)
++
+                         lockAllFields()
+                     } else {
+                         Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+@@ -192,6 +205,7 @@
+                         btnEditEmail.isEnabled = true
+                     }
+                 }
++
+             } catch (e: Exception) {
+                 withContext(Dispatchers.Main) {
+                     Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
+@@ -207,6 +221,7 @@
+         etName.isEnabled = false
+         btnEditName.isEnabled = true
+         btnEditName.setImageResource(android.R.drawable.ic_menu_edit)
++
+         etEmail.isEnabled = false
+         btnEditEmail.isEnabled = true
+         btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)
+Index: app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.os.Bundle\r\nimport android.widget.EditText\r\nimport android.widget.Toast\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport androidx.appcompat.widget.AppCompatButton\r\nimport androidx.lifecycle.lifecycleScope\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.model.UpdateProfileRequest\r\nimport com.example.lumikids.network.AuthApi\r\nimport com.example.lumikids.network.RetrofitClient\r\nimport com.example.lumikids.utils.SessionManager\r\nimport com.example.lumikids.utils.UserManager\r\nimport kotlinx.coroutines.Dispatchers\r\nimport kotlinx.coroutines.launch\r\nimport kotlinx.coroutines.withContext\r\n\r\nclass ChangePasswordActivity : AppCompatActivity() {\r\n\r\n    private lateinit var sessionManager: SessionManager\r\n    private lateinit var userManager: UserManager\r\n\r\n    private var verifiedPassword = \"\"\r\n\r\n    private lateinit var etNewPassword: EditText\r\n    private lateinit var etConfirmNewPassword: EditText // Agregamos la variable\r\n    private lateinit var btnConfirm: AppCompatButton\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_change_password)\r\n\r\n        sessionManager = SessionManager(this)\r\n        userManager = UserManager(this)\r\n\r\n        verifiedPassword = intent.getStringExtra(\"CURRENT_PASSWORD\") ?: \"\"\r\n\r\n        if (verifiedPassword.isEmpty()) {\r\n            Toast.makeText(this, \"Error de seguridad. Vuelve a intentarlo.\", Toast.LENGTH_SHORT).show()\r\n            finish()\r\n        }\r\n\r\n        // Vinculamos el nuevo campo\r\n        etNewPassword = findViewById(R.id.etNewPassword)\r\n        etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword)\r\n        btnConfirm = findViewById(R.id.btnConfirm)\r\n        val btnBack = findViewById<AppCompatButton>(R.id.btnBack)\r\n\r\n        btnConfirm.setOnClickListener {\r\n            changePassword()\r\n        }\r\n\r\n        btnBack.setOnClickListener {\r\n            finish()\r\n        }\r\n    }\r\n\r\n    private fun changePassword() {\r\n        val newPass = etNewPassword.text.toString().trim()\r\n        val confirmPass = etConfirmNewPassword.text.toString().trim() // Leemos la confirmación\r\n\r\n        // 1. Validar que no estén vacíos\r\n        if (newPass.isEmpty() || confirmPass.isEmpty()) {\r\n            Toast.makeText(this, \"Por favor completa ambos campos\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        // 2. \uD83D\uDC49 NUEVO: Validar que las contraseñas coincidan\r\n        if (newPass != confirmPass) {\r\n            Toast.makeText(this, \"Las contraseñas no coinciden\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        // 3. Validar que no sea igual a la actual\r\n        if (verifiedPassword == newPass) {\r\n            Toast.makeText(this, \"La nueva contraseña debe ser diferente a la actual\", Toast.LENGTH_SHORT).show()\r\n            return\r\n        }\r\n\r\n        val userId = sessionManager.getUserId() ?: return\r\n        val name = userManager.getUserName()\r\n        val email = userManager.getUserEmail()\r\n\r\n        btnConfirm.text = \"Actualizando...\"\r\n        btnConfirm.isEnabled = false\r\n\r\n        lifecycleScope.launch(Dispatchers.IO) {\r\n            try {\r\n                val request = UpdateProfileRequest(userId, name, email, verifiedPassword, newPass)\r\n                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)\r\n\r\n                withContext(Dispatchers.Main) {\r\n                    if (response.isSuccessful && response.body()?.success == true) {\r\n                        Toast.makeText(this@ChangePasswordActivity, \"¡Contraseña actualizada con éxito!\", Toast.LENGTH_LONG).show()\r\n                        finish()\r\n                    } else {\r\n                        btnConfirm.text = \"Guardar nueva contraseña\"\r\n                        btnConfirm.isEnabled = true\r\n                        Toast.makeText(this@ChangePasswordActivity, response.body()?.message ?: \"Error al actualizar\", Toast.LENGTH_LONG).show()\r\n                    }\r\n                }\r\n            } catch (e: Exception) {\r\n                withContext(Dispatchers.Main) {\r\n                    btnConfirm.text = \"Guardar nueva contraseña\"\r\n                    btnConfirm.isEnabled = true\r\n                    Toast.makeText(this@ChangePasswordActivity, \"Error de conexión\", Toast.LENGTH_SHORT).show()\r\n                }\r\n            }\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt b/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/ChangePasswordActivity.kt	(date 1775966821936)
+@@ -11,7 +11,6 @@
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.network.RetrofitClient
+ import com.example.lumikids.utils.SessionManager
+-import com.example.lumikids.utils.UserManager
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+ import kotlinx.coroutines.withContext
+@@ -19,12 +18,11 @@
+ class ChangePasswordActivity : AppCompatActivity() {
+ 
+     private lateinit var sessionManager: SessionManager
+-    private lateinit var userManager: UserManager
+ 
+     private var verifiedPassword = ""
+ 
+     private lateinit var etNewPassword: EditText
+-    private lateinit var etConfirmNewPassword: EditText // Agregamos la variable
++    private lateinit var etConfirmNewPassword: EditText
+     private lateinit var btnConfirm: AppCompatButton
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+@@ -32,16 +30,15 @@
+         setContentView(R.layout.activity_change_password)
+ 
+         sessionManager = SessionManager(this)
+-        userManager = UserManager(this)
+ 
+         verifiedPassword = intent.getStringExtra("CURRENT_PASSWORD") ?: ""
+ 
+         if (verifiedPassword.isEmpty()) {
+             Toast.makeText(this, "Error de seguridad. Vuelve a intentarlo.", Toast.LENGTH_SHORT).show()
+             finish()
++            return
+         }
+ 
+-        // Vinculamos el nuevo campo
+         etNewPassword = findViewById(R.id.etNewPassword)
+         etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword)
+         btnConfirm = findViewById(R.id.btnConfirm)
+@@ -58,53 +55,88 @@
+ 
+     private fun changePassword() {
+         val newPass = etNewPassword.text.toString().trim()
+-        val confirmPass = etConfirmNewPassword.text.toString().trim() // Leemos la confirmación
++        val confirmPass = etConfirmNewPassword.text.toString().trim()
+ 
+-        // 1. Validar que no estén vacíos
++        // 1. Validar campos vacíos
+         if (newPass.isEmpty() || confirmPass.isEmpty()) {
+             Toast.makeText(this, "Por favor completa ambos campos", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        // 2. 👉 NUEVO: Validar que las contraseñas coincidan
++        // 2. Validar coincidencia
+         if (newPass != confirmPass) {
+             Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        // 3. Validar que no sea igual a la actual
++        // 3. Validar longitud mínima
++        if (newPass.length < 6) {
++            Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
++            return
++        }
++
++        // 4. Validar que sea diferente a la actual
+         if (verifiedPassword == newPass) {
+             Toast.makeText(this, "La nueva contraseña debe ser diferente a la actual", Toast.LENGTH_SHORT).show()
+             return
+         }
+ 
+-        val userId = sessionManager.getUserId() ?: return
+-        val name = userManager.getUserName()
+-        val email = userManager.getUserEmail()
++        val userId = sessionManager.getUserId()
++
++        if (userId == null) {
++            Toast.makeText(this, "Error: usuario no identificado", Toast.LENGTH_SHORT).show()
++            return
++        }
++
++        // Si tu API requiere estos campos, se envían vacíos
++        val name = ""
++        val email = ""
+ 
+         btnConfirm.text = "Actualizando..."
+         btnConfirm.isEnabled = false
+ 
+         lifecycleScope.launch(Dispatchers.IO) {
+             try {
+-                val request = UpdateProfileRequest(userId, name, email, verifiedPassword, newPass)
+-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
++                val request = UpdateProfileRequest(
++                    userId,
++                    name,
++                    email,
++                    verifiedPassword,
++                    newPass
++                )
++
++                val response = RetrofitClient.instance
++                    .create(AuthApi::class.java)
++                    .updateProfile(request)
+ 
+                 withContext(Dispatchers.Main) {
+                     if (response.isSuccessful && response.body()?.success == true) {
+-                        Toast.makeText(this@ChangePasswordActivity, "¡Contraseña actualizada con éxito!", Toast.LENGTH_LONG).show()
++                        Toast.makeText(
++                            this@ChangePasswordActivity,
++                            "¡Contraseña actualizada con éxito!",
++                            Toast.LENGTH_LONG
++                        ).show()
+                         finish()
+                     } else {
+                         btnConfirm.text = "Guardar nueva contraseña"
+                         btnConfirm.isEnabled = true
+-                        Toast.makeText(this@ChangePasswordActivity, response.body()?.message ?: "Error al actualizar", Toast.LENGTH_LONG).show()
++                        Toast.makeText(
++                            this@ChangePasswordActivity,
++                            response.body()?.message ?: "Error al actualizar",
++                            Toast.LENGTH_LONG
++                        ).show()
+                     }
+                 }
++
+             } catch (e: Exception) {
+                 withContext(Dispatchers.Main) {
+                     btnConfirm.text = "Guardar nueva contraseña"
+                     btnConfirm.isEnabled = true
+-                    Toast.makeText(this@ChangePasswordActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
++                    Toast.makeText(
++                        this@ChangePasswordActivity,
++                        "Error de conexión",
++                        Toast.LENGTH_SHORT
++                    ).show()
+                 }
+             }
+         }
+Index: app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.ui\r\n\r\nimport android.content.Intent\r\nimport android.os.Bundle\r\nimport android.widget.ImageView\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.lumikids.R\r\nimport com.example.lumikids.minigame.memorygame.MemoryGame\r\n\r\nclass MemoryLevelActivity : AppCompatActivity() {\r\n\r\n    // Ahora usamos String para el tema\r\n    private lateinit var theme: String\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_memory_level)\r\n\r\n        // Recibir el String directamente.\r\n        // Si es nulo, usamos \"emotions\" como valor por defecto.\r\n        theme = intent.getStringExtra(\"THEME\") ?: \"furniure\"\r\n\r\n        // Botón regresar\r\n        findViewById<ImageView>(R.id.btnBack).setOnClickListener {\r\n            finish()\r\n        }\r\n\r\n        // Eventos de dificultad\r\n        setupCard(R.id.card6, 6)\r\n        setupCard(R.id.card8, 8)\r\n        setupCard(R.id.card10, 10)\r\n    }\r\n\r\n    private fun setupCard(viewId: Int, numCards: Int) {\r\n        findViewById<ImageView>(viewId).setOnClickListener {\r\n            iniciarMemorama(numCards)\r\n        }\r\n    }\r\n\r\n    private fun iniciarMemorama(numeroDeCartas: Int) {\r\n        val intent = Intent(this, MemoryGame::class.java).apply {\r\n            // Pasamos el String tal cual lo recibimos\r\n            putExtra(\"THEME\", theme)\r\n            putExtra(\"NUM_CARDS\", numeroDeCartas)\r\n        }\r\n        startActivity(intent)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt b/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt
+--- a/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/MemoryLevelActivity.kt	(date 1775966848602)
+@@ -5,7 +5,7 @@
+ import android.widget.ImageView
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.memorygame.MemoryGame
++import com.example.lumikids.ui.MemoryGame
+ 
+ class MemoryLevelActivity : AppCompatActivity() {
+ 
+Index: app/src/main/java/com/example/lumikids/model/ApiResponse.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.model\r\n\r\ndata class ApiResponse(\r\n    val success: Boolean,\r\n    val message: String,\r\n    val ID_user: String?,\r\n    val name: String?,\r\n    val email: String?\r\n)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/ApiResponse.kt b/app/src/main/java/com/example/lumikids/model/ApiResponse.kt
+--- a/app/src/main/java/com/example/lumikids/model/ApiResponse.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/model/ApiResponse.kt	(date 1775966825583)
+@@ -2,8 +2,5 @@
+ 
+ data class ApiResponse(
+     val success: Boolean,
+-    val message: String,
+-    val ID_user: String?,
+-    val name: String?,
+-    val email: String?
++    val message: String
+ )
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/utils/SessionManager.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.utils\r\n\r\nimport android.content.Context\r\n\r\nclass SessionManager(context: Context) {\r\n\r\n    private val prefs = context.getSharedPreferences(\"lumikids_session\", Context.MODE_PRIVATE)\r\n\r\n    fun saveLogin(email: String) {\r\n        prefs.edit().apply {\r\n            putBoolean(\"is_logged_in\", true)\r\n            putString(\"user_email\", email)\r\n            apply()\r\n        }\r\n    }\r\n\r\n    fun isLoggedIn(): Boolean {\r\n        return prefs.getBoolean(\"is_logged_in\", false)\r\n    }\r\n\r\n    fun logout() {\r\n        prefs.edit().clear().apply()\r\n    }\r\n\r\n\r\n    fun saveUserId(userId: String) {\r\n        prefs.edit().putString(\"user_id\", userId).apply()\r\n    }\r\n\r\n\r\n    fun getUserId(): String? {\r\n        return prefs.getString(\"user_id\", null)\r\n    }\r\n\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/utils/SessionManager.kt b/app/src/main/java/com/example/lumikids/utils/SessionManager.kt
+--- a/app/src/main/java/com/example/lumikids/utils/SessionManager.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/utils/SessionManager.kt	(date 1775966851865)
+@@ -4,20 +4,36 @@
+ 
+ class SessionManager(context: Context) {
+ 
++    // Archivo de preferencias para toda la app
+     private val prefs = context.getSharedPreferences("lumikids_session", Context.MODE_PRIVATE)
+ 
+-    fun saveLogin(email: String) {
++    // Guarda los datos de inicio de sesión
++    fun saveLogin(email: String, userId: String) {
+         prefs.edit().apply {
+             putBoolean("is_logged_in", true)
+             putString("user_email", email)
++            putString("user_id", userId)
+             apply()
+         }
+     }
+ 
++    // Verifica si hay una sesión activa
+     fun isLoggedIn(): Boolean {
+         return prefs.getBoolean("is_logged_in", false)
+     }
+ 
++    // Recupera el ID de forma segura y limpia
++    fun getUserId(): String? {
++        val id = prefs.getString("user_id", null)
++
++        if (id == "null" || id.isNullOrEmpty()) {
++            return null
++        }
++
++        return id
++    }
++
++    // Limpia las preferencias al cerrar sesión
+     fun logout() {
+         prefs.edit().clear().apply()
+     }
+Index: app/src/main/java/com/example/lumikids/model/ObjectRound.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/ObjectRound.kt b/app/src/main/java/com/example/lumikids/model/ObjectRound.kt
+new file mode 100644
+--- /dev/null	(date 1775966848637)
++++ b/app/src/main/java/com/example/lumikids/model/ObjectRound.kt	(date 1775966848637)
+@@ -0,0 +1,6 @@
++package com.example.lumikids.model
++
++data class ObjectRound(
++    val options: List<GameObject>,
++    val correctObject: GameObject
++)
+\ No newline at end of file
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    alias(libs.plugins.android.application)\r\n}\r\n\r\nandroid {\r\n    namespace = \"com.example.lumikids\"\r\n    compileSdk {\r\n        version = release(36)\r\n    }\r\n\r\n    defaultConfig {\r\n        applicationId = \"com.example.lumikids\"\r\n        minSdk = 24\r\n        targetSdk = 36\r\n        versionCode = 1\r\n        versionName = \"1.0\"\r\n\r\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            isMinifyEnabled = false\r\n            proguardFiles(\r\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\r\n                \"proguard-rules.pro\"\r\n            )\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility = JavaVersion.VERSION_11\r\n        targetCompatibility = JavaVersion.VERSION_11\r\n    }\r\n\r\n    buildFeatures {\r\n        dataBinding = true\r\n    }\r\n}\r\n\r\ndependencies {\r\n    implementation(libs.androidx.core.ktx)\r\n    implementation(libs.androidx.appcompat)\r\n    implementation(libs.material)\r\n    implementation(libs.androidx.activity)\r\n    implementation(libs.androidx.constraintlayout)\r\n    testImplementation(libs.junit)\r\n    androidTestImplementation(libs.androidx.junit)\r\n    androidTestImplementation(libs.androidx.espresso.core)\r\n    implementation(\"com.squareup.okhttp3:okhttp:4.12.0\")\r\n    implementation(\"androidx.core:core-splashscreen:1.0.1\")\r\n    implementation(\"com.squareup.retrofit2:retrofit:2.9.0\")\r\n    implementation(\"com.squareup.retrofit2:converter-gson:2.9.0\")\r\n    implementation(\"com.squareup.okhttp3:logging-interceptor:4.12.0\")\r\n\r\n    implementation(\"com.github.bumptech.glide:glide:4.16.0\")\r\n    implementation(\"io.coil-kt:coil:2.6.0\")\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/build.gradle.kts	(date 1775966825621)
+@@ -27,6 +27,7 @@
+             )
+         }
+     }
++
+     compileOptions {
+         sourceCompatibility = JavaVersion.VERSION_11
+         targetCompatibility = JavaVersion.VERSION_11
+@@ -43,14 +44,23 @@
+     implementation(libs.material)
+     implementation(libs.androidx.activity)
+     implementation(libs.androidx.constraintlayout)
++
+     testImplementation(libs.junit)
+     androidTestImplementation(libs.androidx.junit)
+     androidTestImplementation(libs.androidx.espresso.core)
++
++    // Networking
+     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+-    implementation("androidx.core:core-splashscreen:1.0.1")
++    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+     implementation("com.squareup.retrofit2:retrofit:2.9.0")
+     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
++
++    // UI / Utils
++    implementation("androidx.core:core-splashscreen:1.0.1")
++
++    // Image loading (ambas librerías conservadas)
++    implementation("com.github.bumptech.glide:glide:4.16.0")
++    implementation("io.coil-kt:coil:2.6.0")
+ 
+     implementation("com.github.bumptech.glide:glide:4.16.0")
+     implementation("io.coil-kt:coil:2.6.0")
+Index: app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt b/app/src/main/java/com/example/lumikids/model/MemoryCard.kt
+rename from app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt
+rename to app/src/main/java/com/example/lumikids/model/MemoryCard.kt
+--- a/app/src/main/java/com/example/lumikids/minigame/memorygame/model/MemoryCard.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/model/MemoryCard.kt	(date 1775966848652)
+@@ -1,6 +1,5 @@
+-package com.example.lumikids.minigame.memorygame.model
++package com.example.lumikids.model
+ 
+-import com.example.lumikids.model.GameObject
+ data class MemoryCard(
+     val gameObject: GameObject,
+     var isFaceUp: Boolean = false,
+Index: app/src/main/java/com/example/lumikids/minigame/MiniGame.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/MiniGame.kt b/app/src/main/java/com/example/lumikids/ui/MiniGame.kt
+rename from app/src/main/java/com/example/lumikids/minigame/MiniGame.kt
+rename to app/src/main/java/com/example/lumikids/ui/MiniGame.kt
+--- a/app/src/main/java/com/example/lumikids/minigame/MiniGame.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/MiniGame.kt	(date 1775966848669)
+@@ -1,4 +1,4 @@
+-package com.example.lumikids.minigame
++package com.example.lumikids.ui
+ 
+ import android.os.Bundle
+ import androidx.appcompat.app.AppCompatActivity
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n    <uses-permission android:name=\"android.permission.INTERNET\"/>\r\n    <application\r\n        android:usesCleartextTraffic=\"true\"\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_app\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_app\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.LumiKids\">\r\n\r\n\r\n\r\n\r\n        <activity android:name=\".MainActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity\r\n            android:name=\".ui.LoginActivity\"\r\n            android:screenOrientation=\"portrait\" />\r\n        <activity android:name=\".ui.RegisterActivity\"\r\n            android:screenOrientation=\"portrait\"/>\r\n        <activity android:name=\".ui.TermsActivity\"\r\n            android:screenOrientation=\"portrait\"/>\r\n\r\n        <activity android:name=\".ui.GameTypeActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.ThemeGameActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.MemoryLevelActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n        <activity android:name=\".ui.ObjectLevelPickerActivity\"\r\n            android:screenOrientation=\"sensorLandscape\"/>\r\n\r\n        <activity android:name=\".minigame.objectrecognition.ObjectRecognition\"\r\n            android:screenOrientation=\"landscape\"/>\r\n        <activity android:name=\".minigame.memorygame.MemoryGame\"\r\n            android:screenOrientation=\"landscape\"/>\r\n\r\n        <activity android:name=\".ui.ProfileActivity\"\r\n            android:screenOrientation=\"portrait\" />\r\n\r\n        <activity\r\n            android:name=\".ui.EditProfileActivity\"\r\n            android:screenOrientation=\"portrait\"\r\n            android:exported=\"false\" />\r\n\r\n        <activity\r\n            android:name=\".ui.ChangePasswordActivity\"\r\n            android:screenOrientation=\"portrait\"\r\n            android:exported=\"false\" />\r\n\r\n        <activity\r\n            android:name=\".ui.SplashActivity\"\r\n            android:exported=\"true\">\r\n            <intent-filter>\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n                <category android:name=\"android.intent.category.LAUNCHER\" />\r\n            </intent-filter>\r\n        </activity>\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/AndroidManifest.xml	(date 1775966843423)
+@@ -35,24 +35,13 @@
+         <activity android:name=".ui.ObjectLevelPickerActivity"
+             android:screenOrientation="sensorLandscape"/>
+ 
+-        <activity android:name=".minigame.objectrecognition.ObjectRecognition"
++        <activity android:name=".minigame.objectrecognition.ui.GameActivityN1"
+             android:screenOrientation="landscape"/>
+-        <activity android:name=".minigame.memorygame.MemoryGame"
++        <activity android:name=".minigame.memorygame.ui.GameActivityN2"
+             android:screenOrientation="landscape"/>
+ 
+         <activity android:name=".ui.ProfileActivity"
+             android:screenOrientation="portrait" />
+-
+-        <activity
+-            android:name=".ui.EditProfileActivity"
+-            android:screenOrientation="portrait"
+-            android:exported="false" />
+-
+-        <activity
+-            android:name=".ui.ChangePasswordActivity"
+-            android:screenOrientation="portrait"
+-            android:exported="false" />
+-
+         <activity
+             android:name=".ui.SplashActivity"
+             android:exported="true">
+Index: app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt b/app/src/main/java/com/example/lumikids/ui/MemoryGame.kt
+rename from app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt
+rename to app/src/main/java/com/example/lumikids/ui/MemoryGame.kt
+--- a/app/src/main/java/com/example/lumikids/minigame/memorygame/MemoryGame.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/MemoryGame.kt	(date 1775966851898)
+@@ -1,4 +1,4 @@
+-package com.example.lumikids.minigame.memorygame
++package com.example.lumikids.ui
+ 
+ import android.os.Bundle
+ import android.view.Gravity
+@@ -10,11 +10,12 @@
+ import com.bumptech.glide.load.resource.bitmap.CenterCrop
+ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.MiniGame
+-import com.example.lumikids.minigame.memorygame.model.MemoryCard
+-import com.example.lumikids.utils.PauseDialog
+-import com.example.lumikids.network.AuthApi
++import com.example.lumikids.ui.MiniGame
++import com.example.lumikids.model.MemoryCard
++import com.example.lumikids.network.GameApi
+ import com.example.lumikids.network.RetrofitClient
++import com.example.lumikids.utils.InstructionRepository
++import com.example.lumikids.utils.PauseDialog
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.delay
+ import kotlinx.coroutines.launch
+@@ -41,7 +42,6 @@
+         loadGameData()
+     }
+ 
+-    // ✨ Agregamos 'override' porque es un contrato de la clase padre
+     override fun initViews() {
+         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
+@@ -57,13 +57,11 @@
+         lifecycleScope.launch {
+             val success = withContext(Dispatchers.IO) {
+                 try {
+-                    val categoryId = when (theme.lowercase()) {
+-                        "clothing" -> 3
+-                        "emotions" -> 5
+-                        "furniure" -> 8
+-                        else -> 0
+-                    }
+-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
++                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
++                    val categoryId = InstructionRepository.getCategoryId(theme)
++
++                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
++                    val api = RetrofitClient.instance.create(GameApi::class.java)
+                     val call = api.getGameObjects(categoryId).awaitResponse()
+ 
+                     if (call.isSuccessful) {
+@@ -232,7 +230,6 @@
+         if (boardCards.all { it.isMatched }) {
+             lifecycleScope.launch {
+                 delay(1000)
+-
+                 showResults("Memorama")
+             }
+         }
+@@ -242,5 +239,4 @@
+         firstSelectedCard = null
+         firstSelectedView = null
+     }
+-
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/EditProfileApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt b/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt
+new file mode 100644
+--- /dev/null	(date 1775966848531)
++++ b/app/src/main/java/com/example/lumikids/network/EditProfileApi.kt	(date 1775966848531)
+@@ -0,0 +1,19 @@
++package com.example.lumikids.network
++
++import com.example.lumikids.model.ApiResponse
++import com.example.lumikids.model.UpdateProfileRequest
++import com.example.lumikids.model.UserProfileResponse
++import retrofit2.Response
++import retrofit2.http.*
++
++interface EditProfileApi {
++
++    @GET("api/auth/user/{id}")
++    suspend fun getUserProfile(@Path("id") userId: String): Response<UserProfileResponse>
++
++    @PUT("api/auth/update")
++    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<ApiResponse>
++
++    @DELETE("api/auth/delete/{id}")
++    suspend fun deleteAccount(@Path("id") userId: String): Response<ApiResponse>
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/RetrofitClient.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.lumikids.network\r\n\r\nimport okhttp3.OkHttpClient\r\nimport okhttp3.logging.HttpLoggingInterceptor\r\nimport retrofit2.Retrofit\r\nimport retrofit2.converter.gson.GsonConverterFactory\r\n\r\nobject RetrofitClient {\r\n\r\n    private const val BASE_URL = \"http://192.168.100.251:3000/\" // My home Carlos\r\n   //private const val BASE_URL = \"http://10.100.77.90:3000/\"   //School\r\n   //private const val BASE_URL = \"http://10.106.250.40:3000/\" // Phone\r\n\r\n   // private const val BASE_URL = \"http://192.168.208.104:3000/\" // Phone 2\r\n   // private const val BASE_URL = \"http://192.168.100.251:3000/\" // My home Carlos\r\n\r\n    const val BASE_URL_IMAGES = \"${BASE_URL}images/\"\r\n    const val BASE_URL_SOUNDS = \"${BASE_URL}sounds/\"\r\n    private val logging = HttpLoggingInterceptor().apply {\r\n        level = HttpLoggingInterceptor.Level.BODY\r\n    }\r\n\r\n    private val client = OkHttpClient.Builder()\r\n        .addInterceptor(logging)\r\n        .build()\r\n\r\n    val instance: Retrofit by lazy {\r\n        Retrofit.Builder()\r\n            .baseUrl(BASE_URL)\r\n            .client(client)\r\n            .addConverterFactory(GsonConverterFactory.create())\r\n            .build()\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt b/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt
+--- a/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/network/RetrofitClient.kt	(date 1775966848449)
+@@ -12,10 +12,8 @@
+    //private const val BASE_URL = "http://10.106.250.40:3000/" // Phone
+ 
+    // private const val BASE_URL = "http://192.168.208.104:3000/" // Phone 2
+-   // private const val BASE_URL = "http://192.168.100.251:3000/" // My home Carlos
+ 
+-    const val BASE_URL_IMAGES = "${BASE_URL}images/"
+-    const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"
++
+     private val logging = HttpLoggingInterceptor().apply {
+         level = HttpLoggingInterceptor.Level.BODY
+     }
+Index: app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt b/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt
+new file mode 100644
+--- /dev/null	(date 1775966848546)
++++ b/app/src/main/java/com/example/lumikids/model/UserProfileResponse.kt	(date 1775966848546)
+@@ -0,0 +1,7 @@
++package com.example.lumikids.model
++
++data class UserProfileResponse(
++    val userId: String,
++    val name: String,
++    val email: String
++)
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/network/GameApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/network/GameApi.kt b/app/src/main/java/com/example/lumikids/network/GameApi.kt
+new file mode 100644
+--- /dev/null	(date 1775966848562)
++++ b/app/src/main/java/com/example/lumikids/network/GameApi.kt	(date 1775966848562)
+@@ -0,0 +1,14 @@
++package com.example.lumikids.network
++
++import com.example.lumikids.model.GameObject
++import retrofit2.Call
++import retrofit2.http.GET
++import retrofit2.http.Path
++
++interface GameApi {
++
++    @GET("api/games/game-objects/{id_category}")
++    fun getGameObjects(
++        @Path("id_category") categoryId: Int
++    ): Call<List<GameObject>>
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt b/app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt
+rename from app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt
+rename to app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt
+--- a/app/src/main/java/com/example/lumikids/minigame/objectrecognition/ObjectRecognition.kt	(revision 8bacb70d2e8fad9c3f19256c23fb6d122a848763)
++++ b/app/src/main/java/com/example/lumikids/ui/ObjectRecognition.kt	(date 1775966848621)
+@@ -1,4 +1,4 @@
+-package com.example.lumikids.minigame.objectrecognition
++package com.example.lumikids.ui
+ 
+ import android.os.Bundle
+ import android.view.View
+@@ -10,13 +10,13 @@
+ import com.bumptech.glide.load.resource.bitmap.CenterCrop
+ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+ import com.example.lumikids.R
+-import com.example.lumikids.minigame.MiniGame
+-import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
+-import com.example.lumikids.utils.InstructionRepository
+-import com.example.lumikids.utils.PauseDialog
++import com.example.lumikids.ui.MiniGame
++import com.example.lumikids.model.ObjectRound
+ import com.example.lumikids.model.GameObject
+ import com.example.lumikids.network.AuthApi
+ import com.example.lumikids.network.RetrofitClient
++import com.example.lumikids.utils.InstructionRepository
++import com.example.lumikids.utils.PauseDialog
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.delay
+ import kotlinx.coroutines.launch
+@@ -89,7 +89,8 @@
+             val success = withContext(Dispatchers.IO) {
+                 try {
+                     val categoryId = InstructionRepository.getCategoryId(theme)
+-                    val instructionMap = InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
++                    val instructionMap =
++                        InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
+                     val api = RetrofitClient.instance.create(AuthApi::class.java)
+                     val call = api.getGameObjects(categoryId).awaitResponse()
+ 

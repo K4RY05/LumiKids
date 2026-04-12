@@ -1,13 +1,15 @@
 package com.example.lumikids.ui
 
-import android.content.Intent // Asegúrate de importar Intent
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.utils.SessionManager // Importa tu SessionManager
+import com.example.lumikids.utils.SessionManager
+
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -23,29 +25,31 @@ class ProfileActivity : AppCompatActivity() {
         val btnTemas = findViewById<Button>(R.id.btnTemas)
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
 
-        txtTitulo.text = "Usuario Lumikids"
+        txtTitulo.text = "Configuraciones"
 
         btnDatos.setOnClickListener {
-            // Abrir datos personales
+            val intent = Intent(this, EditProfileActivity::class.java)
+            startActivity(intent)
         }
 
         btnNotificaciones.setOnClickListener {
-            // Abrir notificaciones
+            Toast.makeText(this, "Notificaciones", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, NotificationActivity::class.java)
+            startActivity(intent)
         }
 
         btnTemas.setOnClickListener {
-            // Abrir temas de colores
+            // Abrir temas de colores (pendiente de implementar)
+            Toast.makeText(this, "Temas de colores", Toast.LENGTH_SHORT).show()
         }
 
-        // --- SOLUCIÓN AQUÍ ---
         btnCerrarSesion.setOnClickListener {
-            // 1. Borrar los datos de SharedPreferences
+            // 1. Borrar los datos de sesión
             val sessionManager = SessionManager(this)
             sessionManager.logout()
 
-            // 2. Redirigir a LoginActivity y limpiar la pila de actividades
+            // 2. Redirigir a LoginActivity y limpiar pila
             val intent = Intent(this, LoginActivity::class.java)
-            // Estas flags evitan que el usuario regrese a la app si presiona el botón "Atrás"
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
