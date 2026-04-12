@@ -19,6 +19,10 @@ import com.example.lumikids.utils.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
 
 class NotificationActivity : AppCompatActivity() {
 
@@ -33,11 +37,33 @@ class NotificationActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
+        solicitarPermisos()
         setupRecyclerView()
         initClickListeners()
         cargarDatos()
     }
 
+    private fun solicitarPermisos() {
+
+        // Permiso notificaciones (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
+            }
+        }
+
+        // Permiso exact alarm (Android 12+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                startActivity(intent)
+            }
+        }
+    }
     private fun setupRecyclerView() {
         val rv = findViewById<RecyclerView>(R.id.rvNotificaciones)
 
