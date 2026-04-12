@@ -13,7 +13,7 @@ import com.example.lumikids.R
 import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.GameObject
 import com.example.lumikids.model.ObjectRound
-import com.example.lumikids.network.AuthApi
+import com.example.lumikids.network.GameApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.InstructionRepository
 import com.example.lumikids.utils.PauseDialog
@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 
-// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity
 class ObjectRecognition : MiniGame() {
 
     private var allItems: MutableList<GameObject> = mutableListOf()
@@ -40,7 +39,6 @@ class ObjectRecognition : MiniGame() {
     private lateinit var btnBack: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_n1)
 
@@ -91,7 +89,9 @@ class ObjectRecognition : MiniGame() {
                     val categoryId = InstructionRepository.getCategoryId(theme)
                     val instructionMap =
                         InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
+
+                    // ✨ CORRECCIÓN: Instanciamos GameApi
+                    val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
                     if (call.isSuccessful) {
@@ -125,7 +125,6 @@ class ObjectRecognition : MiniGame() {
 
     private fun startNewRound() {
         if (currentRoundCount >= totalRoundsWanted) {
-            // ✨ MEJORA: Usamos la función integrada de la clase padre para mostrar la victoria
             showResults("Identificar Objeto")
             return
         }
@@ -172,14 +171,12 @@ class ObjectRecognition : MiniGame() {
     }
 
     private fun handleSelection(view: ImageView, isCorrect: Boolean) {
-        // Deshabilitamos clics para evitar toques múltiples
         images.forEach { it.isEnabled = false }
 
         val index = images.indexOf(view)
         if (index != -1 && index < resultIcons.size) {
             val resultIcon = resultIcons[index]
 
-            // Mostramos el icono visual de acierto o error
             if (isCorrect) {
                 resultIcon.setImageResource(R.drawable.ic_correct)
             } else {
@@ -188,10 +185,10 @@ class ObjectRecognition : MiniGame() {
             resultIcon.visibility = View.VISIBLE
 
             lifecycleScope.launch {
-                delay(500) // Respuesta visual rápida
+                delay(500)
                 if (isCorrect) {
                     gameAudio.playEffect(R.raw.win)
-                    delay(1000) // Esperamos antes de la siguiente ronda
+                    delay(1000)
                     startNewRound()
                 } else {
                     errors++
@@ -207,5 +204,4 @@ class ObjectRecognition : MiniGame() {
         resultIcons.forEach { it.visibility = View.INVISIBLE }
         images.forEach { it.isEnabled = true }
     }
-
 }

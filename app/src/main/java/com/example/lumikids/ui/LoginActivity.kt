@@ -2,7 +2,8 @@ package com.example.lumikids.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +15,7 @@ import com.example.lumikids.model.LoginRequest
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
-import com.example.lumikids.utils.UserManager
+import com.google.android.material.snackbar.Snackbar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -23,102 +24,121 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var sessionManager: SessionManager
-    private lateinit var userManager: UserManager
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
-        userManager = UserManager(this)
 
-        // 1. Verificar sesión primero
+        // Si ya está logueado, ir directo a Main
         if (sessionManager.isLoggedIn()) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
         }
 
-        // 2. Inflar el binding UNA SOLA VEZ
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 3. Configurar lógica del botón de Login
-        binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Toast.makeText(this, "Correo electrónico inválido", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            loginUsuario(email, password)
-        }
-
-        // 4. Configurar lógica para ir al Registro
-        binding.tvSignUp.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
-        }
-
-        // 5. Lógica para mostrar/ocultar contraseña (Ojo)
+        // 🔥 LÓGICA PARA EL BOTÓN DE VER CONTRASEÑA
         binding.ivTogglePassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
 
             if (isPasswordVisible) {
-                // Mostrar contraseña
-                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or
-                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
+                // Mostrar texto
+                binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open) // Verifica tener este ícono en res/drawable
             } else {
-                // Ocultar contraseña
-                binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or
-                        InputType.TYPE_TEXT_VARIATION_PASSWORD
+                // Ocultar texto
+                binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
                 binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_closed)
             }
-
-            // Mantener el cursor al final del texto
+            // Mantener el cursor al final
             binding.etPassword.setSelection(binding.etPassword.text.length)
+        }
+
+        // 🔥 LÓGICA DEL BOTÓN DE LOGIN
+        binding.btnLogin.setOnClickListener {
+
+            val email = binding.etEmail.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+
+            // 1. Limpiar errores previos visuales
+            binding.etEmail.error = null
+            binding.etPassword.error = null
+
+            // 2. Validaciones con feedback visual (UX)
+            if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                binding.etEmail.error = "Ingresa un correo electrónico válido"
+                binding.etEmail.requestFocus()
+                return@setOnClickListener
+            }
+
+            if (password.isEmpty()) {
+                binding.etPassword.error = "Ingresa tu contraseña"
+                binding.etPassword.requestFocus()
+                return@setOnClickListener
+            }
+
+            // Si todo está bien, llamamos al servidor
+            loginUsuario(email, password)
+        }
+
+        // 🔥 NAVEGACIÓN AL REGISTRO
+        binding.tvSignUp.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
     private fun loginUsuario(email: String, password: String) {
+
         val api = RetrofitClient.instance.create(AuthApi::class.java)
         val request = LoginRequest(email, password)
 
         api.login(request).enqueue(object : Callback<ApiResponse> {
-            override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
-                val body = response.body() // Guardamos el cuerpo de la respuesta
 
-                if (response.isSuccessful && body?.success == true) {
-                    // --- LO QUE SE AÑADIÓ ---
-                    sessionManager.saveLogin(email)
+            override fun onResponse(
+                call: Call<ApiResponse>,
+                response: Response<ApiResponse>
+            ) {
+                if (response.isSuccessful && response.body()?.success == true) {
 
-                    // Guardamos el ID del usuario para futuras ediciones
-                    body.ID_user?.let { sessionManager.saveUserId(it) }
+                    // 1. Obtenemos el userId de la respuesta
+                    val userId = response.body()?.ID_user.toString()
 
-                    // Guardamos Nombre y Correo en UserManager para que se vean en el Perfil
-                    userManager.saveUserData(
-                        body.name ?: "Usuario",
-                        body.email ?: email
-                    )
-                    // -------------------------
+                    // 2. Guardamos la sesión con ambos datos
+                    sessionManager.saveLogin(email, userId)
 
-                    Toast.makeText(this@LoginActivity, body.message ?: "Bienvenido", Toast.LENGTH_SHORT).show()
+                    // 3. Mostramos mensaje de éxito y cambiamos de pantalla
+                    Toast.makeText(
+                        this@LoginActivity,
+                        response.body()?.message ?: "Bienvenido",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
+
                 } else {
-                    Toast.makeText(this@LoginActivity, body?.message ?: "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                    Snackbar.make(
+                        binding.root,
+                        response.body()?.message ?: "Credenciales incorrectas",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
             }
 
-            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
-                Toast.makeText(this@LoginActivity, "Error de conexión: ${t.message}", Toast.LENGTH_LONG).show()
+            override fun onFailure(
+                call: Call<ApiResponse>,
+                t: Throwable
+            ) {
+                // Snackbar para errores de red o servidor caído
+                Snackbar.make(
+                    binding.root,
+                    "Error de conexión: Verifica tu internet o el servidor local",
+                    Snackbar.LENGTH_LONG
+                ).show()
             }
         })
     }

@@ -12,8 +12,9 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
 import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.MemoryCard
-import com.example.lumikids.network.AuthApi
+import com.example.lumikids.network.GameApi
 import com.example.lumikids.network.RetrofitClient
+import com.example.lumikids.utils.InstructionRepository
 import com.example.lumikids.utils.PauseDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -41,7 +42,6 @@ class MemoryGame : MiniGame() {
         loadGameData()
     }
 
-    // ✨ Agregamos 'override' porque es un contrato de la clase padre
     override fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
@@ -57,13 +57,11 @@ class MemoryGame : MiniGame() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
-                    val categoryId = when (theme.lowercase()) {
-                        "clothing" -> 3
-                        "emotions" -> 5
-                        "furniure" -> 8
-                        else -> 0
-                    }
-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
+                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
+                    val categoryId = InstructionRepository.getCategoryId(theme)
+
+                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
+                    val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
                     if (call.isSuccessful) {
@@ -232,7 +230,6 @@ class MemoryGame : MiniGame() {
         if (boardCards.all { it.isMatched }) {
             lifecycleScope.launch {
                 delay(1000)
-
                 showResults("Memorama")
             }
         }
@@ -242,5 +239,4 @@ class MemoryGame : MiniGame() {
         firstSelectedCard = null
         firstSelectedView = null
     }
-
 }

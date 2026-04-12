@@ -5,13 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
@@ -21,8 +18,8 @@ import com.example.lumikids.model.LoginRequest
 import com.example.lumikids.model.UpdateProfileRequest
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.network.AuthApi
+import com.example.lumikids.network.EditProfileApi
 import com.example.lumikids.utils.SessionManager
-import com.example.lumikids.utils.UserManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,8 +30,7 @@ import retrofit2.Response as RetrofitResponse
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
-    private lateinit var userManager: UserManager
-
+    private var userId: String = ""
     private var verifiedPassword = ""
     private var fieldWaitingToUnlock = ""
 
@@ -49,19 +45,38 @@ class EditProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_edit_profile)
 
         sessionManager = SessionManager(this)
-        userManager = UserManager(this)
+        val id = sessionManager.getUserId()
 
+        if (id == null) {
+            Toast.makeText(this, "Error de sesión. Vuelve a ingresar.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        userId = id
+
+        initViews()
+        setupListeners()
+        // 👉 Ahora esta función sí realizará la carga desde el servidor
+        cargarDatosUsuario()
+    }
+
+    private fun initViews() {
         etName = findViewById(R.id.etName)
         etEmail = findViewById(R.id.etEmail)
         btnEditName = findViewById(R.id.btnEditName)
         btnEditEmail = findViewById(R.id.btnEditEmail)
         btnChangePassword = findViewById(R.id.btnChangePassword)
+    }
 
-        val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
-        val tvDelete = findViewById<TextView>(R.id.tvDelete)
+    private fun setupListeners() {
+        findViewById<AppCompatButton>(R.id.btnBack).setOnClickListener {
+            hideKeyboard()
+            finish()
+        }
 
-        etName.setText(userManager.getUserName())
-        etEmail.setText(userManager.getUserEmail())
+        findViewById<TextView>(R.id.tvDelete).setOnClickListener {
+            mostrarDialogoEliminarCuenta()
+        }
 
         btnEditName.setOnClickListener {
             if (!etName.isEnabled) {
@@ -77,7 +92,6 @@ class EditProfileActivity : AppCompatActivity() {
             } else saveChanges()
         }
 
-        // 👉 NUEVO: Ahora el botón de Contraseña usa el Pop-up también
         btnChangePassword.setOnClickListener {
             if (verifiedPassword.isEmpty()) {
                 fieldWaitingToUnlock = "password"
@@ -86,14 +100,33 @@ class EditProfileActivity : AppCompatActivity() {
                 goToChangePasswordScreen()
             }
         }
+    }
 
-        btnBack.setOnClickListener {
-            hideKeyboard()
-            finish()
-        }
+    private fun cargarDatosUsuario() {
+        // Le decimos a la corrutina que haga el trabajo de red en segundo plano (IO)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val api = RetrofitClient.instance.create(EditProfileApi::class.java)
+                val response = api.getUserProfile(userId)
 
-        tvDelete.setOnClickListener {
-            Toast.makeText(this, "Borrar cuenta en construcción", Toast.LENGTH_SHORT).show()
+                // Una vez que Retrofit termine, cambiamos al hilo principal para actualizar la pantalla
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val user = response.body()!!
+                        // ✅ Asignamos los datos obtenidos a los EditText con seguridad
+                        etName.setText(user.name)
+                        etEmail.setText(user.email)
+                    } else {
+                        Toast.makeText(this@EditProfileActivity, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                // Si hay un error, también debemos mostrar el Toast en el hilo principal
+                withContext(Dispatchers.Main) {
+                    Log.e("EDIT_PROFILE", "Error al cargar datos: ${e.message}")
+                    Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -120,10 +153,10 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun verifyPassword(password: String) {
-        val email = userManager.getUserEmail()
+        val email = etEmail.text.toString().trim()
         val request = LoginRequest(email, password)
-
         val api = RetrofitClient.instance.create(AuthApi::class.java)
+
         api.login(request).enqueue(object : Callback<ApiResponse> {
             override fun onResponse(call: Call<ApiResponse>, response: RetrofitResponse<ApiResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
@@ -133,7 +166,6 @@ class EditProfileActivity : AppCompatActivity() {
                     Toast.makeText(this@EditProfileActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
                 }
             }
-
             override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
                 Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
             }
@@ -141,27 +173,29 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun unlockField() {
-        if (fieldWaitingToUnlock == "name") {
-            etName.isEnabled = true
-            etName.requestFocus()
-            showKeyboard(etName)
-            btnEditName.setImageResource(android.R.drawable.ic_menu_save)
-        } else if (fieldWaitingToUnlock == "email") {
-            etEmail.isEnabled = true
-            etEmail.requestFocus()
-            showKeyboard(etEmail)
-            btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
-        } else if (fieldWaitingToUnlock == "password") {
-            // 👉 Si el usuario quería cambiar clave, lo mandamos a la otra pantalla
-            goToChangePasswordScreen()
+        when (fieldWaitingToUnlock) {
+            "name" -> {
+                etName.isEnabled = true
+                etName.requestFocus()
+                showKeyboard(etName)
+                btnEditName.setImageResource(android.R.drawable.ic_menu_save)
+            }
+            "email" -> {
+                etEmail.isEnabled = true
+                etEmail.requestFocus()
+                showKeyboard(etEmail)
+                btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
+            }
+            "password" -> goToChangePasswordScreen()
         }
         fieldWaitingToUnlock = ""
     }
 
-    // 👉 Función que abre la pantalla y le pasa la contraseña verificada en secreto
     private fun goToChangePasswordScreen() {
         val intent = Intent(this, ChangePasswordActivity::class.java)
         intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
+        intent.putExtra("CURRENT_NAME", etName.text.toString().trim())
+        intent.putExtra("CURRENT_EMAIL", etEmail.text.toString().trim())
         startActivity(intent)
     }
 
@@ -170,7 +204,6 @@ class EditProfileActivity : AppCompatActivity() {
         val newEmail = etEmail.text.toString().trim()
 
         if (newName.isEmpty() || newEmail.isEmpty()) return
-        val userId = sessionManager.getUserId() ?: return
 
         btnEditName.isEnabled = false
         btnEditEmail.isEnabled = false
@@ -179,12 +212,11 @@ class EditProfileActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
+                val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
                         Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
-                        userManager.saveUserData(newName, newEmail)
                         lockAllFields()
                     } else {
                         Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
@@ -197,6 +229,39 @@ class EditProfileActivity : AppCompatActivity() {
                     Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
                     btnEditName.isEnabled = true
                     btnEditEmail.isEnabled = true
+                }
+            }
+        }
+    }
+
+    private fun mostrarDialogoEliminarCuenta() {
+        AlertDialog.Builder(this)
+            .setTitle("Eliminar Cuenta")
+            .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { _, _ -> eliminarCuenta() }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun eliminarCuenta() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.instance.create(EditProfileApi::class.java).deleteAccount(userId)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        Toast.makeText(this@EditProfileActivity, "Cuenta eliminada", Toast.LENGTH_LONG).show()
+                        sessionManager.logout()
+                        val intent = Intent(this@EditProfileActivity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
                 }
             }
         }

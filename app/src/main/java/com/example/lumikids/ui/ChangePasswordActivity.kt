@@ -8,10 +8,10 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.model.UpdateProfileRequest
-import com.example.lumikids.network.AuthApi
+import com.example.lumikids.network.EditProfileApi // 👉 Usamos tu API especializada
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
-import com.example.lumikids.utils.UserManager
+// Eliminamos el import de UserManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,12 +19,13 @@ import kotlinx.coroutines.withContext
 class ChangePasswordActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
-    private lateinit var userManager: UserManager
 
     private var verifiedPassword = ""
+    private var currentName = ""
+    private var currentEmail = ""
 
     private lateinit var etNewPassword: EditText
-    private lateinit var etConfirmNewPassword: EditText // Agregamos la variable
+    private lateinit var etConfirmNewPassword: EditText
     private lateinit var btnConfirm: AppCompatButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,16 +33,25 @@ class ChangePasswordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_change_password)
 
         sessionManager = SessionManager(this)
-        userManager = UserManager(this)
 
+        // Verificamos la sesión de inmediato
+        if (sessionManager.getUserId() == null) {
+            Toast.makeText(this, "Error de sesión.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        // Recibimos los datos enviados desde EditProfileActivity
         verifiedPassword = intent.getStringExtra("CURRENT_PASSWORD") ?: ""
+        currentName = intent.getStringExtra("CURRENT_NAME") ?: ""
+        currentEmail = intent.getStringExtra("CURRENT_EMAIL") ?: ""
 
         if (verifiedPassword.isEmpty()) {
             Toast.makeText(this, "Error de seguridad. Vuelve a intentarlo.", Toast.LENGTH_SHORT).show()
             finish()
+            return
         }
 
-        // Vinculamos el nuevo campo
         etNewPassword = findViewById(R.id.etNewPassword)
         etConfirmNewPassword = findViewById(R.id.etConfirmNewPassword)
         btnConfirm = findViewById(R.id.btnConfirm)
@@ -58,37 +68,35 @@ class ChangePasswordActivity : AppCompatActivity() {
 
     private fun changePassword() {
         val newPass = etNewPassword.text.toString().trim()
-        val confirmPass = etConfirmNewPassword.text.toString().trim() // Leemos la confirmación
+        val confirmPass = etConfirmNewPassword.text.toString().trim()
 
-        // 1. Validar que no estén vacíos
         if (newPass.isEmpty() || confirmPass.isEmpty()) {
             Toast.makeText(this, "Por favor completa ambos campos", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 2. 👉 NUEVO: Validar que las contraseñas coincidan
         if (newPass != confirmPass) {
             Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 3. Validar que no sea igual a la actual
         if (verifiedPassword == newPass) {
             Toast.makeText(this, "La nueva contraseña debe ser diferente a la actual", Toast.LENGTH_SHORT).show()
             return
         }
 
         val userId = sessionManager.getUserId() ?: return
-        val name = userManager.getUserName()
-        val email = userManager.getUserEmail()
 
         btnConfirm.text = "Actualizando..."
         btnConfirm.isEnabled = false
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val request = UpdateProfileRequest(userId, name, email, verifiedPassword, newPass)
-                val response = RetrofitClient.instance.create(AuthApi::class.java).updateProfile(request)
+                // Instanciamos el Request con los datos que recuperamos del Intent
+                val request = UpdateProfileRequest(userId, currentName, currentEmail, verifiedPassword, newPass)
+
+                // 👉 Ejecutamos a través de EditProfileApi
+                val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
