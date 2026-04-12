@@ -59,7 +59,8 @@ class NotificationActivity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.btnCancelar).setOnClickListener {
 
-            val formularioVisible = findViewById<View>(R.id.layoutContenedorFormulario).visibility == View.VISIBLE
+            val formularioVisible =
+                findViewById<View>(R.id.layoutContenedorFormulario).visibility == View.VISIBLE
 
             if (formularioVisible) {
                 limpiarFormulario()

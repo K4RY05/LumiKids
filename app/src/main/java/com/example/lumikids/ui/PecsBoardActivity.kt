@@ -4,8 +4,12 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -13,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.lumikids.R
 import com.example.lumikids.model.PecsItem
-import com.example.lumikids.pecsadapter.PecsAdapter
+import com.example.lumikids.utils.PecsAdapter
 import com.example.lumikids.utils.SessionManager
 import kotlinx.coroutines.*
 import org.json.JSONArray
@@ -35,13 +39,18 @@ class PecsBoardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
-
+        initClickListeners()
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
         clearBoardInDB {
             loadPecs("pronoun")
+        }
+    }
+    private fun initClickListeners() {
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
+            finish()
         }
     }
 

@@ -1,4 +1,4 @@
-package com.example.lumikids.pecsadapter
+package com.example.lumikids.utils
 
 import android.view.LayoutInflater
 import android.view.View
