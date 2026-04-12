@@ -1,7 +1,8 @@
 package com.example.lumikids.minigame.memorygame.model
 
+import com.example.lumikids.model.GameObject
 data class MemoryCard(
-    val id: Int,
-    val name: String,
-    val imageResId: Int
+    val gameObject: GameObject,
+    var isFaceUp: Boolean = false,
+    var isMatched: Boolean = false
 )

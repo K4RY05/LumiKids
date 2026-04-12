@@ -4,8 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.lumikids.GameActivityN1
-import com.example.lumikids.GameActivityN2
 import com.example.lumikids.R
 
 class GameTypeActivity : AppCompatActivity() {
@@ -14,39 +12,30 @@ class GameTypeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_type)
 
-        // Botón regresar
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         btnBack.setOnClickListener {
             finish()
         }
 
-        // Recibir temática seleccionada
-        val theme = intent.getStringExtra("THEME")
+        val theme = intent.getStringExtra("THEME") ?: "furniure"
 
-        //  Tarjetas
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
 
-        //  Identifica el objeto
         cardObject.setOnClickListener {
-
-            val intent = Intent(this, GameActivityN1::class.java)
-            intent.putExtra("THEME", theme)
-            intent.putExtra("GAME_TYPE", "OBJECT")
-            startActivity(intent)
-            finish()
+            openGame(ObjectLevelPickerActivity::class.java, theme)
         }
-
-        // Memorama
         cardMemory.setOnClickListener {
-
-            val intent = Intent(this, GameActivityN2::class.java)
-            intent.putExtra("THEME", theme)
-            intent.putExtra("GAME_TYPE", "MEMORY")
-            startActivity(intent)
-            finish()
+            openGame(MemoryLevelActivity::class.java, theme)
         }
+    }
 
-
+    private fun openGame(
+        activity: Class<*>,
+        theme: String
+    ) {
+        val intent = Intent(this, activity)
+        intent.putExtra("THEME", theme)
+        startActivity(intent)
     }
 }

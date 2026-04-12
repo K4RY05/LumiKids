@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
+    <!-- Botón regresar -->
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="@dimen/ic_top_corner"
@@ -17,8 +18,9 @@
         android:focusable="true"
         android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
+    <!-- Botón pausa -->
     <ImageView
         android:id="@+id/btnPause"
         android:layout_width="@dimen/ic_top_corner"
@@ -30,9 +32,9 @@
         android:focusable="true"
         android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-
+    <!-- Grid del memorama -->
     <GridLayout
         android:id="@+id/gridMemorama"
         android:layout_width="wrap_content"
@@ -45,7 +47,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.5">
-    </GridLayout>
+        app:layout_constraintVertical_bias="0.5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

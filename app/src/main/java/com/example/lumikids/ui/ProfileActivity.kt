@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
 import com.example.lumikids.utils.SessionManager // Importa tu SessionManager
@@ -24,23 +23,21 @@ class ProfileActivity : AppCompatActivity() {
         val btnTemas = findViewById<Button>(R.id.btnTemas)
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
 
-        txtTitulo.text = "Usuario"
+        txtTitulo.text = "Usuario Lumikids"
 
         btnDatos.setOnClickListener {
             // Abrir datos personales
         }
 
         btnNotificaciones.setOnClickListener {
-            Toast.makeText(this, "Notificaciones", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, NotificationActivity::class.java)
-            startActivity(intent)
+            // Abrir notificaciones
         }
 
         btnTemas.setOnClickListener {
             // Abrir temas de colores
         }
 
-
+        // --- SOLUCIÓN AQUÍ ---
         btnCerrarSesion.setOnClickListener {
             // 1. Borrar los datos de SharedPreferences
             val sessionManager = SessionManager(this)

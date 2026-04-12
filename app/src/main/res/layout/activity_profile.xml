@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,85 +9,82 @@
     <LinearLayout
         android:id="@+id/containerCenter"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="24dp"
-
-        android:layout_marginStart="@dimen/margen_perfil"
-        android:layout_marginEnd="@dimen/margen_perfil"
-
+        app:layout_constraintWidth_max="@dimen/profile_max_width"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-
-        <!-- TITULO -->
         <TextView
-            android:id="@+id/txtTitulo"
+            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Usuario"
-            android:textSize="@dimen/tamano_user"
+            android:textSize="@dimen/profile_title_size"
             android:textStyle="bold"
-
-
-
-
-            android:textColor="@android:color/black"
+            android:textColor="@color/c_one"
+            android:textAlignment="center"
+            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="24dp"/>
 
-        <!-- IMAGEN -->
         <ImageView
             android:id="@+id/imgUsuario"
-            android:layout_width="@dimen/tamano_avatar"
-            android:layout_height="@dimen/tamano_avatar"
+            android:layout_width="@dimen/profile_avatar_size"
+            android:layout_height="@dimen/profile_avatar_size"
             android:background="@drawable/circle_bg"
             android:clipToOutline="true"
             android:outlineProvider="background"
             android:src="@drawable/ic_user"
             android:scaleType="centerCrop"
+            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="36dp"/>
 
-        <!-- BOTONES -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnDatos"
             android:layout_width="match_parent"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Datos Personales"
-            android:layout_height="@dimen/tallButton"
-            android:textSize="@dimen/buttonFontSize"
-            android:layout_marginBottom="16dp"
-            android:textColor="@color/c_two"
-            android:backgroundTint="@color/c_three"/>
+            android:textSize="@dimen/profile_label_text_size"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button"
+            android:layout_marginBottom="16dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNotificaciones"
             android:layout_width="match_parent"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Notificaciones"
-            android:layout_height="@dimen/tallButton"
-            android:textSize="@dimen/buttonFontSize"
-            android:layout_marginBottom="16dp"
-            android:textColor="@color/c_two"
-            android:backgroundTint="@color/c_three"/>
+            android:textSize="@dimen/profile_label_text_size"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button"
+            android:layout_marginBottom="16dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnTemas"
             android:layout_width="match_parent"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Temas de colores"
-            android:layout_height="@dimen/tallButton"
-            android:textSize="@dimen/buttonFontSize"
-            android:layout_marginBottom="28dp"
-            android:textColor="@color/c_two"
-            android:backgroundTint="@color/c_three"/>
+            android:textSize="@dimen/profile_label_text_size"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button"
+            android:layout_marginBottom="28dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCerrarSesion"
             android:layout_width="match_parent"
+            android:layout_height="@dimen/profile_button_height"
             android:text="Cerrar Sesión"
-            android:layout_height="@dimen/tallButton"
-            android:textSize="@dimen/buttonFontSize"
+            android:textSize="@dimen/profile_label_text_size"
             android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:background="@drawable/bg_button"
             android:backgroundTint="#F44336"/>
 
     </LinearLayout>

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,77 +5,143 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-    <!-- Botón regresar -->
     <ImageView
         android:id="@+id/btnBack"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
         android:src="@drawable/ic_left"
         android:clickable="true"
-        android:layout_margin="16dp"
+        android:focusable="true"
+        android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Botón pausa -->
     <ImageView
         android:id="@+id/btnPause"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="24dp"
         android:src="@drawable/ic_pause"
         android:clickable="true"
-        android:layout_margin="16dp"
+        android:focusable="true"
+        android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Opción 1 -->
-    <ImageView
-        android:id="@+id/imgOption1"
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Selecciona el objeto"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:textColor="@color/c_one"
+        android:gravity="center"
+        android:maxLines="2"
+        android:padding="8dp"
+        app:layout_constraintStart_toEndOf="@id/btnBack"
+        app:layout_constraintEnd_toStartOf="@id/btnPause"
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack" />
+
+    <FrameLayout
+        android:id="@+id/containerOption1"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/imgOption2"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintDimensionRatio="1:1"/>
+        app:layout_constraintEnd_toStartOf="@id/containerOption2"
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <!-- Opción 2 -->
-    <ImageView
-        android:id="@+id/imgOption2"
+        <ImageView
+            android:id="@+id/imgOption1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult1"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/containerOption2"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="12dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/imgOption1"
-        app:layout_constraintEnd_toStartOf="@id/imgOption3"
-        app:layout_constraintDimensionRatio="1:1"/>
+        android:layout_marginBottom="24dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toEndOf="@id/containerOption1"
+        app:layout_constraintEnd_toStartOf="@id/containerOption3"
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <!-- Opción 3 -->
-    <ImageView
-        android:id="@+id/imgOption3"
+        <ImageView
+            android:id="@+id/imgOption2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult2"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/containerOption3"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:scaleType="fitCenter"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/imgOption2"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toEndOf="@id/containerOption2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="1:1"/>
+        app:layout_constraintTop_toBottomOf="@id/tvInstruction"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/imgOption3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/imgResult3"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:elevation="8dp"
+            android:visibility="invisible" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/c_four">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Datos de Usuario"
+            android:textSize="@dimen/profile_title_size"
+            android:textStyle="bold"
+            android:textColor="@color/c_one"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
+
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="@dimen/profile_avatar_size"
+            android:layout_height="@dimen/profile_avatar_size"
+            android:background="@drawable/circle_bg"
+            android:clipToOutline="true"
+            android:outlineProvider="background"
+            android:src="@drawable/ic_user"
+            android:scaleType="centerCrop"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
+
+        <LinearLayout
+            android:id="@+id/rowName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:background="@drawable/bg_input_rounded_pill"
+            android:elevation="4dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
+            app:layout_constraintTop_toBottomOf="@id/imgAvatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp">
+
+            <EditText
+                android:id="@+id/etName"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:textSize="@dimen/profile_input_text_size"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:enabled="false"
+                android:inputType="textPersonName"
+                android:padding="8dp"/>
+
+            <ImageButton
+                android:id="@+id/btnEditName"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="?selectableItemBackgroundBorderless"
+                app:tint="@color/c_one"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowEmail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:background="@drawable/bg_input_rounded_pill"
+            android:elevation="4dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
+            app:layout_constraintTop_toBottomOf="@id/rowName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp">
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:textSize="@dimen/profile_label_text_size"
+                android:textColor="@android:color/darker_gray"
+                android:enabled="false"
+                android:inputType="textEmailAddress"
+                android:padding="8dp"/>
+
+            <ImageButton
+                android:id="@+id/btnEditEmail"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="?selectableItemBackgroundBorderless"
+                app:tint="@color/c_one"/>
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnChangePassword"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/profile_button_height"
+            android:text="Cambiar contraseña"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
+            app:layout_constraintTop_toBottomOf="@id/rowEmail"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="40dp"/>
+
+        <TextView
+            android:id="@+id/tvDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Borrar cuenta"
+            android:textColor="@android:color/holo_red_dark"
+            android:textStyle="bold"
+            android:textSize="@dimen/profile_label_text_size"
+            android:padding="8dp"
+            android:background="?selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintTop_toBottomOf="@id/btnChangePassword"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnBack"
+            android:layout_width="@dimen/profile_button_width"
+            android:layout_height="@dimen/profile_button_height"
+            android:text="Volver"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button"
+            app:layout_constraintTop_toBottomOf="@id/tvDelete"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/profile_margin_top_standard"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

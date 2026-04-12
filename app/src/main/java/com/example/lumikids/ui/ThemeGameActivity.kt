@@ -4,6 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.lumikids.R
 
 class ThemeGameActivity : AppCompatActivity() {
@@ -12,33 +15,32 @@ class ThemeGameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_theme)
 
-        // Flecha regresar
-        val btnBack = findViewById<ImageView>(R.id.btnBack)
-        btnBack.setOnClickListener {
-            finish()
-        }
+        setupImmersiveMode()
+        initViews()
+    }
 
-        // Tarjetas (Temáticas)
-        val furniture = findViewById<ImageView>(R.id.cardFur)
+    // ✨ OPTIMIZACIÓN: Sacamos la configuración de pantalla completa a su propia función
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    // ✨ OPTIMIZACIÓN: Agrupamos todos los botones y sus clics en un solo lugar
+    private fun initViews() {
+        val btnBack = findViewById<ImageView>(R.id.btnBack)
+        val furniure = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
         val clothes = findViewById<ImageView>(R.id.cardClot)
 
-        // Eventos: Pasamos directamente los Strings
-        // Nota: Mantenemos "furniure" sin la 't' para que coincida con tu servidor
-        furniture.setOnClickListener {
-            openGame("furniure")
-        }
+        btnBack.setOnClickListener { finish() }
 
-        emotions.setOnClickListener {
-            openGame("emotions")
-        }
-
-        clothes.setOnClickListener {
-            openGame("clothes")
-        }
+        furniure.setOnClickListener { openGame("furniure") }
+        emotions.setOnClickListener { openGame("emotions") }
+        clothes.setOnClickListener { openGame("clothing") }
     }
 
-    // La función ahora recibe un String en lugar del enum GameTheme
+    // Pasa la categoría seleccionada a la siguiente pantalla (GameTypeActivity)
     private fun openGame(theme: String) {
         val intent = Intent(this, GameTypeActivity::class.java)
         intent.putExtra("THEME", theme)
