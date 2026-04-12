@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.minigame.memorygame.MemoryGame
+import com.example.lumikids.ui.MemoryGame
 
 class MemoryLevelActivity : AppCompatActivity() {
 

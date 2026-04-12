@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.objectrecognition
+package com.example.lumikids.ui
 
 import android.os.Bundle
 import android.view.View
@@ -10,13 +10,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.minigame.MiniGame
-import com.example.lumikids.minigame.objectrecognition.model.ObjectRound
-import com.example.lumikids.utils.InstructionRepository
-import com.example.lumikids.utils.PauseDialog
+import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.GameObject
+import com.example.lumikids.model.ObjectRound
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
+import com.example.lumikids.utils.InstructionRepository
+import com.example.lumikids.utils.PauseDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -89,7 +89,8 @@ class ObjectRecognition : MiniGame() {
             val success = withContext(Dispatchers.IO) {
                 try {
                     val categoryId = InstructionRepository.getCategoryId(theme)
-                    val instructionMap = InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
+                    val instructionMap =
+                        InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
                     val api = RetrofitClient.instance.create(AuthApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 

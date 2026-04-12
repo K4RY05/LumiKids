@@ -6,7 +6,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
-import com.example.lumikids.minigame.objectrecognition.ObjectRecognition
+import com.example.lumikids.ui.ObjectRecognition
 
 class ObjectLevelPickerActivity : AppCompatActivity() {
 

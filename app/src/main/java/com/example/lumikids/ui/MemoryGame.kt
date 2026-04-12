@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame.memorygame
+package com.example.lumikids.ui
 
 import android.os.Bundle
 import android.view.Gravity
@@ -10,11 +10,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.minigame.MiniGame
-import com.example.lumikids.minigame.memorygame.model.MemoryCard
-import com.example.lumikids.utils.PauseDialog
+import com.example.lumikids.ui.MiniGame
+import com.example.lumikids.model.MemoryCard
 import com.example.lumikids.network.AuthApi
 import com.example.lumikids.network.RetrofitClient
+import com.example.lumikids.utils.PauseDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

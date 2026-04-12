@@ -35,9 +35,9 @@
         <activity android:name=".ui.ObjectLevelPickerActivity"
             android:screenOrientation="sensorLandscape"/>
 
-        <activity android:name=".minigame.objectrecognition.ObjectRecognition"
+        <activity android:name=".ui.ObjectRecognition"
             android:screenOrientation="landscape"/>
-        <activity android:name=".minigame.memorygame.MemoryGame"
+        <activity android:name=".ui.MemoryGame"
             android:screenOrientation="landscape"/>
 
         <activity android:name=".ui.ProfileActivity"

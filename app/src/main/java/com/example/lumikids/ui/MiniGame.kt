@@ -1,4 +1,4 @@
-package com.example.lumikids.minigame
+package com.example.lumikids.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
