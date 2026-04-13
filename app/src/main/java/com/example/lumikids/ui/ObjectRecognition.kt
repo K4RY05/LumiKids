@@ -25,7 +25,6 @@ import retrofit2.awaitResponse
 class ObjectRecognition : MiniGame() {
 
     private var allItems: MutableList<GameObject> = mutableListOf()
-    // 1. LISTA DE PENDIENTES: Para controlar qué no ha salido como correcto
     private var availableItems: MutableList<GameObject> = mutableListOf()
 
     private var currentRoundCount: Int = 0

@@ -61,7 +61,7 @@ class GameAudioManager(
     }
 
 
-     //Inicia un bucle que reproduce un audio de internet cada X milisegundos
+    //Inicia un bucle que reproduce un audio de internet cada X milisegundos
 
     fun startLoop(url: String, delayMs: Long = 8000L) {
         stopLoop() // Nos aseguramos de detener cualquier bucle anterior
@@ -74,7 +74,7 @@ class GameAudioManager(
         }
     }
 
-  // Detiene temporalmente el bucle de repetición
+    // Detiene temporalmente el bucle de repetición
 
     fun stopLoop() {
         loopJob?.cancel()

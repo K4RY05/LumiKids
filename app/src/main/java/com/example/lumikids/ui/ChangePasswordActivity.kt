@@ -8,10 +8,9 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.model.UpdateProfileRequest
-import com.example.lumikids.network.EditProfileApi // 👉 Usamos tu API especializada
+import com.example.lumikids.network.EditProfileApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
-// Eliminamos el import de UserManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
