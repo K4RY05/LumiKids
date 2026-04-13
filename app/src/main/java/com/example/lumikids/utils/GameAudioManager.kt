@@ -12,18 +12,15 @@ import kotlinx.coroutines.launch
 
 class GameAudioManager(
     private val context: Context,
-    private val scope: CoroutineScope // Recibe el lifecycleScope de la Activity
+    private val scope: CoroutineScope
 ) {
-    // Reproductor para audios cortos locales
     private var localMediaPlayer: MediaPlayer? = null
     // Reproductor para audios de internet
     private var networkMediaPlayer: MediaPlayer? = null
     // Variable para controlar el bucle
     private var loopJob: Job? = null
 
-    /**
-     * Reproduce un sonido local desde la carpeta res/raw (ej. R.raw.win, R.raw.fail)
-     */
+
     fun playEffect(resId: Int) {
         MediaPlayer.create(context, resId)?.apply {
             setOnCompletionListener { release() }
@@ -31,22 +28,10 @@ class GameAudioManager(
         }
     }
 
-    /**
-     * Reproduce un sonido local buscando su nombre como String
-     */
-    fun playObjectAudio(audioIdentifier: String) {
-        localMediaPlayer?.release()
-        val resId = context.resources.getIdentifier(audioIdentifier, "raw", context.packageName)
 
-        if (resId != 0) {
-            localMediaPlayer = MediaPlayer.create(context, resId)
-            localMediaPlayer?.start()
-        }
-    }
 
-    /**
-     * Reproduce un audio desde una URL de internet
-     */
+
+
     fun playUrl(url: String) {
         stopNetworkAudio() // Detenemos cualquier audio anterior antes de iniciar uno nuevo
 
@@ -75,9 +60,9 @@ class GameAudioManager(
         }
     }
 
-    /**
-     * Inicia un bucle que reproduce un audio de internet cada X milisegundos
-     */
+
+    //Inicia un bucle que reproduce un audio de internet cada X milisegundos
+
     fun startLoop(url: String, delayMs: Long = 8000L) {
         stopLoop() // Nos aseguramos de detener cualquier bucle anterior
 
@@ -89,17 +74,15 @@ class GameAudioManager(
         }
     }
 
-    /**
-     * Detiene temporalmente el bucle de repetición
-     */
+    // Detiene temporalmente el bucle de repetición
+
     fun stopLoop() {
         loopJob?.cancel()
         loopJob = null
     }
 
-    /**
-     * Detiene el audio de internet que esté sonando en este momento
-     */
+    // Detiene el audio de internet que esté sonando en este momento
+
     fun stopNetworkAudio() {
         try {
             networkMediaPlayer?.let {
@@ -113,9 +96,6 @@ class GameAudioManager(
         }
     }
 
-    /**
-     * Libera todos los recursos (se debe llamar en el onDestroy de la Activity)
-     */
     fun releaseAll() {
         stopLoop()
         stopNetworkAudio()

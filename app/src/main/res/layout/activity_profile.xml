@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/c_four">
 
-
     <LinearLayout
         android:id="@+id/containerCenter"
         android:layout_width="0dp"
@@ -21,10 +20,10 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
-            android:id="@+id/txtTitulo"
+            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Configuraciones"
+            android:text="Usuario"
             android:textSize="@dimen/profile_title_size"
             android:textStyle="bold"
             android:textColor="@color/c_one"
@@ -44,7 +43,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="36dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnDatos"
             android:layout_width="match_parent"
             android:layout_height="@dimen/profile_button_height"
@@ -55,7 +54,7 @@
             android:background="@drawable/bg_button"
             android:layout_marginBottom="16dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnNotificaciones"
             android:layout_width="match_parent"
             android:layout_height="@dimen/profile_button_height"
@@ -66,7 +65,7 @@
             android:background="@drawable/bg_button"
             android:layout_marginBottom="16dp"/>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnTemas"
             android:layout_width="match_parent"
             android:layout_height="@dimen/profile_button_height"

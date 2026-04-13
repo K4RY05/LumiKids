@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.GameObject
 import com.example.lumikids.model.ObjectRound
 import com.example.lumikids.network.GameApi
@@ -26,6 +25,8 @@ import retrofit2.awaitResponse
 class ObjectRecognition : MiniGame() {
 
     private var allItems: MutableList<GameObject> = mutableListOf()
+    private var availableItems: MutableList<GameObject> = mutableListOf()
+
     private var currentRoundCount: Int = 0
     private var currentRound: ObjectRound? = null
     private var totalRoundsWanted: Int = 3
@@ -47,7 +48,6 @@ class ObjectRecognition : MiniGame() {
         initViews()
         loadGameData()
     }
-
 
     override fun initViews() {
         tvInstruction = findViewById(R.id.tvInstruction)
@@ -90,7 +90,6 @@ class ObjectRecognition : MiniGame() {
                     val instructionMap =
                         InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
 
-                    // ✨ CORRECCIÓN: Instanciamos GameApi
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -102,6 +101,9 @@ class ObjectRecognition : MiniGame() {
                             val localText = instructionMap[item.name] ?: "Selecciona el objeto"
                             item.copy(instructionText = localText)
                         }.toMutableList()
+
+                        // 2. INICIALIZACIÓN: Llenamos la lista de pendientes con todos los objetos
+                        availableItems = allItems.toMutableList()
 
                         if (allItems.size >= 3) {
                             gameTimer.start()
@@ -129,11 +131,25 @@ class ObjectRecognition : MiniGame() {
             return
         }
 
-        if (allItems.size < 3) return
+        // 3. VALIDACIÓN: Si ya no hay objetos únicos disponibles, terminamos o reiniciamos lista
+        if (availableItems.isEmpty() || allItems.size < 3) {
+            showResults("Identificar Objeto")
+            return
+        }
 
         currentRoundCount++
-        val roundOptions = allItems.shuffled().take(3)
-        val correctObject = roundOptions.random()
+
+        // 4. SELECCIÓN ÚNICA: Sacamos el correcto de la lista de pendientes y lo eliminamos
+        availableItems.shuffle()
+        val correctObject = availableItems.removeAt(0)
+
+        // 5. DISTRACTORES: Tomamos otros 2 de la lista completa (que no sean el correcto actual)
+        val distractors = allItems.filter { it.id != correctObject.id }
+            .shuffled()
+            .take(2)
+
+        // Unimos y mezclamos para la visualización
+        val roundOptions = (distractors + correctObject).shuffled()
         currentRound = ObjectRound(roundOptions, correctObject)
 
         tvInstruction.text = correctObject.instructionText
@@ -159,7 +175,7 @@ class ObjectRecognition : MiniGame() {
                 isEnabled = true
                 setOnClickListener {
                     gameAudio.stopLoop()
-                    val isCorrect = gameObject == currentRound?.correctObject
+                    val isCorrect = (gameObject.id == currentRound?.correctObject?.id)
 
                     if (gameObject.audioShortUrl != null) {
                         gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)

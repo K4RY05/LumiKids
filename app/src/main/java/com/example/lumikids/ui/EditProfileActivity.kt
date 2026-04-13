@@ -56,8 +56,7 @@ class EditProfileActivity : AppCompatActivity() {
 
         initViews()
         setupListeners()
-        // 👉 Ahora esta función sí realizará la carga desde el servidor
-        cargarDatosUsuario()
+        fetchUserData()
     }
 
     private fun initViews() {
@@ -75,7 +74,7 @@ class EditProfileActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.tvDelete).setOnClickListener {
-            mostrarDialogoEliminarCuenta()
+            showDeleteAccountDialog()
         }
 
         btnEditName.setOnClickListener {
@@ -102,18 +101,15 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun cargarDatosUsuario() {
-        // Le decimos a la corrutina que haga el trabajo de red en segundo plano (IO)
+    private fun fetchUserData() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val api = RetrofitClient.instance.create(EditProfileApi::class.java)
                 val response = api.getUserProfile(userId)
 
-                // Una vez que Retrofit termine, cambiamos al hilo principal para actualizar la pantalla
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val user = response.body()!!
-                        // ✅ Asignamos los datos obtenidos a los EditText con seguridad
                         etName.setText(user.name)
                         etEmail.setText(user.email)
                     } else {
@@ -219,14 +215,28 @@ class EditProfileActivity : AppCompatActivity() {
                         Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
                         lockAllFields()
                     } else {
-                        Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+
+                        val errorBody = response.errorBody()?.string()
+
+                        val errorMessage = if (!errorBody.isNullOrEmpty()) {
+                            try {
+                                org.json.JSONObject(errorBody).optString("message", "Error al actualizar")
+                            } catch (e: Exception) {
+                                "Error en el formato de respuesta"
+                            }
+                        } else {
+                            response.body()?.message ?: "Error desconocido"
+                        }
+
+                        Toast.makeText(this@EditProfileActivity, errorMessage, Toast.LENGTH_LONG).show()
+
                         btnEditName.isEnabled = true
                         btnEditEmail.isEnabled = true
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditProfileActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
                     btnEditName.isEnabled = true
                     btnEditEmail.isEnabled = true
                 }
@@ -234,7 +244,7 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun mostrarDialogoEliminarCuenta() {
+    private fun showDeleteAccountDialog() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")

@@ -15,18 +15,14 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
     private val minRounds = 1
     private val maxRounds = 10
 
-    // UI
     private lateinit var tvRoundCount: TextView
 
-    // Ahora el tema es un String directamente
     private lateinit var theme: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
 
-        // Recibimos el String directamente.
-        // Mantenemos "furniure" como valor por defecto para evitar nulos y coincidir con tu servidor.
         theme = intent.getStringExtra("THEME") ?: "furniure"
 
         tvRoundCount = findViewById(R.id.tvRoundCount)

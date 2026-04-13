@@ -8,10 +8,9 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.model.UpdateProfileRequest
-import com.example.lumikids.network.EditProfileApi // 👉 Usamos tu API especializada
+import com.example.lumikids.network.EditProfileApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
-// Eliminamos el import de UserManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -95,7 +94,7 @@ class ChangePasswordActivity : AppCompatActivity() {
                 // Instanciamos el Request con los datos que recuperamos del Intent
                 val request = UpdateProfileRequest(userId, currentName, currentEmail, verifiedPassword, newPass)
 
-                // 👉 Ejecutamos a través de EditProfileApi
+                //  Ejecutamos a través de EditProfileApi
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
                 withContext(Dispatchers.Main) {
