@@ -95,7 +95,7 @@ class ChangePasswordActivity : AppCompatActivity() {
                 // Instanciamos el Request con los datos que recuperamos del Intent
                 val request = UpdateProfileRequest(userId, currentName, currentEmail, verifiedPassword, newPass)
 
-                // 👉 Ejecutamos a través de EditProfileApi
+                //  Ejecutamos a través de EditProfileApi
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
                 withContext(Dispatchers.Main) {

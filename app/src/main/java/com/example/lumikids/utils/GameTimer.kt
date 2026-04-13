@@ -32,7 +32,6 @@ class GameTimer {
         if (!isRunning) return 0L
         val endTime = SystemClock.elapsedRealtime()
 
-        // Fórmula: (Tiempo Total - Tiempo Pausado) / 1000 para segundos
         return (endTime - startTime - totalPausedTime) / 1000
     }
 }

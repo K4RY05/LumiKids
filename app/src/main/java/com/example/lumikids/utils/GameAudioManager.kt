@@ -29,15 +29,7 @@ class GameAudioManager(
     }
 
 
-    fun playObjectAudio(audioIdentifier: String) {
-        localMediaPlayer?.release()
-        val resId = context.resources.getIdentifier(audioIdentifier, "raw", context.packageName)
 
-        if (resId != 0) {
-            localMediaPlayer = MediaPlayer.create(context, resId)
-            localMediaPlayer?.start()
-        }
-    }
 
 
     fun playUrl(url: String) {

@@ -56,7 +56,7 @@ class EditProfileActivity : AppCompatActivity() {
 
         initViews()
         setupListeners()
-        cargarDatosUsuario()
+        fetchUserData()
     }
 
     private fun initViews() {
@@ -74,7 +74,7 @@ class EditProfileActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.tvDelete).setOnClickListener {
-            mostrarDialogoEliminarCuenta()
+            showDeleteAccountDialog()
         }
 
         btnEditName.setOnClickListener {
@@ -101,18 +101,15 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun cargarDatosUsuario() {
-        // Le decimos a la corrutina que haga el trabajo de red en segundo plano (IO)
+    private fun fetchUserData() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val api = RetrofitClient.instance.create(EditProfileApi::class.java)
                 val response = api.getUserProfile(userId)
 
-                // Una vez que Retrofit termine, cambiamos al hilo principal para actualizar la pantalla
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val user = response.body()!!
-                        // ✅ Asignamos los datos obtenidos a los EditText con seguridad
                         etName.setText(user.name)
                         etEmail.setText(user.email)
                     } else {
@@ -247,7 +244,7 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun mostrarDialogoEliminarCuenta() {
+    private fun showDeleteAccountDialog() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")

@@ -2,7 +2,9 @@ package com.example.lumikids.ui
 
 import android.app.*
 import android.content.*
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -52,13 +54,11 @@ class NotificationActivity : AppCompatActivity() {
     }
 
     private fun initClickListeners() {
-
         findViewById<ImageButton>(R.id.btnAgregar).setOnClickListener {
             mostrarFormulario(true)
         }
 
         findViewById<ImageButton>(R.id.btnCancelar).setOnClickListener {
-
             val formularioVisible =
                 findViewById<View>(R.id.layoutContenedorFormulario).visibility == View.VISIBLE
 
@@ -109,7 +109,8 @@ class NotificationActivity : AppCompatActivity() {
         val fecha = findViewById<TextView>(R.id.tvFecha).text.toString()
         val hora = findViewById<TextView>(R.id.tvHora).text.toString()
 
-        if (titulo.isEmpty() || fecha.contains("dd")) {
+        // Agregada validación adicional para hora
+        if (titulo.isEmpty() || fecha.contains("dd") || hora.contains("hh")) {
             Toast.makeText(this, "Campos incompletos", Toast.LENGTH_SHORT).show()
             return
         }
@@ -139,9 +140,11 @@ class NotificationActivity : AppCompatActivity() {
                 limpiarFormulario()
                 delay(500)
                 cargarDatos()
+                Toast.makeText(this@NotificationActivity, "Guardado correctamente", Toast.LENGTH_SHORT).show()
 
             } catch (e: Exception) {
                 Log.e("SAVE", e.message.toString())
+                Toast.makeText(this@NotificationActivity, "Error al guardar", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -151,17 +154,20 @@ class NotificationActivity : AppCompatActivity() {
 
         findViewById<EditText>(R.id.etTitulo).setText(noti.title)
         findViewById<EditText>(R.id.etMensaje).setText(noti.message)
-        val fechaLimpia = noti.date.split("T")[0]
+
+        // Manejo robusto de separación de fecha y hora
+        val fechaLimpia = if (noti.date.contains("T")) noti.date.split("T")[0] else noti.date
         val f = fechaLimpia.split("-")
 
-        val dia = f.getOrNull(2)?.trim() ?: "00"
-        val mes = f.getOrNull(1)?.trim() ?: "00"
-        val anio = f.getOrNull(0)?.trim() ?: "0000"
-
-        findViewById<TextView>(R.id.tvFecha).text = "$dia/$mes/$anio"
+        if (f.size >= 3) {
+            val dia = f[2].trim()
+            val mes = f[1].trim()
+            val anio = f[0].trim()
+            findViewById<TextView>(R.id.tvFecha).text = "$dia/$mes/$anio"
+        }
 
         findViewById<TextView>(R.id.tvHora).text =
-            noti.time.trim().substring(0, 5)
+            if (noti.time.length >= 5) noti.time.trim().substring(0, 5) else noti.time
 
         idEditando = noti.ID_notification
     }
@@ -200,6 +206,16 @@ class NotificationActivity : AppCompatActivity() {
     private fun programarAlarmaLocal(titulo: String, mensaje: String, fecha: String, hora: String) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+        // Validar explícitamente el permiso de alarma exacta para Android 12 (API 31) o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Toast.makeText(this, "Por favor, permite el uso de alarmas exactas en Configuración", Toast.LENGTH_LONG).show()
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                startActivity(intent)
+                return
+            }
+        }
+
         val intent = Intent(this, NotificationReceiver::class.java).apply {
             putExtra("titulo", titulo)
             putExtra("mensaje", mensaje)
@@ -216,10 +232,22 @@ class NotificationActivity : AppCompatActivity() {
         val f = fecha.split("-")
         val h = hora.split(":")
 
-        calendar.set(f[0].toInt(), f[1].toInt() - 1, f[2].toInt(), h[0].toInt(), h[1].toInt(), 0)
+        try {
+            if (f.size >= 3 && h.size >= 2) {
+                calendar.set(f[0].toInt(), f[1].toInt() - 1, f[2].toInt(), h[0].toInt(), h[1].toInt(), 0)
 
-        if (calendar.timeInMillis > System.currentTimeMillis()) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+                if (calendar.timeInMillis > System.currentTimeMillis()) {
+                    try {
+                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+                    } catch (e: SecurityException) {
+                        // Manejo de SecurityException como red de seguridad
+                        Log.e("ALARM", "Error de seguridad al programar alarma: ${e.message}")
+                        Toast.makeText(this, "Permiso de alarma denegado.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ALARM", "Error al parsear la fecha/hora: ${e.message}")
         }
     }
 
@@ -249,6 +277,6 @@ class NotificationActivity : AppCompatActivity() {
 
     private fun formatToMySQL(date: String): String {
         val p = date.split("/")
-        return "${p[2]}-${p[1]}-${p[0]}"
+        return if (p.size == 3) "${p[2]}-${p[1]}-${p[0]}" else date
     }
 }
