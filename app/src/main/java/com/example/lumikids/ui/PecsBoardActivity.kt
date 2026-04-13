@@ -42,6 +42,7 @@ class PecsBoardActivity : AppCompatActivity() {
 
         initClickListeners()
 
+        // El RecyclerView principal mantiene sus 3 columnas
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
         clearBoardInDB {
@@ -55,43 +56,8 @@ class PecsBoardActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadPecs(category: String) {
-        val sessionManager = SessionManager(this)
-        val userId = sessionManager.getUserId() ?: return
-
-        val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
-        val url = "$BASE_URL/api/pecs/board/$endpoint/$userId"
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val json = URL(url).readText()
-                val array = JSONArray(json)
-                val list = mutableListOf<PecsItem>()
-
-                for (i in 0 until array.length()) {
-                    val obj = array.getJSONObject(i)
-                    list.add(
-                        PecsItem(
-                            id = obj.getInt("id"),
-                            text = obj.getString("text"),
-                            imageUrl = obj.getString("imageUrl"),
-                            type = obj.optString("type", "")
-                        )
-                    )
-                }
-
-                withContext(Dispatchers.Main) {
-                    rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@PecsBoardActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     private fun onItemSelected(item: PecsItem) {
+        // Solo permitir 3 items en la barra de oración
         if (sentenceBar.childCount < 3) {
             addToSentenceBar(item)
             saveSelectionToDB(item.id)
@@ -108,8 +74,7 @@ class PecsBoardActivity : AppCompatActivity() {
                 item.text
             }
 
-            val soundUrl = "$BASE_URL/sounds/$currentStage/$audioName.mp3"
-            playSound(soundUrl)
+            playSound("$BASE_URL/sounds/$currentStage/$audioName.mp3")
 
             when (currentStage) {
                 "pronoun" -> {
@@ -123,33 +88,54 @@ class PecsBoardActivity : AppCompatActivity() {
                 }
                 "complement" -> {
                     Toast.makeText(this, "¡Oración completa! 👏", Toast.LENGTH_SHORT).show()
-                    // Aquí podrías poner un delay antes de limpiar
                 }
             }
         }
     }
 
     private fun addToSentenceBar(item: PecsItem) {
-        val view = LayoutInflater.from(this).inflate(R.layout.item_sentence, sentenceBar, false)
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.item_sentence, sentenceBar, false)
 
-        // CONFIGURACIÓN PARA QUE QUEPAN 3 ITEMS LADO A LADO
-        val params = LinearLayout.LayoutParams(
-            0, // Width 0 para usar el peso
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            1.0f // Peso igual para todos
-        )
+        val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
+        params.setMargins(1, 1, 1, 1)
         view.layoutParams = params
 
         val img = view.findViewById<ImageView>(R.id.imgSentence)
-        img.load(item.imageUrl)
+        img.load(item.imageUrl) {
+            crossfade(true)
+        }
 
         view.setOnClickListener {
             sentenceBar.removeView(view)
             deleteSelectionFromDB(item.id)
-            // Lógica para retroceder el stage si es necesario
         }
 
         sentenceBar.addView(view)
+    }
+
+
+    private fun loadPecs(category: String) {
+        val userId = SessionManager(this).getUserId() ?: return
+        val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
+        val url = "$BASE_URL/api/pecs/board/$endpoint/$userId"
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val json = URL(url).readText()
+                val array = JSONArray(json)
+                val list = mutableListOf<PecsItem>()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    list.add(PecsItem(obj.getInt("id"), obj.getString("text"), obj.getString("imageUrl"), obj.optString("type", "")))
+                }
+                withContext(Dispatchers.Main) {
+                    rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
+                }
+            } catch (e: Exception) {
+                Log.e("API_ERROR", e.message.toString())
+            }
+        }
     }
 
     private fun playSound(soundUrl: String) {
@@ -160,9 +146,7 @@ class PecsBoardActivity : AppCompatActivity() {
                 prepareAsync()
                 setOnPreparedListener { start() }
             }
-        } catch (e: Exception) {
-            Log.e("AUDIO_ERROR", "${e.message}")
-        }
+        } catch (e: Exception) { Log.e("AUDIO", e.message.toString()) }
     }
 
     private fun saveSelectionToDB(themeId: Int) {
@@ -174,10 +158,7 @@ class PecsBoardActivity : AppCompatActivity() {
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
-                val jsonParam = JSONObject().apply {
-                    put("ID_theme", themeId)
-                    put("ID_user", userId)
-                }
+                val jsonParam = JSONObject().apply { put("ID_theme", themeId); put("ID_user", userId) }
                 OutputStreamWriter(conn.outputStream).use { it.write(jsonParam.toString()) }
                 conn.responseCode
             } catch (e: Exception) { e.printStackTrace() }
@@ -189,8 +170,7 @@ class PecsBoardActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("$BASE_URL/api/pecs/board/item/$userId/$themeId")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "DELETE"
+                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
                 conn.responseCode
             } catch (e: Exception) { e.printStackTrace() }
         }
@@ -201,8 +181,7 @@ class PecsBoardActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("$BASE_URL/api/pecs/board/$userId")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "DELETE"
+                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
                 conn.responseCode
                 withContext(Dispatchers.Main) { onSuccess() }
             } catch (e: Exception) { e.printStackTrace() }
