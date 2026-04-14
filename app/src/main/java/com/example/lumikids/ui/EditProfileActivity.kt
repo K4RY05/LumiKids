@@ -117,7 +117,6 @@ class EditProfileActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                // Si hay un error, también debemos mostrar el Toast en el hilo principal
                 withContext(Dispatchers.Main) {
                     Log.e("EDIT_PROFILE", "Error al cargar datos: ${e.message}")
                     Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
@@ -248,12 +247,12 @@ class EditProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
-            .setPositiveButton("Eliminar") { _, _ -> eliminarCuenta() }
+            .setPositiveButton("Eliminar") { _, _ -> deleteAccount() }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun eliminarCuenta() {
+    private fun deleteAccount() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).deleteAccount(userId)
