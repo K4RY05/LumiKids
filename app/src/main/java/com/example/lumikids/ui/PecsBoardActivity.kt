@@ -4,12 +4,9 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -31,123 +28,84 @@ class PecsBoardActivity : AppCompatActivity() {
     private lateinit var rvOptions: RecyclerView
     private lateinit var sentenceBar: LinearLayout
     private var currentStage = "pronoun"
-    private var selectedPronounFolder = "" // Guardará si es "he", "she", "men", "women"
+    private var selectedPronounFolder = ""
     private var mediaPlayer: MediaPlayer? = null
 
-    private val BASE_URL = "http://10.100.244.104:3000"
+    private val BASE_URL = "http://192.168.100.251:3000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
-        initClickListeners()
+
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
+
+        initClickListeners()
+
+        // El RecyclerView principal mantiene sus 3 columnas
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
         clearBoardInDB {
             loadPecs("pronoun")
         }
     }
+
     private fun initClickListeners() {
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
             finish()
         }
     }
 
-    private fun loadPecs(category: String) {
-        val sessionManager = SessionManager(this)
-        val userId = sessionManager.getUserId() ?: return
-
-        // Si la categoría es verbos, le agregamos el pronombre seleccionado para el filtrado
-        val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
-        val url = "$BASE_URL/api/pecs/board/$endpoint/$userId"
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val json = URL(url).readText()
-                val array = JSONArray(json)
-                val list = mutableListOf<PecsItem>()
-
-                for (i in 0 until array.length()) {
-                    val obj = array.getJSONObject(i)
-                    list.add(
-                        PecsItem(
-                            id = obj.getInt("id"),
-                            text = obj.getString("text"),
-                            imageUrl = obj.getString("imageUrl"),
-                            type = obj.optString("type", "")
-                        )
-                    )
-                }
-
-                withContext(Dispatchers.Main) {
-                    rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@PecsBoardActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     private fun onItemSelected(item: PecsItem) {
-        addToSentenceBar(item)
-        saveSelectionToDB(item.id)
+        // Solo permitir 3 items en la barra de oración
+        if (sentenceBar.childCount < 3) {
+            addToSentenceBar(item)
+            saveSelectionToDB(item.id)
 
-        // 🔥 LÓGICA DINÁMICA DE AUDIO
-        val audioName = if (currentStage == "pronoun") {
-            when {
-                item.imageUrl.contains("/she/") -> "she"
-                item.imageUrl.contains("/he/") -> "he"
-                item.imageUrl.contains("/women/") -> "women"
-                item.imageUrl.contains("/men/") -> "men"
-                else -> item.text
+            val audioName = if (currentStage == "pronoun") {
+                when {
+                    item.imageUrl.contains("/she/") -> "she"
+                    item.imageUrl.contains("/he/") -> "he"
+                    item.imageUrl.contains("/women/") -> "women"
+                    item.imageUrl.contains("/men/") -> "men"
+                    else -> item.text
+                }
+            } else {
+                item.text
             }
-        } else {
-            item.text // Para los verbos y complementos, el nombre suele ser exacto ("cut", "eat")
-        }
 
-        val soundUrl = "$BASE_URL/sounds/$currentStage/$audioName.mp3"
-        Log.d("AUDIO_DEBUG", "Intentando reproducir URL: $soundUrl")
+            playSound("$BASE_URL/sounds/$currentStage/$audioName.mp3")
 
-        playSound(soundUrl)
-
-        // LÓGICA DE TRANSICIÓN ENTRE TABLEROS
-        when (currentStage) {
-            "pronoun" -> {
-                selectedPronounFolder = audioName // Reutilizamos el nombre deducido (he, she, etc.)
-                currentStage = "verb"
-                loadPecs("verb")
-            }
-            "verb" -> {
-                currentStage = "complement"
-                loadPecs("food") // O la categoría que corresponda (school, games, etc.)
-            }
-            "complement" -> {
-                Toast.makeText(this, "¡Oración completa! Muy bien 👏", Toast.LENGTH_SHORT).show()
-
-                // Reinicio automático para hacer la siguiente oración
-                sentenceBar.removeAllViews()
-                currentStage = "pronoun"
-                selectedPronounFolder = ""
-
-                clearBoardInDB {
-                    loadPecs("pronoun")
+            when (currentStage) {
+                "pronoun" -> {
+                    selectedPronounFolder = audioName
+                    currentStage = "verb"
+                    loadPecs("verb")
+                }
+                "verb" -> {
+                    currentStage = "complement"
+                    loadPecs("food")
+                }
+                "complement" -> {
+                    Toast.makeText(this, "¡Oración completa! 👏", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
     private fun addToSentenceBar(item: PecsItem) {
-        val view = LayoutInflater.from(this).inflate(R.layout.item_sentence, sentenceBar, false)
-        val img = view.findViewById<ImageView>(R.id.imgSentence)
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.item_sentence, sentenceBar, false)
 
+        val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
+        params.setMargins(1, 1, 1, 1)
+        view.layoutParams = params
+
+        val img = view.findViewById<ImageView>(R.id.imgSentence)
         img.load(item.imageUrl) {
             crossfade(true)
         }
 
-        // Eliminar tarjeta si se toca la barra superior
         view.setOnClickListener {
             sentenceBar.removeView(view)
             deleteSelectionFromDB(item.id)
@@ -156,28 +114,39 @@ class PecsBoardActivity : AppCompatActivity() {
         sentenceBar.addView(view)
     }
 
-    // --- FUNCIONES DE RED Y MULTIMEDIA ---
+
+    private fun loadPecs(category: String) {
+        val userId = SessionManager(this).getUserId() ?: return
+        val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
+        val url = "$BASE_URL/api/pecs/board/$endpoint/$userId"
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val json = URL(url).readText()
+                val array = JSONArray(json)
+                val list = mutableListOf<PecsItem>()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    list.add(PecsItem(obj.getInt("id"), obj.getString("text"), obj.getString("imageUrl"), obj.optString("type", "")))
+                }
+                withContext(Dispatchers.Main) {
+                    rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
+                }
+            } catch (e: Exception) {
+                Log.e("API_ERROR", e.message.toString())
+            }
+        }
+    }
 
     private fun playSound(soundUrl: String) {
         try {
             mediaPlayer?.release()
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(soundUrl)
-
-                setOnErrorListener { _, what, extra ->
-                    Log.e("AUDIO_ERROR", "Error del MediaPlayer. Código: what=$what extra=$extra")
-                    true
-                }
-
                 prepareAsync()
-                setOnPreparedListener {
-                    Log.d("AUDIO_DEBUG", "Audio descargado correctamente. ¡Reproduciendo!")
-                    start()
-                }
+                setOnPreparedListener { start() }
             }
-        } catch (e: Exception) {
-            Log.e("AUDIO_ERROR", "Error reproduciendo: ${e.message}")
-        }
+        } catch (e: Exception) { Log.e("AUDIO", e.message.toString()) }
     }
 
     private fun saveSelectionToDB(themeId: Int) {
@@ -189,16 +158,10 @@ class PecsBoardActivity : AppCompatActivity() {
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
-
-                val jsonParam = JSONObject()
-                jsonParam.put("ID_theme", themeId)
-                jsonParam.put("ID_user", userId)
-
+                val jsonParam = JSONObject().apply { put("ID_theme", themeId); put("ID_user", userId) }
                 OutputStreamWriter(conn.outputStream).use { it.write(jsonParam.toString()) }
                 conn.responseCode
-            } catch (e: Exception) {
-                Log.e("DB_Error", "No se pudo guardar: ${e.message}")
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -207,12 +170,9 @@ class PecsBoardActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("$BASE_URL/api/pecs/board/item/$userId/$themeId")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "DELETE"
+                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
                 conn.responseCode
-            } catch (e: Exception) {
-                Log.e("DB_Error", "No se pudo eliminar: ${e.message}")
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -221,22 +181,15 @@ class PecsBoardActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("$BASE_URL/api/pecs/board/$userId")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "DELETE"
+                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
                 conn.responseCode
-
-                withContext(Dispatchers.Main) {
-                    onSuccess()
-                }
-            } catch (e: Exception) {
-                Log.e("DB_Error", "No se pudo limpiar el tablero: ${e.message}")
-            }
+                withContext(Dispatchers.Main) { onSuccess() }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
-        mediaPlayer = null
     }
 }
