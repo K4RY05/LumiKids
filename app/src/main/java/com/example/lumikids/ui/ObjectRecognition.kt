@@ -209,8 +209,14 @@ class ObjectRecognition : MiniGame() {
                 } else {
                     errors++
                     gameAudio.playEffect(R.raw.fail)
+
+                    delay(1000) // Esperamos a que termine el sonido de "fail"
                     resultIcon.visibility = View.INVISIBLE
                     images.forEach { it.isEnabled = true }
+
+                    urlAudioActual?.let {
+                        gameAudio.startLoop(it)
+                    }
                 }
             }
         }
