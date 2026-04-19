@@ -41,7 +41,7 @@ class ObjectRecognition : MiniGame() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game_n1)
+        setContentView(R.layout.activity_game_object)
 
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
 
@@ -112,6 +112,7 @@ class ObjectRecognition : MiniGame() {
                     }
                     false
                 } catch (e: Exception) {
+                    android.util.Log.e("MiniGame", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
@@ -131,7 +132,6 @@ class ObjectRecognition : MiniGame() {
             return
         }
 
-        // 3. VALIDACIÓN: Si ya no hay objetos únicos disponibles, terminamos o reiniciamos lista
         if (availableItems.isEmpty() || allItems.size < 3) {
             showResults("Identificar Objeto")
             return

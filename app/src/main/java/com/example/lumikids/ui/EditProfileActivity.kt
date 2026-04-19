@@ -182,7 +182,7 @@ class EditProfileActivity : AppCompatActivity() {
                 showKeyboard(etEmail)
                 btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
             }
-            "password" -> goToChangePasswordScreen()
+            "delete_account" -> deleteAccount()
         }
         fieldWaitingToUnlock = ""
     }
@@ -193,13 +193,18 @@ class EditProfileActivity : AppCompatActivity() {
         intent.putExtra("CURRENT_NAME", etName.text.toString().trim())
         intent.putExtra("CURRENT_EMAIL", etEmail.text.toString().trim())
         startActivity(intent)
+        lockAllFields()
+        fetchUserData()
     }
 
     private fun saveChanges() {
         val newName = etName.text.toString().trim()
         val newEmail = etEmail.text.toString().trim()
 
-        if (newName.isEmpty() || newEmail.isEmpty()) return
+        if (newName.isEmpty() || newEmail.isEmpty()) {
+            Toast.makeText(this, "Ningún campo puede quedar en blanco", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         btnEditName.isEnabled = false
         btnEditEmail.isEnabled = false
@@ -248,12 +253,19 @@ class EditProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
-            .setPositiveButton("Eliminar") { _, _ -> eliminarCuenta() }
+            .setPositiveButton("Eliminar") { _, _ ->
+                fieldWaitingToUnlock = "delete_account"
+                if (verifiedPassword.isEmpty()) {
+                    showPasswordDialog()
+                } else {
+                    deleteAccount()
+                }
+            }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun eliminarCuenta() {
+    private fun deleteAccount() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).deleteAccount(userId)

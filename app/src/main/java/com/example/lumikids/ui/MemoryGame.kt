@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.MemoryCard
 import com.example.lumikids.network.GameApi
 import com.example.lumikids.network.RetrofitClient
@@ -34,7 +33,7 @@ class MemoryGame : MiniGame() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game_n2)
+        setContentView(R.layout.activity_game_memory)
 
         numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
 
@@ -57,10 +56,8 @@ class MemoryGame : MiniGame() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
-                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
-                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -80,6 +77,7 @@ class MemoryGame : MiniGame() {
                     }
                     false
                 } catch (e: Exception) {
+                    android.util.Log.e("MiniGame", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
