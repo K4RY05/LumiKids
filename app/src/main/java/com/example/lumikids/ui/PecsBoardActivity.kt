@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.lumikids.R
 import com.example.lumikids.model.PecsItem
+import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.PecsAdapter
 import com.example.lumikids.utils.SessionManager
 import kotlinx.coroutines.*
@@ -31,8 +32,6 @@ class PecsBoardActivity : AppCompatActivity() {
     private var selectedPronounFolder = ""
     private var mediaPlayer: MediaPlayer? = null
 
-    private val BASE_URL = "http://192.168.100.132:3000"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
@@ -40,9 +39,10 @@ class PecsBoardActivity : AppCompatActivity() {
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
 
-        initClickListeners()
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
 
-        // El RecyclerView principal mantiene sus 3 columnas
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
         clearBoardInDB {
@@ -50,15 +50,9 @@ class PecsBoardActivity : AppCompatActivity() {
         }
     }
 
-    private fun initClickListeners() {
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
-    }
-
     private fun onItemSelected(item: PecsItem) {
-        // Solo permitir 3 items en la barra de oración
         if (sentenceBar.childCount < 3) {
+
             addToSentenceBar(item)
             saveSelectionToDB(item.id)
 
@@ -70,11 +64,10 @@ class PecsBoardActivity : AppCompatActivity() {
                     item.imageUrl.contains("/men/") -> "men"
                     else -> item.text
                 }
-            } else {
-                item.text
-            }
+            } else item.text
 
-            playSound("$BASE_URL/sounds/$currentStage/$audioName.mp3")
+
+            playSound("${RetrofitClient.BASE_URL_SOUNDS}$currentStage/$audioName.mp3")
 
             when (currentStage) {
                 "pronoun" -> {
@@ -94,17 +87,15 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private fun addToSentenceBar(item: PecsItem) {
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.item_sentence, sentenceBar, false)
+        val view = LayoutInflater.from(this)
+            .inflate(R.layout.item_sentence, sentenceBar, false)
 
         val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
         params.setMargins(1, 1, 1, 1)
         view.layoutParams = params
 
         val img = view.findViewById<ImageView>(R.id.imgSentence)
-        img.load(item.imageUrl) {
-            crossfade(true)
-        }
+        img.load(item.imageUrl)
 
         view.setOnClickListener {
             sentenceBar.removeView(view)
@@ -114,77 +105,117 @@ class PecsBoardActivity : AppCompatActivity() {
         sentenceBar.addView(view)
     }
 
-
     private fun loadPecs(category: String) {
         val userId = SessionManager(this).getUserId() ?: return
         val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
-        val url = "$BASE_URL/api/pecs/board/$endpoint/$userId"
+
+        val url = "${RetrofitClient.BASE_URL}api/pecs/board/$endpoint/$userId"
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val json = URL(url).readText()
                 val array = JSONArray(json)
+
                 val list = mutableListOf<PecsItem>()
+
                 for (i in 0 until array.length()) {
                     val obj = array.getJSONObject(i)
-                    list.add(PecsItem(obj.getInt("id"), obj.getString("text"), obj.getString("imageUrl"), obj.optString("type", "")))
+                    list.add(
+                        PecsItem(
+                            obj.getInt("id"),
+                            obj.getString("text"),
+                            obj.getString("imageUrl"),
+                            obj.optString("type", "")
+                        )
+                    )
                 }
+
                 withContext(Dispatchers.Main) {
                     rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
                 }
+
             } catch (e: Exception) {
                 Log.e("API_ERROR", e.message.toString())
             }
         }
     }
 
-    private fun playSound(soundUrl: String) {
+    private fun playSound(url: String) {
         try {
             mediaPlayer?.release()
             mediaPlayer = MediaPlayer().apply {
-                setDataSource(soundUrl)
+                setDataSource(url)
                 prepareAsync()
                 setOnPreparedListener { start() }
             }
-        } catch (e: Exception) { Log.e("AUDIO", e.message.toString()) }
+        } catch (e: Exception) {
+            Log.e("AUDIO", e.message.toString())
+        }
     }
 
     private fun saveSelectionToDB(themeId: Int) {
         val userId = SessionManager(this).getUserId() ?: return
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = URL("$BASE_URL/api/pecs/board/select")
+                val url = URL("${RetrofitClient.BASE_URL}api/pecs/board/select")
                 val conn = url.openConnection() as HttpURLConnection
+
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
-                val jsonParam = JSONObject().apply { put("ID_theme", themeId); put("ID_user", userId) }
-                OutputStreamWriter(conn.outputStream).use { it.write(jsonParam.toString()) }
+
+                val json = JSONObject().apply {
+                    put("ID_theme", themeId)
+                    put("ID_user", userId)
+                }
+
+                OutputStreamWriter(conn.outputStream).use {
+                    it.write(json.toString())
+                }
+
                 conn.responseCode
-            } catch (e: Exception) { e.printStackTrace() }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     private fun deleteSelectionFromDB(themeId: Int) {
         val userId = SessionManager(this).getUserId() ?: return
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = URL("$BASE_URL/api/pecs/board/item/$userId/$themeId")
-                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
+                val url = URL("${RetrofitClient.BASE_URL}api/pecs/board/item/$userId/$themeId")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "DELETE"
+                }
                 conn.responseCode
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     private fun clearBoardInDB(onSuccess: () -> Unit = {}) {
         val userId = SessionManager(this).getUserId() ?: return
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = URL("$BASE_URL/api/pecs/board/$userId")
-                val conn = (url.openConnection() as HttpURLConnection).apply { requestMethod = "DELETE" }
+                val url = URL("${RetrofitClient.BASE_URL}api/pecs/board/$userId")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "DELETE"
+                }
                 conn.responseCode
-                withContext(Dispatchers.Main) { onSuccess() }
-            } catch (e: Exception) { e.printStackTrace() }
+
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
