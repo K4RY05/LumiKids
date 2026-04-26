@@ -31,7 +31,6 @@ class RegisterActivity : AppCompatActivity() {
         val etPassConfirm = findViewById<EditText>(R.id.etPass2)
         val btnContinuar = findViewById<AppCompatButton>(R.id.btnContinue)
 
-        // Se deben inicializar los botones de visibilidad y sus listeners fuera del clic de registro
         val ivTogglePass = findViewById<ImageButton>(R.id.ivTogglePass)
         val ivTogglePass2 = findViewById<ImageButton>(R.id.ivTogglePass2)
 

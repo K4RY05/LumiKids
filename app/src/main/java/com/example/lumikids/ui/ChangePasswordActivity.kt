@@ -1,7 +1,12 @@
 package com.example.lumikids.ui
 
+import android.content.Context
 import android.os.Bundle
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -26,6 +31,10 @@ class ChangePasswordActivity : AppCompatActivity() {
     private lateinit var etNewPassword: EditText
     private lateinit var etConfirmNewPassword: EditText
     private lateinit var btnConfirm: AppCompatButton
+
+    // Variables de estado para saber si el texto está visible o no
+    private var isNewPasswordVisible = false
+    private var isConfirmPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,11 +65,28 @@ class ChangePasswordActivity : AppCompatActivity() {
         btnConfirm = findViewById(R.id.btnConfirm)
         val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
 
+        // Enlazamos los botones del "ojito" (Asegúrate de que estos IDs existan en tu XML)
+        val btnToggleNew = findViewById<ImageButton>(R.id.btnToggleNewPassword)
+        val btnToggleConfirm = findViewById<ImageButton>(R.id.btnToggleConfirmPassword)
+
+        // Configuramos los listeners para alternar la visibilidad
+        btnToggleNew.setOnClickListener {
+            isNewPasswordVisible = !isNewPasswordVisible
+            togglePasswordVisibility(etNewPassword, btnToggleNew, isNewPasswordVisible)
+        }
+
+        btnToggleConfirm.setOnClickListener {
+            isConfirmPasswordVisible = !isConfirmPasswordVisible
+            togglePasswordVisibility(etConfirmNewPassword, btnToggleConfirm, isConfirmPasswordVisible)
+        }
+
         btnConfirm.setOnClickListener {
+            hideKeyboard()
             changePassword()
         }
 
         btnBack.setOnClickListener {
+            hideKeyboard()
             finish()
         }
     }
@@ -71,6 +97,11 @@ class ChangePasswordActivity : AppCompatActivity() {
 
         if (newPass.isEmpty() || confirmPass.isEmpty()) {
             Toast.makeText(this, "Por favor completa ambos campos", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (newPass.length < 6) {
+            Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -91,10 +122,8 @@ class ChangePasswordActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Instanciamos el Request con los datos que recuperamos del Intent
                 val request = UpdateProfileRequest(userId, currentName, currentEmail, verifiedPassword, newPass)
 
-                //  Ejecutamos a través de EditProfileApi
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
                 withContext(Dispatchers.Main) {
@@ -104,16 +133,54 @@ class ChangePasswordActivity : AppCompatActivity() {
                     } else {
                         btnConfirm.text = "Guardar nueva contraseña"
                         btnConfirm.isEnabled = true
-                        Toast.makeText(this@ChangePasswordActivity, response.body()?.message ?: "Error al actualizar", Toast.LENGTH_LONG).show()
+
+                        val errorBody = response.errorBody()?.string()
+                        val errorMessage = if (!errorBody.isNullOrEmpty()) {
+                            try {
+                                org.json.JSONObject(errorBody).optString("message", "Error al actualizar")
+                            } catch (_: Exception) { // Usamos '_' para ignorar la advertencia si falla el parseo
+                                "Error en el formato de respuesta"
+                            }
+                        } else {
+                            response.body()?.message ?: "Error desconocido"
+                        }
+
+                        Toast.makeText(this@ChangePasswordActivity, errorMessage, Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
+                // Usamos 'e' para dejar un registro oculto en Logcat, útil para depurar
+                android.util.Log.e("ChangePassword", "Fallo en la red: ${e.message}", e)
+
                 withContext(Dispatchers.Main) {
                     btnConfirm.text = "Guardar nueva contraseña"
                     btnConfirm.isEnabled = true
-                    Toast.makeText(this@ChangePasswordActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ChangePasswordActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+
+    private fun hideKeyboard() {
+        val view: View? = this.currentFocus
+        if (view != null) {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
+    // Nueva función para alternar la visibilidad
+    private fun togglePasswordVisibility(editText: EditText, button: ImageButton, isVisible: Boolean) {
+        if (isVisible) {
+            // Mostrar contraseña
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_open)
+        } else {
+            // Ocultar contraseña
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            button.setImageResource(R.drawable.ic_eye_closed)
+        }
+        // Mover el cursor al final del texto para que no salte al inicio
+        editText.setSelection(editText.text.length)
     }
 }

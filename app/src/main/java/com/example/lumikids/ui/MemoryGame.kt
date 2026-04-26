@@ -45,6 +45,7 @@ class MemoryGame : MiniGame() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
+            gameAudio.stopNetworkAudio()
             PauseDialog(this).showDialog(
                 onResume = { gameTimer.resume() },
                 onExit = { finish() }

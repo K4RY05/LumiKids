@@ -71,6 +71,7 @@ class ObjectRecognition : MiniGame() {
         btnPause.setOnClickListener {
             gameTimer.pause()
             gameAudio.stopLoop()
+            gameAudio.stopNetworkAudio()
 
             PauseDialog(this).showDialog(
                 onResume = {
@@ -98,12 +99,18 @@ class ObjectRecognition : MiniGame() {
                         if (downloadedObjects.isEmpty()) return@withContext false
 
                         allItems = downloadedObjects.map { item ->
-                            val localText = instructionMap[item.name] ?: "Selecciona el objeto"
-                            item.copy(instructionText = localText)
+                            val localText = instructionMap[item.name]
+
+                            if (localText == null) {
+                                android.util.Log.w("LumiKids", "Instrucción visual faltante para: ${item.name}")
+                            }
+
+                            item.copy(instructionText = localText ?: "Selecciona el objeto")
                         }.toMutableList()
 
-                        // 2. INICIALIZACIÓN: Llenamos la lista de pendientes con todos los objetos
-                        availableItems = allItems.toMutableList()
+                        availableItems = allItems.filter { item ->
+                            instructionMap.containsKey(item.name) && item.audioInstructionUrl != null
+                        }.toMutableList()
 
                         if (allItems.size >= 3) {
                             gameTimer.start()
@@ -139,16 +146,13 @@ class ObjectRecognition : MiniGame() {
 
         currentRoundCount++
 
-        // 4. SELECCIÓN ÚNICA: Sacamos el correcto de la lista de pendientes y lo eliminamos
         availableItems.shuffle()
         val correctObject = availableItems.removeAt(0)
 
-        // 5. DISTRACTORES: Tomamos otros 2 de la lista completa (que no sean el correcto actual)
         val distractors = allItems.filter { it.id != correctObject.id }
             .shuffled()
             .take(2)
 
-        // Unimos y mezclamos para la visualización
         val roundOptions = (distractors + correctObject).shuffled()
         currentRound = ObjectRound(roundOptions, correctObject)
 

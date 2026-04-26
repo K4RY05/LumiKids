@@ -12,7 +12,7 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
     // Estado
     private var selectedRounds: Int = 3
     private val minRounds = 1
-    private val maxRounds = 10
+    private val maxRounds = 11
 
     private lateinit var tvRoundCount: TextView
 

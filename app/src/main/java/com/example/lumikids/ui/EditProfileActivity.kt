@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
-import com.example.lumikids.model.ApiResponse
 import com.example.lumikids.model.LoginRequest
 import com.example.lumikids.model.UpdateProfileRequest
 import com.example.lumikids.network.RetrofitClient
@@ -23,9 +22,6 @@ import com.example.lumikids.utils.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response as RetrofitResponse
 
 class EditProfileActivity : AppCompatActivity() {
 
@@ -33,6 +29,9 @@ class EditProfileActivity : AppCompatActivity() {
     private var userId: String = ""
     private var verifiedPassword = ""
     private var fieldWaitingToUnlock = ""
+
+    // Guardamos el correo real de la base de datos para no perderlo si el usuario lo edita
+    private var originalEmail = ""
 
     private lateinit var etName: EditText
     private lateinit var etEmail: EditText
@@ -79,25 +78,39 @@ class EditProfileActivity : AppCompatActivity() {
 
         btnEditName.setOnClickListener {
             if (!etName.isEnabled) {
+                // Validación: No permitir editar ambos al mismo tiempo
+                if (etEmail.isEnabled) {
+                    Toast.makeText(this, "Guarda los cambios de tu correo primero", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 fieldWaitingToUnlock = "name"
-                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()
-            } else saveChanges()
+                showPasswordDialog() // Siempre pedimos la contraseña
+            } else {
+                saveChanges()
+            }
         }
 
         btnEditEmail.setOnClickListener {
             if (!etEmail.isEnabled) {
+                // Validación: No permitir editar ambos al mismo tiempo
+                if (etName.isEnabled) {
+                    Toast.makeText(this, "Guarda los cambios de tu nombre primero", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 fieldWaitingToUnlock = "email"
-                if (verifiedPassword.isEmpty()) showPasswordDialog() else unlockField()
-            } else saveChanges()
+                showPasswordDialog() // Siempre pedimos la contraseña
+            } else {
+                saveChanges()
+            }
         }
 
         btnChangePassword.setOnClickListener {
-            if (verifiedPassword.isEmpty()) {
-                fieldWaitingToUnlock = "password"
-                showPasswordDialog()
-            } else {
-                goToChangePasswordScreen()
+            if (etName.isEnabled || etEmail.isEnabled) {
+                Toast.makeText(this, "Guarda tus cambios antes de cambiar la contraseña", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+            fieldWaitingToUnlock = "password"
+            showPasswordDialog()
         }
     }
 
@@ -112,12 +125,12 @@ class EditProfileActivity : AppCompatActivity() {
                         val user = response.body()!!
                         etName.setText(user.name)
                         etEmail.setText(user.email)
+                        originalEmail = user.email // Almacenamos el correo verificado
                     } else {
                         Toast.makeText(this@EditProfileActivity, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                // Si hay un error, también debemos mostrar el Toast en el hilo principal
                 withContext(Dispatchers.Main) {
                     Log.e("EDIT_PROFILE", "Error al cargar datos: ${e.message}")
                     Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
@@ -148,24 +161,29 @@ class EditProfileActivity : AppCompatActivity() {
         builder.show()
     }
 
+    // Ahora usa Corrutinas y el correo original seguro
     private fun verifyPassword(password: String) {
-        val email = etEmail.text.toString().trim()
-        val request = LoginRequest(email, password)
-        val api = RetrofitClient.instance.create(AuthApi::class.java)
+        val request = LoginRequest(originalEmail, password)
 
-        api.login(request).enqueue(object : Callback<ApiResponse> {
-            override fun onResponse(call: Call<ApiResponse>, response: RetrofitResponse<ApiResponse>) {
-                if (response.isSuccessful && response.body()?.success == true) {
-                    verifiedPassword = password
-                    unlockField()
-                } else {
-                    Toast.makeText(this@EditProfileActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val api = RetrofitClient.instance.create(AuthApi::class.java)
+                val response = api.login(request).execute() // Petición síncrona dentro del hilo IO
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        verifiedPassword = password
+                        unlockField()
+                    } else {
+                        Toast.makeText(this@EditProfileActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EditProfileActivity, "Error de red al verificar", Toast.LENGTH_SHORT).show()
                 }
             }
-            override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
-                Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
-            }
-        })
+        }
     }
 
     private fun unlockField() {
@@ -182,6 +200,7 @@ class EditProfileActivity : AppCompatActivity() {
                 showKeyboard(etEmail)
                 btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
             }
+            "password" -> goToChangePasswordScreen()
             "delete_account" -> deleteAccount()
         }
         fieldWaitingToUnlock = ""
@@ -217,12 +236,11 @@ class EditProfileActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EditProfileActivity, "Campo actualizado", Toast.LENGTH_SHORT).show()
+                        originalEmail = newEmail // Actualizamos nuestra referencia segura
                         lockAllFields()
                     } else {
-
                         val errorBody = response.errorBody()?.string()
-
                         val errorMessage = if (!errorBody.isNullOrEmpty()) {
                             try {
                                 org.json.JSONObject(errorBody).optString("message", "Error al actualizar")
@@ -234,7 +252,6 @@ class EditProfileActivity : AppCompatActivity() {
                         }
 
                         Toast.makeText(this@EditProfileActivity, errorMessage, Toast.LENGTH_LONG).show()
-
                         btnEditName.isEnabled = true
                         btnEditEmail.isEnabled = true
                     }
@@ -255,11 +272,7 @@ class EditProfileActivity : AppCompatActivity() {
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
                 fieldWaitingToUnlock = "delete_account"
-                if (verifiedPassword.isEmpty()) {
-                    showPasswordDialog()
-                } else {
-                    deleteAccount()
-                }
+                showPasswordDialog() // Siempre pedimos contraseña antes de borrar
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -290,10 +303,11 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun lockAllFields() {
-        verifiedPassword = ""
+        verifiedPassword = "" // Limpiamos la contraseña temporal
         etName.isEnabled = false
         btnEditName.isEnabled = true
         btnEditName.setImageResource(android.R.drawable.ic_menu_edit)
+
         etEmail.isEnabled = false
         btnEditEmail.isEnabled = true
         btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)
