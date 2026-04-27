@@ -35,6 +35,20 @@
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- ✔️ RESULTADO  -->
+    <ImageView
+        android:id="@+id/resultIcon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:visibility="gone"
+        android:elevation="10dp"
+        android:translationZ="10dp"
+        android:src="@drawable/ic_correct"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Botones laterales -->
     <LinearLayout
         android:id="@+id/sideButtons"
@@ -63,6 +77,7 @@
             android:src="@drawable/ic_speaker"
             android:scaleType="centerInside"/>
     </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOptions"
         android:layout_width="0dp"

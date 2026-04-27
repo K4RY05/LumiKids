@@ -47,7 +47,7 @@ class PecsBoardActivity : AppCompatActivity() {
     )
 
     // =========================
-    // MAPA ÚNICO
+    // MAPA
     // =========================
     private val complementMap = mapOf(
 
@@ -102,26 +102,29 @@ class PecsBoardActivity : AppCompatActivity() {
         ),
 
         "paint" to listOf(
-            ComplementData("letter", "school/letter.jpg", "school"),
-            ComplementData("whiteboard", "school/whiteboard.jpg", "school")
+            ComplementData("paper", "school/paper.jpg", "school"),
+            ComplementData("box", "school/box.jpg", "school"),
+            ComplementData("face", "personal_hygiene/face.jpg", "personal_hygiene")
         ),
-
         "sleep" to listOf(
             ComplementData("bed", "furniure/bed.jpg", "furniure"),
-            ComplementData("sofa", "furniure/sofa.jpg", "furniure")
+            ComplementData("sofa", "furniure/sofa.jpg", "furniure"),
+            ComplementData("pillow", "furniure/pillow.jpg", "furniure"),
+            ComplementData("blanket", "furniure/blanket.jpg", "furniure")
         ),
 
         "listen" to listOf(
-            ComplementData("radio", "sounds/radio.jpg", "sounds"),
-            ComplementData("song", "sounds/song.jpg", "sounds"),
-            ComplementData("drum", "sounds/drum.jpg", "sounds"),
-            ComplementData("bell", "sounds/bell.jpg", "sounds")
+            ComplementData("radio", "music/radio.jpg", "music"),
+            ComplementData("song", "music/song.jpg", "music"),
+            ComplementData("drum", "music/drum.jpg", "music"),
+            ComplementData("bell", "music/bell.jpg", "music")
         )
     )
 
     // =========================
     // onCreate
     // =========================
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
@@ -188,7 +191,16 @@ class PecsBoardActivity : AppCompatActivity() {
             }
 
             "complement" -> {
-                Toast.makeText(this, "¡Oración completa!", Toast.LENGTH_SHORT).show()
+                val resultIcon = findViewById<ImageView>(R.id.resultIcon)
+                val isCorrect = complementMap[selectedVerb]?.any { it.text == item.text } ?: false
+
+                showValidationResult(isCorrect, resultIcon)
+
+               /* if (isCorrect) {
+                    //Toast.makeText(this, "¡Oración completa y correcta!", Toast.LENGTH_SHORT).show()
+                } else {
+                   // Toast.makeText(this, "Intenta de nuevo", Toast.LENGTH_SHORT).show()
+                }*/
             }
         }
     }
@@ -278,16 +290,30 @@ class PecsBoardActivity : AppCompatActivity() {
     // =========================
     private fun loadComplements(verb: String) {
 
-        val complements = complementMap[verb] ?: emptyList()
+        val correctList = complementMap[verb] ?: emptyList()
 
-        val shuffled = complements.shuffled()
-        val selected = shuffled.take(3)
+        if (correctList.isEmpty()) {
+            Log.e(TAG, "No hay complementos para verbo: $verb")
+            return
+        }
 
-        val list = selected.mapIndexed { index, comp ->
+
+        val correct = correctList.random()
+
+
+        val allIncorrect = complementMap
+            .filterKeys { it != verb }
+            .values
+            .flatten()
+        val incorrect = allIncorrect.shuffled().take(2)
+        val finalList = (listOf(correct) + incorrect).shuffled()
+
+        val list = finalList.mapIndexed { index, comp ->
 
             val imageUrl = "${RetrofitClient.BASE_URL}images/${comp.imagePath}"
 
-            Log.d(TAG, "IMG: $imageUrl")
+            Log.d(TAG, "COMPLEMENTO → ${comp.text}")
+            Log.d(TAG, "IMG → $imageUrl")
 
             PecsItem(
                 id = index,
@@ -299,7 +325,6 @@ class PecsBoardActivity : AppCompatActivity() {
 
         rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
     }
-
     // =========================
     // AUDIO
     // =========================
@@ -425,5 +450,39 @@ class PecsBoardActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
+    }
+    private fun showValidationResult(isCorrect: Boolean, resultIcon: ImageView) {
+        // 1. Configurar imagen y audio
+        if (isCorrect) {
+            resultIcon.setImageResource(R.drawable.ic_correct)
+            // Usando tu lógica de sonidos (asegúrate de tener la clase gameAudio o usar mediaPlayer)
+            playLocalSound(R.raw.win)
+        } else {
+            resultIcon.setImageResource(R.drawable.ic_error)
+            playLocalSound(R.raw.fail)
+        }
+
+        // 2. Mostrar el icono
+        resultIcon.visibility = android.view.View.VISIBLE
+
+        // 3. Ocultarlo automáticamente después de 2 segundos
+        resultIcon.postDelayed({
+            resultIcon.visibility = android.view.View.GONE
+
+            // Si falló, quizás quieras limpiar el último item para que el niño lo intente de nuevo
+            if (!isCorrect) {
+                removeLastItem()
+            }
+        }, 2000)
+    }
+
+    private fun playLocalSound(resId: Int) {
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer.create(this, resId)
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing local sound: ${e.message}")
+        }
     }
 }
