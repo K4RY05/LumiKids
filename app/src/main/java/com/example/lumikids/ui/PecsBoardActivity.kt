@@ -26,14 +26,102 @@ import java.net.URL
 
 class PecsBoardActivity : AppCompatActivity() {
 
+    private val TAG = "PECS_DEBUG"
+
     private lateinit var rvOptions: RecyclerView
     private lateinit var sentenceBar: LinearLayout
 
     private var currentStage = "pronoun"
     private var selectedPronounFolder = ""
+    private var selectedVerb = ""
 
     private var mediaPlayer: MediaPlayer? = null
 
+    // =========================
+    // DATA CLASS
+    // =========================
+    data class ComplementData(
+        val text: String,
+        val imagePath: String,
+        val soundCategory: String
+    )
+
+    // =========================
+    // MAPA ÚNICO
+    // =========================
+    private val complementMap = mapOf(
+
+        "eat" to listOf(
+            ComplementData("apple", "food/apple.jpg", "food"),
+            ComplementData("banana", "food/banana.jpg", "food"),
+            ComplementData("cookie", "food/cookie.jpg", "food"),
+            ComplementData("sweetbread", "food/sweetbread.jpg", "food"),
+            ComplementData("yogurt", "food/yogurt.jpg", "food")
+        ),
+
+        "drink" to listOf(
+            ComplementData("water", "food/water.jpg", "food"),
+            ComplementData("juice", "food/juice.jpg", "food"),
+            ComplementData("milk", "food/milk.jpg", "food")
+        ),
+
+        "run" to listOf(
+            ComplementData("park", "place/park.jpg", "place"),
+            ComplementData("patio", "place/patio.jpg", "place"),
+            ComplementData("school", "place/school.jpg", "place"),
+            ComplementData("street", "place/street.jpg", "place")
+        ),
+
+        "walk" to listOf(
+            ComplementData("park", "place/park.jpg", "place"),
+            ComplementData("school", "place/school.jpg", "place"),
+            ComplementData("street", "place/street.jpg", "place"),
+            ComplementData("home", "place/home.jpg", "place"),
+            ComplementData("patio", "place/patio.jpg", "place")
+        ),
+
+        "play" to listOf(
+            ComplementData("car", "games/car.jpg", "games"),
+            ComplementData("doll", "games/doll.jpg", "games"),
+            ComplementData("ball", "games/ball.jpg", "games"),
+            ComplementData("blocks", "games/blocks.jpg", "games"),
+            ComplementData("bubbles", "games/bubbles.jpg", "games")
+        ),
+
+        "write" to listOf(
+            ComplementData("letter", "school/letter.jpg", "school"),
+            ComplementData("number", "school/number.jpg", "school"),
+            ComplementData("whiteboard", "school/whiteboard.jpg", "school")
+        ),
+
+        "cut" to listOf(
+            ComplementData("paper", "school/paper.jpg", "school"),
+            ComplementData("circle", "school/circle.jpg", "school"),
+            ComplementData("square", "school/square.jpg", "school"),
+            ComplementData("triangle", "school/triangle.jpg", "school")
+        ),
+
+        "paint" to listOf(
+            ComplementData("letter", "school/letter.jpg", "school"),
+            ComplementData("whiteboard", "school/whiteboard.jpg", "school")
+        ),
+
+        "sleep" to listOf(
+            ComplementData("bed", "furniure/bed.jpg", "furniure"),
+            ComplementData("sofa", "furniure/sofa.jpg", "furniure")
+        ),
+
+        "listen" to listOf(
+            ComplementData("radio", "sounds/radio.jpg", "sounds"),
+            ComplementData("song", "sounds/song.jpg", "sounds"),
+            ComplementData("drum", "sounds/drum.jpg", "sounds"),
+            ComplementData("bell", "sounds/bell.jpg", "sounds")
+        )
+    )
+
+    // =========================
+    // onCreate
+    // =========================
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
@@ -41,13 +129,8 @@ class PecsBoardActivity : AppCompatActivity() {
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
-
-        findViewById<ImageButton>(R.id.btnClear).setOnClickListener {
-            removeLastItem()
-        }
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageButton>(R.id.btnClear).setOnClickListener { removeLastItem() }
 
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
@@ -57,9 +140,11 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // SELECCIÓN DE ITEMS
+    // SELECCIÓN
     // =========================
     private fun onItemSelected(item: PecsItem) {
+
+        Log.d(TAG, "Seleccion: ${item.text} Stage: $currentStage")
 
         if (sentenceBar.childCount >= 3) return
 
@@ -67,20 +152,43 @@ class PecsBoardActivity : AppCompatActivity() {
         saveSelectionToDB(item.id)
 
         val audioName = getAudioName(item)
-        playSound("${RetrofitClient.BASE_URL_SOUNDS}$currentStage/$audioName.mp3")
+
+        val soundUrl = if (currentStage == "complement") {
+
+            val comp = complementMap[selectedVerb]
+                ?.find { it.text == audioName }
+
+            if (comp == null) {
+                Log.e(TAG, "No encontrado complemento: $audioName")
+                ""
+            } else {
+                "${RetrofitClient.BASE_URL_SOUNDS}${comp.soundCategory}/${comp.text}.mp3"
+            }
+
+        } else {
+            "${RetrofitClient.BASE_URL_SOUNDS}$currentStage/$audioName.mp3"
+        }
+
+        Log.d(TAG, "Audio URL: $soundUrl")
+
+        if (soundUrl.isNotEmpty()) playSound(soundUrl)
 
         when (currentStage) {
+
             "pronoun" -> {
                 selectedPronounFolder = audioName
                 currentStage = "verb"
                 loadPecs("verb")
             }
+
             "verb" -> {
+                selectedVerb = item.text.lowercase()
                 currentStage = "complement"
-                loadPecs("food")
+                loadComplements(selectedVerb)
             }
+
             "complement" -> {
-                Toast.makeText(this, "¡Oración completa! 👏", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "¡Oración completa!", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -98,29 +206,25 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // AGREGAR A LA BARRA
+    // SENTENCE BAR
     // =========================
     private fun addToSentenceBar(item: PecsItem) {
 
         val view = LayoutInflater.from(this)
             .inflate(R.layout.item_sentence, sentenceBar, false)
 
-        view.tag = item // 🔥 NECESARIO PARA EL BOTÓN CLEAR
+        view.tag = item
 
-        val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
-        params.setMargins(1, 1, 1, 1)
+        val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
         view.layoutParams = params
 
         val img = view.findViewById<ImageView>(R.id.imgSentence)
         img.load(item.imageUrl)
 
         view.setOnClickListener {
-
             val index = sentenceBar.indexOfChild(view)
-
             sentenceBar.removeView(view)
             deleteSelectionFromDB(item.id)
-
             handleDeletion(index)
         }
 
@@ -128,55 +232,20 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // LÓGICA DE ELIMINACIÓN
-    // =========================
-    private fun handleDeletion(index: Int) {
-
-        when (index) {
-
-            0 -> {
-                resetToPronouns()
-            }
-
-            1 -> {
-                currentStage = "verb"
-
-                if (sentenceBar.childCount > 1) {
-                    sentenceBar.removeViews(1, sentenceBar.childCount - 1)
-                }
-
-                loadPecs("verb")
-            }
-
-            2 -> {
-                currentStage = "complement"
-                loadPecs("food")
-            }
-        }
-    }
-
-    private fun resetToPronouns() {
-        currentStage = "pronoun"
-        selectedPronounFolder = ""
-        sentenceBar.removeAllViews()
-        loadPecs("pronoun")
-    }
-
-    // =========================
-    // API GET
+    // API
     // =========================
     private fun loadPecs(category: String) {
 
         val userId = SessionManager(this).getUserId() ?: return
         val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
-
         val url = "${RetrofitClient.BASE_URL}api/pecs/board/$endpoint/$userId"
+
+        Log.d(TAG, "GET: $url")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val json = URL(url).readText()
                 val array = JSONArray(json)
-
                 val list = mutableListOf<PecsItem>()
 
                 for (i in 0 until array.length()) {
@@ -191,15 +260,44 @@ class PecsBoardActivity : AppCompatActivity() {
                         )
                     )
                 }
+                list.shuffle()
 
+                val finalList = list.take(3)
                 withContext(Dispatchers.Main) {
-                    rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
+                    rvOptions.adapter = PecsAdapter(finalList) { onItemSelected(it) }
                 }
 
             } catch (e: Exception) {
-                Log.e("API_ERROR", e.message.toString())
+                Log.e(TAG, "ERROR API: ${e.message}")
             }
         }
+    }
+
+    // =========================
+    // COMPLEMENTOS
+    // =========================
+    private fun loadComplements(verb: String) {
+
+        val complements = complementMap[verb] ?: emptyList()
+
+        val shuffled = complements.shuffled()
+        val selected = shuffled.take(3)
+
+        val list = selected.mapIndexed { index, comp ->
+
+            val imageUrl = "${RetrofitClient.BASE_URL}images/${comp.imagePath}"
+
+            Log.d(TAG, "IMG: $imageUrl")
+
+            PecsItem(
+                id = index,
+                text = comp.text,
+                imageUrl = imageUrl,
+                type = "complement"
+            )
+        }
+
+        rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
     }
 
     // =========================
@@ -214,7 +312,7 @@ class PecsBoardActivity : AppCompatActivity() {
                 setOnPreparedListener { start() }
             }
         } catch (e: Exception) {
-            Log.e("AUDIO", e.message.toString())
+            Log.e(TAG, "ERROR AUDIO: ${e.message}")
         }
     }
 
@@ -228,8 +326,8 @@ class PecsBoardActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("${RetrofitClient.BASE_URL}api/pecs/board/select")
-                val conn = url.openConnection() as HttpURLConnection
 
+                val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
@@ -246,16 +344,12 @@ class PecsBoardActivity : AppCompatActivity() {
                 conn.responseCode
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "ERROR POST: ${e.message}")
             }
         }
     }
 
-    // =========================
-    // API DELETE ITEM
-    // =========================
     private fun deleteSelectionFromDB(themeId: Int) {
-
         val userId = SessionManager(this).getUserId() ?: return
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -265,18 +359,13 @@ class PecsBoardActivity : AppCompatActivity() {
                     requestMethod = "DELETE"
                 }
                 conn.responseCode
-
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "ERROR DELETE: ${e.message}")
             }
         }
     }
 
-    // =========================
-    // LIMPIAR TABLERO
-    // =========================
     private fun clearBoardInDB(onSuccess: () -> Unit = {}) {
-
         val userId = SessionManager(this).getUserId() ?: return
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -292,16 +381,12 @@ class PecsBoardActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "ERROR CLEAR: ${e.message}")
             }
         }
     }
 
-    // =========================
-    // BOTÓN CLEAR (ELIMINA ÚLTIMO)
-    // =========================
     private fun removeLastItem() {
-
         val count = sentenceBar.childCount
         if (count == 0) return
 
@@ -311,8 +396,30 @@ class PecsBoardActivity : AppCompatActivity() {
 
         sentenceBar.removeViewAt(lastIndex)
         deleteSelectionFromDB(item.id)
-
         handleDeletion(lastIndex)
+    }
+
+    private fun handleDeletion(index: Int) {
+        when (index) {
+            0 -> resetToPronouns()
+            1 -> {
+                currentStage = "verb"
+                sentenceBar.removeViews(1, sentenceBar.childCount - 1)
+                loadPecs("verb")
+            }
+            2 -> {
+                currentStage = "complement"
+                loadComplements(selectedVerb)
+            }
+        }
+    }
+
+    private fun resetToPronouns() {
+        currentStage = "pronoun"
+        selectedPronounFolder = ""
+        selectedVerb = ""
+        sentenceBar.removeAllViews()
+        loadPecs("pronoun")
     }
 
     override fun onDestroy() {
