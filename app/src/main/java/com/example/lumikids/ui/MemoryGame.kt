@@ -1,6 +1,7 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.util.Log // Importación necesaria para los logs
 import android.view.Gravity
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -68,6 +69,11 @@ class MemoryGame : MiniGame() {
                 try {
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
+                    // --- LOG: Petición GET ---
+                    // Como BASE_URL es privado en tu RetrofitClient, usamos BASE_URL_IMAGES quitando "images/"
+                    val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
+                    Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
+
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -87,7 +93,7 @@ class MemoryGame : MiniGame() {
                     }
                     false
                 } catch (e: Exception) {
-                    android.util.Log.e("MiniGame", "Error al cargar objetos: ${e.message}")
+                    Log.e("MINIGAME_DEBUG", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
@@ -120,6 +126,11 @@ class MemoryGame : MiniGame() {
 
         for (i in boardCards.indices) {
             val cardData = boardCards[i]
+
+            // --- LOG: Carga de Imagen ---
+            val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl
+            Log.d("MINIGAME_DEBUG", "IMG: $imageUrlCompleta")
+
             val view = ImageView(this).apply {
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = size
@@ -134,7 +145,7 @@ class MemoryGame : MiniGame() {
                 tag = false
 
                 Glide.with(this@MemoryGame)
-                    .load(RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl)
+                    .load(imageUrlCompleta)
                     .preload()
             }
             view.setOnClickListener { handleCardClick(view, cardData) }
@@ -144,6 +155,9 @@ class MemoryGame : MiniGame() {
 
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true || card.isMatched) return
+
+        // --- LOG: Selección de Carta ---
+        Log.d("MINIGAME_DEBUG", "Seleccion: ${card.gameObject.name} Stage: memory_card")
 
         flipCardUp(view, card.gameObject.imageUrl)
         view.tag = true
@@ -160,7 +174,10 @@ class MemoryGame : MiniGame() {
                 card.isMatched = true
 
                 card.gameObject.audioShortUrl?.let {
-                    gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + it)
+                    val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
+                    // --- LOG: Reproducción de Audio ---
+                    Log.d("MINIGAME_DEBUG", "Audio URL: $audioUrl")
+                    gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
 
                 resetSelection()

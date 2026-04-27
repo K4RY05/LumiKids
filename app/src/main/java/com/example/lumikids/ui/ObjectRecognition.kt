@@ -1,6 +1,7 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -91,6 +92,9 @@ class ObjectRecognition : MiniGame() {
                     val instructionMap =
                         InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
 
+                    val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
+                    Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
+
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -102,7 +106,7 @@ class ObjectRecognition : MiniGame() {
                             val localText = instructionMap[item.name]
 
                             if (localText == null) {
-                                android.util.Log.w("LumiKids", "Instrucción visual faltante para: ${item.name}")
+                                Log.w("MINIGAME_DEBUG", "Instrucción visual faltante para: ${item.name}")
                             }
 
                             item.copy(instructionText = localText ?: "Selecciona el objeto")
@@ -119,7 +123,7 @@ class ObjectRecognition : MiniGame() {
                     }
                     false
                 } catch (e: Exception) {
-                    android.util.Log.e("MiniGame", "Error al cargar objetos: ${e.message}")
+                    Log.e("MINIGAME_DEBUG", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
@@ -169,9 +173,14 @@ class ObjectRecognition : MiniGame() {
         resetImagesBackground()
 
         roundOptions.forEachIndexed { index, gameObject ->
+
+            // --- LOG: Carga de Imagen ---
+            val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl
+            Log.d("MINIGAME_DEBUG", "IMG: $imageUrlCompleta")
+
             images[index].apply {
                 Glide.with(this@ObjectRecognition)
-                    .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
+                    .load(imageUrlCompleta)
                     .placeholder(R.drawable.ic_logo)
                     .transform(CenterCrop(), RoundedCorners(30))
                     .into(this)
@@ -179,10 +188,16 @@ class ObjectRecognition : MiniGame() {
                 isEnabled = true
                 setOnClickListener {
                     gameAudio.stopLoop()
+
+                    // --- LOG: Selección de Carta ---
+                    Log.d("MINIGAME_DEBUG", "Seleccion: ${gameObject.name} Stage: object")
+
                     val isCorrect = (gameObject.id == currentRound?.correctObject?.id)
 
                     if (gameObject.audioShortUrl != null) {
-                        gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
+                        val audioUrl = RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl
+                        Log.d("MINIGAME_DEBUG", "Audio URL: $audioUrl")
+                        gameAudio.playUrl(audioUrl)
                     }
                     handleSelection(this, isCorrect)
                 }
@@ -214,7 +229,7 @@ class ObjectRecognition : MiniGame() {
                     errors++
                     gameAudio.playEffect(R.raw.fail)
 
-                    delay(1000) // Esperamos a que termine el sonido de "fail"
+                    delay(1000)
                     resultIcon.visibility = View.INVISIBLE
                     images.forEach { it.isEnabled = true }
 

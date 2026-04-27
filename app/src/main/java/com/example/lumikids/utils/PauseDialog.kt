@@ -52,9 +52,7 @@ class PauseDialog(private val context: Context) {
             onExit()
         }
 
-        // ==========================================
-        // CONTROL DE VOLUMEN RESTRINGIDO AL 70%
-        // ==========================================
+
         val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val deviceMaxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
