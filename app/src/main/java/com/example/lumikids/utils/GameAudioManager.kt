@@ -30,11 +30,8 @@ class GameAudioManager(
 
 
 
-
-
     fun playUrl(url: String) {
-        stopNetworkAudio() // Detenemos cualquier audio anterior antes de iniciar uno nuevo
-
+        stopNetworkAudio()
         try {
             networkMediaPlayer = MediaPlayer().apply {
                 setAudioAttributes(

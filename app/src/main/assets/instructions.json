@@ -1,35 +1,36 @@
 {
-  "emotions_happiness": "¿Qué emoción sientes cuando tu amigo viene a jugar?",
-  "emotions_sadness": "¿Qué emoción sientes cuando tu mamá se enoja contigo?",
+
   "emotions_anger": "¿Qué emoción sientes cuando te dicen que guardes tus juguetes?",
-  "emotions_surprised": "¿Qué emoción sientes cuando te dan un regalo?",
-  "emotions_sick": "¿Qué sientes cuando te duele el estómago?",
   "emotions_bored": "¿Qué emoción sientes cuando esperas mucho tiempo?",
   "emotions_fear": "¿Qué emoción sientes cuando escuchas un cuete?",
+  "emotions_happiness": "¿Qué emoción sientes cuando tu amigo viene a jugar?",
+  "emotions_sadness": "¿Qué emoción sientes cuando tu mamá se enoja contigo?",
+  "emotions_sick": "¿Qué sientes cuando te duele el estómago?",
+  "emotions_surprised": "¿Qué emoción sientes cuando te dan un regalo?",
   "emotions_tired": "¿Qué sientes después de correr mucho?",
 
 
   "clothing_socks": "Selecciona lo que te pones en los pies para no tener frío.",
-  "clothing_shirt": "Selecciona la prenda que cubre el pecho y los brazos.",
-  "clothing_watch": "Selecciona lo que usas en la muñeca para saber la hora.",
-  "clothing_hat": "Selecciona lo que sirve para ponerse en la cabeza.",
-  "clothing_earring": "Selecciona el accesorio que se usa en las orejas.",
   "clothing_belt": "Selecciona lo que usas en la cintura.",
+  "clothing_earring": "Selecciona el accesorio que se usa en las orejas.",
   "clothing_glasses": "Selecciona lo que usas en los ojos para ver mejor.",
+  "clothing_hat": "Selecciona lo que sirve para ponerse en la cabeza.",
+  "clothing_raincoat": "Selecciona lo que usas para no mojarte cuando llueve.",
   "clothing_ring": "Selecciona lo que usas en los dedos como adorno.",
   "clothing_scarf": "Selecciona lo que usas en el cuello cuando hace frío.",
-  "clothing_raincoat": "Selecciona lo que usas para no mojarte cuando llueve.",
+  "clothing_shirt": "Selecciona la prenda que cubre el pecho y los brazos.",
   "clothing_shoes": "Selecciona lo que te pones para caminar en la calle.",
+  "clothing_watch": "Selecciona lo que usas en la muñeca para saber la hora.",
 
 
   "furniure_bed": "Selecciona donde te acuestas a dormir.",
-  "furniure_lamp": "Selecciona el objeto que se prende para dar luz ",
-  "furniure_cup": "Selecciona el utensilio que usas para tomar jugo.",
-  "furniure_refrigerator": "Selecciona el electrodoméstico que congela los alimentos.",
-  "furniure_chair": "Selecciona el objeto que sirve para que te sientes.",
-  "furniure_television": "Selecciona el objeto donde  ves tus caricaturas.",
-  "furniure_stove": "Selecciona el objeto que se usa para cocinar los alimentos.",
+  "furniure_washing_machine": "Selecciona el articulo donde se lava la  ropa",
   "furniure_blender": "Selecciona el articulo que se usa para moler la comida.",
+  "furniure_refrigerator": "Selecciona el electrodoméstico que congela los alimentos.",
+  "furniure_television": "Selecciona el objeto donde  ves tus caricaturas.",
   "furniure_door": "Selecciona el objeto que se abre para entrar a tu cuarto.",
-  "furniure_washing_machine": "Selecciona el articulo donde se lava la  ropa"
+  "furniure_lamp": "Selecciona el objeto que se prende para dar luz ",
+  "furniure_stove": "Selecciona el objeto que se usa para cocinar los alimentos.",
+  "furniure_chair": "Selecciona el objeto que sirve para que te sientes.",
+  "furniure_cup": "Selecciona el utensilio que usas para tomar jugo."
 }

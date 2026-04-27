@@ -16,7 +16,8 @@ import com.example.lumikids.R
 
 class PauseDialog(private val context: Context) {
 
-    // ✨ CAMBIO: Agregamos onExit para manejar el cierre de la actividad
+    private val MAX_VOLUME_PERCENTAGE = 0.8f
+
     fun showDialog(onResume: () -> Unit, onExit: () -> Unit) {
         val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -38,28 +39,39 @@ class PauseDialog(private val context: Context) {
         }
 
         val btnPlay = dialog.findViewById<ImageButton>(R.id.btnPlay)
-        val btnExit = dialog.findViewById<ImageButton>(R.id.btnExit) // ✨ Nuevo botón configurado
+        val btnExit = dialog.findViewById<ImageButton>(R.id.btnExit)
         val seekVolume = dialog.findViewById<SeekBar>(R.id.seekVolume)
 
-        // Botón Reanudar
         btnPlay?.setOnClickListener {
             dialog.dismiss()
             onResume()
         }
 
-        // ✨ NUEVO: Botón Salir (Regresar al menú)
         btnExit?.setOnClickListener {
             dialog.dismiss()
-            onExit() // Llama a finish() en la Activity
+            onExit()
         }
 
-        // Control de volumen REAL del dispositivo
+        // ==========================================
+        // CONTROL DE VOLUMEN RESTRINGIDO AL 70%
+        // ==========================================
         val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val deviceMaxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-        seekVolume?.max = maxVolume
-        seekVolume?.progress = audioService.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val safeMaxVolume = (deviceMaxVolume * MAX_VOLUME_PERCENTAGE).toInt()
 
+        seekVolume?.max = safeMaxVolume
+
+        val currentVolume = audioService.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+        if (currentVolume > safeMaxVolume) {
+            audioService.setStreamVolume(AudioManager.STREAM_MUSIC, safeMaxVolume, 0) // 0 evita que salga el popup del sistema
+            seekVolume?.progress = safeMaxVolume
+        } else {
+            seekVolume?.progress = currentVolume
+        }
+
+        // Listener para cuando el usuario desliza la barra
         seekVolume?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {

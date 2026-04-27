@@ -31,6 +31,9 @@ class MemoryGame : MiniGame() {
     private var firstSelectedView: ImageView? = null
     private var isBusy = false
 
+    // Definimos la URL globalmente para poder usarla al pausar y reanudar
+    private val instructionUrl = RetrofitClient.BASE_URL_SOUNDS + "games/instruc_memory.mp3"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_memory)
@@ -43,11 +46,17 @@ class MemoryGame : MiniGame() {
 
     override fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
             gameAudio.stopNetworkAudio()
+            gameAudio.stopLoop()
+
             PauseDialog(this).showDialog(
-                onResume = { gameTimer.resume() },
+                onResume = {
+                    gameTimer.resume()
+                    gameAudio.startLoop(instructionUrl, 8000L) // Reanudamos la instrucción
+                },
                 onExit = { finish() }
             )
         }
@@ -85,6 +94,8 @@ class MemoryGame : MiniGame() {
 
             if (success) {
                 createDynamicBoard()
+                // Iniciamos la instrucción de voz cada 8 segundos
+                gameAudio.startLoop(instructionUrl, 8000L)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -227,6 +238,8 @@ class MemoryGame : MiniGame() {
 
     private fun checkGameFinished() {
         if (boardCards.all { it.isMatched }) {
+            gameAudio.stopLoop()
+
             lifecycleScope.launch {
                 delay(1000)
                 showResults("Memorama")
