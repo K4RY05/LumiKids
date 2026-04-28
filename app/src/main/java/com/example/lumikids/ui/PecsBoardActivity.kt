@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,7 +34,13 @@ class PecsBoardActivity : AppCompatActivity() {
     private var selectedPronounFolder = ""
     private var selectedVerb = ""
 
+    // Player principal: para sonidos de selección
+    @Volatile
     private var mediaPlayer: MediaPlayer? = null
+
+    private var repeatPlayer: MediaPlayer? = null
+
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
     // =========================
     // DATA CLASS
@@ -96,9 +101,9 @@ class PecsBoardActivity : AppCompatActivity() {
 
         "cut" to listOf(
             ComplementData("paper", "school/paper.jpg", "school"),
-            ComplementData("circle", "school/circle.jpg", "school"),
-            ComplementData("square", "school/square.jpg", "school"),
-            ComplementData("triangle", "school/triangle.jpg", "school")
+            ComplementData("circle", "school/circle.png", "school"),
+            ComplementData("square", "school/square.png", "school"),
+            ComplementData("triangle", "school/triangle.png", "school")
         ),
 
         "paint" to listOf(
@@ -106,28 +111,23 @@ class PecsBoardActivity : AppCompatActivity() {
             ComplementData("box", "school/box.jpg", "school"),
             ComplementData("face", "personal_hygiene/face.jpg", "personal_hygiene")
         ),
+
         "sleep" to listOf(
             ComplementData("bed", "furniure/bed.jpg", "furniure"),
             ComplementData("sofa", "furniure/sofa.jpg", "furniure"),
             ComplementData("pillow", "furniure/pillow.jpg", "furniure"),
-            ComplementData("blanket", "furniure/blanket.jpg", "furniure")
+            ComplementData("blanket", "furniure/blanket.png", "furniure")
         ),
-
-        "listen" to listOf(
-            ComplementData("radio", "music/radio.jpg", "music"),
-            ComplementData("song", "music/song.jpg", "music"),
-            ComplementData("drum", "music/drum.jpg", "music"),
-            ComplementData("bell", "music/bell.jpg", "music")
-        )
     )
 
     // =========================
     // onCreate
     // =========================
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
+
+        Log.d(TAG, "=== onCreate START ===")
 
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
@@ -137,90 +137,92 @@ class PecsBoardActivity : AppCompatActivity() {
 
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
+        Log.d(TAG, "onCreate: limpiando board en DB antes de iniciar")
         clearBoardInDB {
             resetToPronouns()
         }
+
+        Log.d(TAG, "=== onCreate END ===")
     }
 
     // =========================
     // SELECCIÓN
     // =========================
     private fun onItemSelected(item: PecsItem) {
-
-        Log.d(TAG, "Seleccion: ${item.text} Stage: $currentStage")
+        val stageAtSelection = currentStage
 
         if (sentenceBar.childCount >= 3) return
 
         addToSentenceBar(item)
         saveSelectionToDB(item.id)
 
-        val audioName = getAudioName(item)
+        val audioName = getAudioName(item, stageAtSelection)
 
-        val soundUrl = if (currentStage == "complement") {
-
-            val comp = complementMap[selectedVerb]
-                ?.find { it.text == audioName }
-
-            if (comp == null) {
-                Log.e(TAG, "No encontrado complemento: $audioName")
-                ""
-            } else {
-                "${RetrofitClient.BASE_URL_SOUNDS}${comp.soundCategory}/${comp.text}.mp3"
+        // --- LÓGICA DE AUDIO ---
+        val soundUrl = when (stageAtSelection) {
+            "complement" -> {
+                val comp = complementMap[selectedVerb]?.find { it.text == audioName }
+                if (comp == null) "" else "${RetrofitClient.BASE_URL_SOUNDS}${comp.soundCategory}/${comp.text}.mp3"
             }
-
-        } else {
-            "${RetrofitClient.BASE_URL_SOUNDS}$currentStage/$audioName.mp3"
+            else -> "${RetrofitClient.BASE_URL_SOUNDS}$stageAtSelection/$audioName.mp3"
         }
 
-        Log.d(TAG, "Audio URL: $soundUrl")
+        if (soundUrl.isNotEmpty()) {
+            playSound(soundUrl)
+        }
 
-        if (soundUrl.isNotEmpty()) playSound(soundUrl)
 
-        when (currentStage) {
-
+        when (stageAtSelection) {
             "pronoun" -> {
                 selectedPronounFolder = audioName
                 currentStage = "verb"
                 loadPecs("verb")
             }
-
             "verb" -> {
                 selectedVerb = item.text.lowercase()
                 currentStage = "complement"
                 loadComplements(selectedVerb)
             }
-
             "complement" -> {
                 val resultIcon = findViewById<ImageView>(R.id.resultIcon)
-                val isCorrect = complementMap[selectedVerb]?.any { it.text == item.text } ?: false
+                val isCorrect = complementMap[selectedVerb]?.any {
+                    it.text.equals(item.text, ignoreCase = true)
+                } ?: false
 
-                showValidationResult(isCorrect, resultIcon)
+                Log.d(TAG, "Validación: item=${item.text} verbo=$selectedVerb correcto=$isCorrect")
 
-               /* if (isCorrect) {
-                    //Toast.makeText(this, "¡Oración completa y correcta!", Toast.LENGTH_SHORT).show()
-                } else {
-                   // Toast.makeText(this, "Intenta de nuevo", Toast.LENGTH_SHORT).show()
-                }*/
+                stopRepeatingSound()
+
+                handler.postDelayed({
+                    showValidationResult(isCorrect, resultIcon)
+                }, 950)
             }
         }
     }
 
-    private fun getAudioName(item: PecsItem): String {
-        return if (currentStage == "pronoun") {
-            when {
+    private fun getAudioName(item: PecsItem, stage: String): String {
+        return if (stage == "pronoun") {
+            val name = when {
                 item.imageUrl.contains("/she/") -> "she"
                 item.imageUrl.contains("/he/") -> "he"
                 item.imageUrl.contains("/women/") -> "women"
                 item.imageUrl.contains("/men/") -> "men"
                 else -> item.text
             }
-        } else item.text
+            Log.d(TAG, "  getAudioName (pronoun): imageUrl=${item.imageUrl} -> '$name'")
+            name
+        } else {
+            Log.d(TAG, "  getAudioName ($stage): '${item.text}'")
+            item.text
+        }
     }
 
     // =========================
     // SENTENCE BAR
     // =========================
     private fun addToSentenceBar(item: PecsItem) {
+
+        Log.d(TAG, "addToSentenceBar: ${item.text}")
 
         val view = LayoutInflater.from(this)
             .inflate(R.layout.item_sentence, sentenceBar, false)
@@ -235,34 +237,51 @@ class PecsBoardActivity : AppCompatActivity() {
 
         view.setOnClickListener {
             val index = sentenceBar.indexOfChild(view)
+            Log.d(TAG, "sentenceBar click: eliminando index=$index item=${item.text}")
             sentenceBar.removeView(view)
             deleteSelectionFromDB(item.id)
             handleDeletion(index)
+
+            if (sentenceBar.childCount == 0) {
+                Log.d(TAG, "sentenceBar vacío tras click: deteniendo sonido repetido")
+                stopRepeatingSound()
+            }
         }
 
         sentenceBar.addView(view)
+
+        if (sentenceBar.childCount == 1) {
+            Log.d(TAG, "Primer item en sentenceBar: iniciando sonido repetido")
+            startRepeatingSound()
+        }
     }
 
     // =========================
-    // API
+    // API GET
     // =========================
     private fun loadPecs(category: String) {
 
-        val userId = SessionManager(this).getUserId() ?: return
+        val userId = SessionManager(this).getUserId() ?: run {
+            Log.e(TAG, "loadPecs: userId es null, abortando")
+            return
+        }
+
         val endpoint = if (category == "verb") "verb/$selectedPronounFolder" else category
         val url = "${RetrofitClient.BASE_URL}api/pecs/board/$endpoint/$userId"
 
-        Log.d(TAG, "GET: $url")
+        Log.d(TAG, "loadPecs: category=$category | GET $url")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val json = URL(url).readText()
-                val array = JSONArray(json)
-                val list = mutableListOf<PecsItem>()
+                Log.d(TAG, "loadPecs: respuesta recibida (${json.length} chars)")
 
+                val array = JSONArray(json)
+                Log.d(TAG, "loadPecs: total items = ${array.length()}")
+
+                val list = mutableListOf<PecsItem>()
                 for (i in 0 until array.length()) {
                     val obj = array.getJSONObject(i)
-
                     list.add(
                         PecsItem(
                             obj.getInt("id"),
@@ -272,15 +291,19 @@ class PecsBoardActivity : AppCompatActivity() {
                         )
                     )
                 }
-                list.shuffle()
 
+                list.shuffle()
                 val finalList = list.take(3)
+
+                Log.d(TAG, "loadPecs: mostrando ${finalList.size} items:")
+                finalList.forEach { Log.d(TAG, "  - ${it.text} | ${it.imageUrl}") }
+
                 withContext(Dispatchers.Main) {
                     rvOptions.adapter = PecsAdapter(finalList) { onItemSelected(it) }
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "ERROR API: ${e.message}")
+                Log.e(TAG, "loadPecs ERROR: ${e.javaClass.simpleName} - ${e.message}")
             }
         }
     }
@@ -290,54 +313,214 @@ class PecsBoardActivity : AppCompatActivity() {
     // =========================
     private fun loadComplements(verb: String) {
 
-        val correctList = complementMap[verb] ?: emptyList()
+        Log.d(TAG, "loadComplements: verb=$verb")
 
-        if (correctList.isEmpty()) {
-            Log.e(TAG, "No hay complementos para verbo: $verb")
+        val correctList = complementMap[verb] ?: run {
+            Log.e(TAG, "loadComplements: verbo '$verb' no encontrado en complementMap")
+            Log.e(TAG, "loadComplements: claves disponibles = ${complementMap.keys}")
             return
         }
 
+        if (correctList.isEmpty()) {
+            Log.e(TAG, "loadComplements: lista vacía para verbo '$verb'")
+            return
+        }
 
         val correct = correctList.random()
+        Log.d(TAG, "loadComplements: correcto = ${correct.text}")
 
-
-        val allIncorrect = complementMap
-            .filterKeys { it != verb }
-            .values
-            .flatten()
+        val allIncorrect = complementMap.filterKeys { it != verb }.values.flatten()
         val incorrect = allIncorrect.shuffled().take(2)
+        Log.d(TAG, "loadComplements: incorrectos = ${incorrect.map { it.text }}")
+
         val finalList = (listOf(correct) + incorrect).shuffled()
 
         val list = finalList.mapIndexed { index, comp ->
-
             val imageUrl = "${RetrofitClient.BASE_URL}images/${comp.imagePath}"
-
-            Log.d(TAG, "COMPLEMENTO → ${comp.text}")
-            Log.d(TAG, "IMG → $imageUrl")
-
-            PecsItem(
-                id = index,
-                text = comp.text,
-                imageUrl = imageUrl,
-                type = "complement"
-            )
+            Log.d(TAG, "  COMPLEMENTO[$index] text=${comp.text} | img=$imageUrl | soundCat=${comp.soundCategory}")
+            PecsItem(id = index, text = comp.text, imageUrl = imageUrl, type = "complement")
         }
 
         rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
+        Log.d(TAG, "loadComplements: adapter seteado con ${list.size} items")
+    }
+
+    // =========================
+    // AUDIO PRINCIPAL
+    // =========================
+    private fun playSound(url: String, onComplete: (() -> Unit)? = null) {
+        Log.d(TAG, "playSound: $url")
+        try {
+            val previousPlayer = mediaPlayer
+            mediaPlayer = null
+
+            val newPlayer = MediaPlayer()
+            newPlayer.setDataSource(url)
+
+            newPlayer.setOnPreparedListener { mp ->
+                Log.d(TAG, "playSound: onPrepared")
+                try { previousPlayer?.release() } catch (e: Exception) {
+                    Log.w(TAG, "playSound: error liberando anterior: ${e.message}")
+                }
+                mp.start()
+                mediaPlayer = mp
+            }
+
+            newPlayer.setOnErrorListener { mp, what, extra ->
+                Log.e(TAG, "playSound ERROR: $what en $url")
+                try { mp.release() } catch (e: Exception) {}
+                if (mediaPlayer == mp) mediaPlayer = null
+                true
+            }
+
+            newPlayer.setOnCompletionListener { mp ->
+                Log.d(TAG, "playSound: completado")
+                mp.release()
+                if (mediaPlayer == mp) mediaPlayer = null
+                onComplete?.invoke()
+            }
+
+            newPlayer.prepareAsync()
+
+        } catch (e: Exception) {
+            Log.e(TAG, "playSound EXCEPTION: ${e.message}")
+        }
     }
     // =========================
-    // AUDIO
+    // AUDIO REPETIDO
     // =========================
-    private fun playSound(url: String) {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(url)
-                prepareAsync()
-                setOnPreparedListener { start() }
+    private val repeatSoundRunnable = object : Runnable {
+        override fun run() {
+            val count = sentenceBar.childCount
+            Log.d(TAG, "repeatSoundRunnable: tick | childCount=$count")
+
+            if (count >= 3) {
+                Log.d(TAG, "Máximo alcanzado (complemento). Ejecutando sonido final y deteniendo repetición.")
+                playRepeatSound()
+                return
             }
+            playRepeatSound()
+            handler.postDelayed(this, 5000)
+        }
+    }
+
+    private fun playRepeatSound() {
+        val count = sentenceBar.childCount
+        if (count == 0) {
+            Log.w(TAG, "playRepeatSound: sentenceBar vacío")
+            return
+        }
+
+        val lastView = sentenceBar.getChildAt(count - 1)
+        val item = lastView.tag as? PecsItem ?: run {
+            Log.e(TAG, "playRepeatSound: tag no es PecsItem")
+            return
+        }
+
+        val audioName = if (count == 1) {
+            when {
+                item.imageUrl.contains("/she/") -> "she"
+                item.imageUrl.contains("/he/") -> "he"
+                item.imageUrl.contains("/women/") -> "women"
+                item.imageUrl.contains("/men/") -> "men"
+                else -> item.text.lowercase().trim()
+            }
+        } else {
+            item.text.lowercase().trim()
+        }
+
+        Log.d(TAG, "playRepeatSound: count=$count | audioName=$audioName")
+
+        val soundUrl = when (count) {
+            1 -> "${RetrofitClient.BASE_URL_SOUNDS}pronoun/$audioName.mp3"
+            2 -> "${RetrofitClient.BASE_URL_SOUNDS}verb/$audioName.mp3"
+            else -> {
+                val comp = complementMap[selectedVerb]?.find { it.text == audioName }
+                if (comp != null) {
+                    "${RetrofitClient.BASE_URL_SOUNDS}${comp.soundCategory}/${comp.text}.mp3"
+                } else {
+                    Log.e(TAG, "playRepeatSound: complemento '$audioName' no encontrado")
+                    ""
+                }
+            }
+        }
+
+        if (soundUrl.isEmpty()) return
+
+        try {
+            val previousRepeat = repeatPlayer
+            repeatPlayer = null
+
+            val rp = MediaPlayer()
+            rp.setDataSource(soundUrl)
+
+            rp.setOnPreparedListener { mp ->
+                Log.d(TAG, "playRepeatSound: OK -> Reproduciendo $audioName")
+                try { previousRepeat?.release() } catch (e: Exception) {}
+                mp.start()
+                repeatPlayer = mp
+            }
+
+            rp.setOnCompletionListener { mp ->
+                mp.release()
+                if (repeatPlayer == mp) repeatPlayer = null
+            }
+
+            rp.setOnErrorListener { mp, what, extra ->
+                Log.e(TAG, "playRepeatSound ERROR: $audioName no encontrado en $soundUrl")
+                mp.release()
+                if (repeatPlayer == mp) repeatPlayer = null
+                true
+            }
+
+            repeatPlayer = rp
+            rp.prepareAsync()
+
         } catch (e: Exception) {
-            Log.e(TAG, "ERROR AUDIO: ${e.message}")
+            Log.e(TAG, "playRepeatSound EXCEPTION: ${e.message}")
+        }
+    }
+
+    private fun startRepeatingSound() {
+        Log.d(TAG, "startRepeatingSound: iniciando handler (delay 4000ms)")
+        handler.removeCallbacks(repeatSoundRunnable)
+        // FIX: postDelayed en lugar de post para no solaparse con el sonido de selección
+        handler.postDelayed(repeatSoundRunnable, 4000)
+    }
+
+    private fun stopRepeatingSound() {
+        Log.d(TAG, "stopRepeatingSound: deteniendo handler y liberando repeatPlayer")
+        handler.removeCallbacks(repeatSoundRunnable)
+        try { repeatPlayer?.release() } catch (e: Exception) {
+            Log.w(TAG, "stopRepeatingSound: error liberando repeatPlayer: ${e.message}")
+        }
+        repeatPlayer = null
+    }
+
+    // =========================
+    // SONIDO LOCAL
+    // =========================
+    private fun playLocalSound(resId: Int) {
+        Log.d(TAG, "playLocalSound: resId=$resId")
+        try {
+            val previous = mediaPlayer
+            mediaPlayer = null
+            try { previous?.release() } catch (e: Exception) {
+                Log.w(TAG, "playLocalSound: error liberando player anterior: ${e.message}")
+            }
+            val mp = MediaPlayer.create(this, resId)
+            if (mp == null) {
+                Log.e(TAG, "playLocalSound: MediaPlayer.create() retornó null para resId=$resId")
+                return
+            }
+            mediaPlayer = mp
+            mp.setOnCompletionListener {
+                Log.d(TAG, "playLocalSound: completado resId=$resId")
+            }
+            mp.start()
+            Log.d(TAG, "playLocalSound: reproducción iniciada")
+        } catch (e: Exception) {
+            Log.e(TAG, "playLocalSound ERROR: ${e.message}")
         }
     }
 
@@ -346,12 +529,16 @@ class PecsBoardActivity : AppCompatActivity() {
     // =========================
     private fun saveSelectionToDB(themeId: Int) {
 
-        val userId = SessionManager(this).getUserId() ?: return
+        val userId = SessionManager(this).getUserId() ?: run {
+            Log.e(TAG, "saveSelectionToDB: userId null, abortando")
+            return
+        }
+
+        Log.d(TAG, "saveSelectionToDB: themeId=$themeId userId=$userId")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val url = URL("${RetrofitClient.BASE_URL}api/pecs/board/select")
-
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -362,20 +549,24 @@ class PecsBoardActivity : AppCompatActivity() {
                     put("ID_user", userId)
                 }
 
-                OutputStreamWriter(conn.outputStream).use {
-                    it.write(json.toString())
-                }
-
-                conn.responseCode
+                OutputStreamWriter(conn.outputStream).use { it.write(json.toString()) }
+                val code = conn.responseCode
+                Log.d(TAG, "saveSelectionToDB: responseCode=$code")
 
             } catch (e: Exception) {
-                Log.e(TAG, "ERROR POST: ${e.message}")
+                Log.e(TAG, "saveSelectionToDB ERROR: ${e.message}")
             }
         }
     }
 
     private fun deleteSelectionFromDB(themeId: Int) {
-        val userId = SessionManager(this).getUserId() ?: return
+
+        val userId = SessionManager(this).getUserId() ?: run {
+            Log.e(TAG, "deleteSelectionFromDB: userId null, abortando")
+            return
+        }
+
+        Log.d(TAG, "deleteSelectionFromDB: themeId=$themeId userId=$userId")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -383,15 +574,22 @@ class PecsBoardActivity : AppCompatActivity() {
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "DELETE"
                 }
-                conn.responseCode
+                val code = conn.responseCode
+                Log.d(TAG, "deleteSelectionFromDB: responseCode=$code")
             } catch (e: Exception) {
-                Log.e(TAG, "ERROR DELETE: ${e.message}")
+                Log.e(TAG, "deleteSelectionFromDB ERROR: ${e.message}")
             }
         }
     }
 
     private fun clearBoardInDB(onSuccess: () -> Unit = {}) {
-        val userId = SessionManager(this).getUserId() ?: return
+
+        val userId = SessionManager(this).getUserId() ?: run {
+            Log.e(TAG, "clearBoardInDB: userId null, abortando")
+            return
+        }
+
+        Log.d(TAG, "clearBoardInDB: userId=$userId")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -399,37 +597,60 @@ class PecsBoardActivity : AppCompatActivity() {
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "DELETE"
                 }
-                conn.responseCode
+                val code = conn.responseCode
+                Log.d(TAG, "clearBoardInDB: responseCode=$code")
 
                 withContext(Dispatchers.Main) {
+                    Log.d(TAG, "clearBoardInDB: llamando onSuccess()")
                     onSuccess()
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "ERROR CLEAR: ${e.message}")
+                Log.e(TAG, "clearBoardInDB ERROR: ${e.message}")
             }
         }
     }
 
+    // =========================
+    // RESET
+    // =========================
     private fun removeLastItem() {
         val count = sentenceBar.childCount
-        if (count == 0) return
+        Log.d(TAG, "removeLastItem: childCount=$count")
+
+        if (count == 0) {
+            Log.w(TAG, "removeLastItem: sentenceBar vacío, nada que borrar")
+            return
+        }
 
         val lastIndex = count - 1
         val lastView = sentenceBar.getChildAt(lastIndex)
-        val item = lastView.tag as? PecsItem ?: return
+        val item = lastView.tag as? PecsItem ?: run {
+            Log.e(TAG, "removeLastItem: tag no es PecsItem en index $lastIndex")
+            return
+        }
 
+        Log.d(TAG, "removeLastItem: eliminando '${item.text}' en index=$lastIndex")
         sentenceBar.removeViewAt(lastIndex)
         deleteSelectionFromDB(item.id)
         handleDeletion(lastIndex)
+
+        if (sentenceBar.childCount == 0) {
+            Log.d(TAG, "removeLastItem: sentenceBar vacío, deteniendo sonido repetido")
+            stopRepeatingSound()
+        }
     }
 
     private fun handleDeletion(index: Int) {
+        Log.d(TAG, "handleDeletion: index=$index | currentStage=$currentStage")
+        if (sentenceBar.childCount > 0 && sentenceBar.childCount < 3) {
+            startRepeatingSound()
+        }
+
         when (index) {
             0 -> resetToPronouns()
             1 -> {
                 currentStage = "verb"
-                sentenceBar.removeViews(1, sentenceBar.childCount - 1)
                 loadPecs("verb")
             }
             2 -> {
@@ -440,6 +661,7 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private fun resetToPronouns() {
+        Log.d(TAG, "resetToPronouns: limpiando todo y volviendo a pronoun")
         currentStage = "pronoun"
         selectedPronounFolder = ""
         selectedVerb = ""
@@ -447,42 +669,69 @@ class PecsBoardActivity : AppCompatActivity() {
         loadPecs("pronoun")
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mediaPlayer?.release()
-    }
+    // =========================
+    // VALIDACIÓN
+    // =========================
     private fun showValidationResult(isCorrect: Boolean, resultIcon: ImageView) {
-        // 1. Configurar imagen y audio
+        Log.d(TAG, "showValidationResult: isCorrect=$isCorrect")
+
         if (isCorrect) {
             resultIcon.setImageResource(R.drawable.ic_correct)
-            // Usando tu lógica de sonidos (asegúrate de tener la clase gameAudio o usar mediaPlayer)
             playLocalSound(R.raw.win)
         } else {
             resultIcon.setImageResource(R.drawable.ic_error)
             playLocalSound(R.raw.fail)
         }
 
-        // 2. Mostrar el icono
         resultIcon.visibility = android.view.View.VISIBLE
 
-        // 3. Ocultarlo automáticamente después de 2 segundos
         resultIcon.postDelayed({
             resultIcon.visibility = android.view.View.GONE
-
-            // Si falló, quizás quieras limpiar el último item para que el niño lo intente de nuevo
             if (!isCorrect) {
+                Log.d(TAG, "showValidationResult: respuesta incorrecta -> removeLastItem()")
                 removeLastItem()
             }
         }, 2000)
     }
 
-    private fun playLocalSound(resId: Int) {
+    // =========================
+    // LIFECYCLE
+    // =========================
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "=== onPause: deteniendo sonido y handler ===")
+        stopRepeatingSound()
+        try {
+            mediaPlayer?.let { mp ->
+                if (mp.isPlaying) {
+                    mp.pause()
+                    Log.d(TAG, "onPause: MediaPlayer pausado")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "onPause ERROR al pausar MediaPlayer: ${e.message}")
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "=== onResume: childCount=${sentenceBar.childCount} ===")
+        if (sentenceBar.childCount > 0) {
+            Log.d(TAG, "onResume: reanudando sonido repetido")
+            startRepeatingSound()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "=== onDestroy: liberando recursos ===")
+        stopRepeatingSound()
         try {
             mediaPlayer?.release()
-            mediaPlayer = MediaPlayer.create(this, resId)
-            mediaPlayer?.start()
+            Log.d(TAG, "onDestroy: MediaPlayer liberado")
         } catch (e: Exception) {
-            Log.e(TAG, "Error playing local sound: ${e.message}")
+            Log.e(TAG, "onDestroy ERROR al liberar MediaPlayer: ${e.message}")
         }
+        mediaPlayer = null
     }
 }
