@@ -17,8 +17,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_app"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LumiKids">
+        android:theme="@style/Theme.LumiKids.Blue">
 
+        <activity
+            android:name=".ui.ThemeColorActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
 
 
 

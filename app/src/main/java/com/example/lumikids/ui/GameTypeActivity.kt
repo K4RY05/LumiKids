@@ -3,10 +3,9 @@ package com.example.lumikids.ui
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
 
-class GameTypeActivity : AppCompatActivity() {
+class GameTypeActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

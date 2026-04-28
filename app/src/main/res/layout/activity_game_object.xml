@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/c_four">
+    android:background="?attr/color_fondo_pantalla">
 
     <ImageView
         android:id="@+id/btnBack"
@@ -38,7 +38,7 @@
         android:text="Selecciona el objeto"
         android:textSize="40sp"
         android:textStyle="bold"
-        android:textColor="@color/c_one"
+        android:textColor="?attr/color_primario"
         android:gravity="center"
         android:maxLines="2"
         android:padding="8dp"

@@ -13,7 +13,7 @@ import com.example.lumikids.utils.ScoreManager
 import android.view.KeyEvent
 
 
-abstract class MiniGame : AppCompatActivity() {
+abstract class MiniGame : BaseActivity() {
 
     protected lateinit var theme: String
     protected var errors: Int = 0

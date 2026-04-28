@@ -20,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChangePasswordActivity : AppCompatActivity() {
+class ChangePasswordActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
 
@@ -32,7 +32,6 @@ class ChangePasswordActivity : AppCompatActivity() {
     private lateinit var etConfirmNewPassword: EditText
     private lateinit var btnConfirm: AppCompatButton
 
-    // Variables de estado para saber si el texto está visible o no
     private var isNewPasswordVisible = false
     private var isConfirmPasswordVisible = false
 
@@ -169,7 +168,6 @@ class ChangePasswordActivity : AppCompatActivity() {
         }
     }
 
-    // Nueva función para alternar la visibilidad
     private fun togglePasswordVisibility(editText: EditText, button: ImageButton, isVisible: Boolean) {
         if (isVisible) {
             // Mostrar contraseña

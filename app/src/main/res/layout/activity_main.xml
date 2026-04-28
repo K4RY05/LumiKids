@@ -3,17 +3,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main" android:layout_width="match_parent"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/c_four"
-    tools:context=".MainActivity">
+    android:background="?attr/color_fondo_pantalla" tools:context=".MainActivity">
 
     <RelativeLayout
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/c_three"
-        app:layout_constraintTop_toTopOf="parent"
+        android:background="?attr/color_terciario" app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.30">
@@ -46,8 +45,7 @@
             android:gravity="center"
             android:maxLines="1"
             android:text="LumiKids"
-            android:textColor="@color/c_one"
-            android:textStyle="bold" />
+            android:textColor="?attr/color_primario" android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/ivProfile"
@@ -56,9 +54,11 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:layout_marginEnd="16dp"
-            android:adjustViewBounds="true"
+            android:padding="8dp" android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:contentDescription="Perfil de usuario"
+            android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true"
+            android:focusable="true"
             android:src="@drawable/ic_user"/>
     </RelativeLayout>
 
@@ -73,7 +73,7 @@
         android:layout_marginBottom="24dp"
         android:clickable="true"
         android:focusable="true"
-        android:scaleType="fitCenter"
+        android:background="?attr/selectableItemBackgroundBorderless" android:scaleType="fitCenter"
         android:src="@drawable/btn_tablero"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -92,7 +92,7 @@
         android:layout_marginBottom="24dp"
         android:clickable="true"
         android:focusable="true"
-        android:scaleType="fitCenter"
+        android:background="?attr/selectableItemBackgroundBorderless" android:scaleType="fitCenter"
         android:src="@drawable/btn_minijuegos"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toBottomOf="parent"

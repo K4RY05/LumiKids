@@ -37,4 +37,15 @@ class SessionManager(context: Context) {
     fun logout() {
         prefs.edit().clear().apply()
     }
+
+    fun setTheme(themeName: String) {
+        prefs.edit().apply {
+            putString("selected_theme", themeName)
+            apply()
+        }
+    }
+
+    fun getTheme(): String {
+        return prefs.getString("selected_theme", "blue") ?: "blue"
+    }
 }
