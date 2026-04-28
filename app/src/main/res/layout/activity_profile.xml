@@ -6,6 +6,19 @@
     android:layout_height="match_parent"
     android:background="?attr/color_fondo_pantalla">
 
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_left"
+        android:scaleType="fitCenter"
+        android:contentDescription="Regresar al inicio"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <LinearLayout
         android:id="@+id/containerCenter"
         android:layout_width="0dp"
@@ -13,13 +26,12 @@
         android:gravity="center"
         android:orientation="vertical"
         android:padding="24dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintWidth_max="@dimen/profile_max_width"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.497"
-        app:layout_constraintWidth_max="@dimen/profile_max_width">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/tvTitle"
@@ -27,7 +39,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="24dp"
-            android:backgroundTint="?attr/color_primario"
             android:text="Configuración"
             android:textAlignment="center"
             android:textColor="?attr/color_primario"
@@ -46,7 +57,6 @@
             android:outlineProvider="background"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_user" />
-
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnDatos"
@@ -89,7 +99,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/profile_button_height"
             android:background="@drawable/bg_button"
-            android:backgroundTint="#F44336"
+            android:backgroundTint="#EF5350"
             android:text="Cerrar Sesión"
             android:textAllCaps="false"
             android:textColor="@android:color/white"

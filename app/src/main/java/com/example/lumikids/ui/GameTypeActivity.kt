@@ -4,12 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import com.example.lumikids.R
+import androidx.activity.enableEdgeToEdge
 
 class GameTypeActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_type)
+        enableEdgeToEdge()
+
+
 
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         btnBack.setOnClickListener {
@@ -28,6 +32,8 @@ class GameTypeActivity : BaseActivity() {
             openGame(MemoryLevelActivity::class.java, theme)
         }
     }
+
+
 
     private fun openGame(
         activity: Class<*>,

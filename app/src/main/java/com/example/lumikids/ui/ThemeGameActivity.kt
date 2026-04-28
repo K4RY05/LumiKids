@@ -25,7 +25,6 @@ class ThemeGameActivity : BaseActivity() {
         windowInsetsController?.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-    // ✨ OPTIMIZACIÓN: Agrupamos todos los botones y sus clics en un solo lugar
     private fun initViews() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val furniure = findViewById<ImageView>(R.id.cardFur)

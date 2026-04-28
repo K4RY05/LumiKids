@@ -3,6 +3,7 @@ package com.example.lumikids.ui
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
+import androidx.activity.enableEdgeToEdge
 import com.example.lumikids.R
 
 class MemoryLevelActivity : BaseActivity() {
@@ -12,6 +13,7 @@ class MemoryLevelActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memory_level)
+        enableEdgeToEdge()
 
 
         theme = intent.getStringExtra("THEME") ?: "furniure"

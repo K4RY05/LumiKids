@@ -44,4 +44,6 @@
     <dimen name="profile_max_width">1000dp</dimen>
     <dimen name="profile_margin_top_standard">24dp</dimen>
 
+    <dimen name="text_instruction">22sp</dimen>
+
 </resources>

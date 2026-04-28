@@ -2,6 +2,7 @@ package com.example.lumikids.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import com.example.lumikids.R
@@ -35,6 +36,10 @@ class ProfileActivity : BaseActivity() {
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
 
         txtTitulo.text = "Configuraciones"
+
+        findViewById<View>(R.id.btnBack).setOnClickListener {
+            finish()
+        }
 
         btnDatos.setOnClickListener {
             val intent = Intent(this, EditProfileActivity::class.java)

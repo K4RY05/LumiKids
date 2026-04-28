@@ -1,11 +1,12 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
-import android.util.Log // Importación necesaria para los logs
+import android.util.Log
 import android.view.Gravity
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -38,6 +39,7 @@ class MemoryGame : MiniGame() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_memory)
+        enableEdgeToEdge()
 
         numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
 

@@ -8,26 +8,27 @@
 
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="@dimen/ic_top_corner"
+        android:layout_height="@dimen/ic_top_corner"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="Regresar"
-        android:padding="4dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_left"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
 
     <TextView
         android:id="@+id/tvThemeTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Temas"
+        android:text="Temas de Colores "
         android:textColor="?attr/color_primario"
-        android:textSize="32sp"
+        android:textSize="@dimen/title_size"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,10 +39,12 @@
         android:layout_height="wrap_content"
         android:columnCount="2"
         android:rowCount="2"
+        android:layout_marginTop="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvThemeTitle">
+        app:layout_constraintTop_toBottomOf="@id/tvThemeTitle"
+        app:layout_constraintVertical_bias="0.3">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -50,22 +53,28 @@
             android:padding="16dp"
             android:gravity="center">
 
-            <ImageView
-                android:id="@+id/btnTheme1"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
-                android:contentDescription="Tema Océano"
-                android:src="@drawable/btn_color1" />
-
-            <TextView
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Océano"
-                android:textStyle="bold"
-                android:textColor="?attr/color_primario"/>
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnTheme1"
+                    android:layout_width="@dimen/profile_avatar_size"
+                    android:layout_height="@dimen/profile_avatar_size"
+                    android:background="@drawable/bg_theme_blue_swatch"
+                    android:elevation="6dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Tema Océano" />
+
+                <ImageView
+                    android:id="@+id/imgCheck1"
+                    android:layout_width="@dimen/selector_arrow_size"
+                    android:layout_height="@dimen/selector_arrow_size"
+                    android:layout_gravity="center"
+                    android:elevation="8dp"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_selection_check" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -75,22 +84,28 @@
             android:padding="16dp"
             android:gravity="center">
 
-            <ImageView
-                android:id="@+id/btnTheme2"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
-                android:contentDescription="Tema Dulce"
-                android:src="@drawable/btn_color2" />
-
-            <TextView
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Dulce"
-                android:textStyle="bold"
-                android:textColor="?attr/color_primario"/>
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnTheme2"
+                    android:layout_width="@dimen/profile_avatar_size"
+                    android:layout_height="@dimen/profile_avatar_size"
+                    android:background="@drawable/bg_theme_pink_swatch"
+                    android:elevation="6dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Tema Dulce" />
+
+                <ImageView
+                    android:id="@+id/imgCheck2"
+                    android:layout_width="@dimen/selector_arrow_size"
+                    android:layout_height="@dimen/selector_arrow_size"
+                    android:layout_gravity="center"
+                    android:elevation="8dp"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_selection_check" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -100,22 +115,28 @@
             android:padding="16dp"
             android:gravity="center">
 
-            <ImageView
-                android:id="@+id/btnTheme3"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
-                android:contentDescription="Tema Bosque"
-                android:src="@drawable/btn_color3" />
-
-            <TextView
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Bosque"
-                android:textStyle="bold"
-                android:textColor="?attr/color_primario"/>
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnTheme3"
+                    android:layout_width="@dimen/profile_avatar_size"
+                    android:layout_height="@dimen/profile_avatar_size"
+                    android:background="@drawable/bg_theme_green_swatch"
+                    android:elevation="6dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Tema Bosque" />
+
+                <ImageView
+                    android:id="@+id/imgCheck3"
+                    android:layout_width="@dimen/selector_arrow_size"
+                    android:layout_height="@dimen/selector_arrow_size"
+                    android:layout_gravity="center"
+                    android:elevation="8dp"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_selection_check" />
+            </FrameLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -125,22 +146,28 @@
             android:padding="16dp"
             android:gravity="center">
 
-            <ImageView
-                android:id="@+id/btnTheme4"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:scaleType="fitCenter"
-                android:contentDescription="Tema Sol"
-                android:src="@drawable/btn_color4" />
-
-            <TextView
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Sol"
-                android:textStyle="bold"
-                android:textColor="?attr/color_primario"/>
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnTheme4"
+                    android:layout_width="@dimen/profile_avatar_size"
+                    android:layout_height="@dimen/profile_avatar_size"
+                    android:background="@drawable/bg_theme_red_swatch"
+                    android:elevation="6dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Tema Sol" />
+
+                <ImageView
+                    android:id="@+id/imgCheck4"
+                    android:layout_width="@dimen/selector_arrow_size"
+                    android:layout_height="@dimen/selector_arrow_size"
+                    android:layout_gravity="center"
+                    android:elevation="8dp"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_selection_check" />
+            </FrameLayout>
         </LinearLayout>
 
     </GridLayout>

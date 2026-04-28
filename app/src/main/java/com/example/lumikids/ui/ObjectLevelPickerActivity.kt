@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import com.example.lumikids.R
 
 class ObjectLevelPickerActivity : BaseActivity() {
@@ -20,6 +21,8 @@ class ObjectLevelPickerActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
+        enableEdgeToEdge()
+
 
         theme = intent.getStringExtra("THEME") ?: "furniure"
 

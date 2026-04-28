@@ -2,55 +2,64 @@ package com.example.lumikids.ui
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.R
 import com.example.lumikids.utils.SessionManager
 
-class ThemeColorActivity : AppCompatActivity() {
+class ThemeColorActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
 
+    private lateinit var checkBlue: ImageView
+    private lateinit var checkPink: ImageView
+    private lateinit var checkGreen: ImageView
+    private lateinit var checkRed: ImageView
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 1. Inicializar SessionManager primero para poder leer la preferencia
-        sessionManager = SessionManager(this)
-
-        // 2. Aplicar el tema ANTES de super.onCreate y setContentView (OBLIGATORIO)
-        applySavedTheme()
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_color)
 
-        // 3. Vincular los botones usando los IDs exactos de activity_theme.xml
+        sessionManager = SessionManager(this)
+
+        checkBlue = findViewById(R.id.imgCheck1)
+        checkPink = findViewById(R.id.imgCheck2)
+        checkGreen = findViewById(R.id.imgCheck3)
+        checkRed = findViewById(R.id.imgCheck4)
+
         findViewById<View>(R.id.btnTheme1).setOnClickListener { changeTheme("blue") }
-        findViewById<View>(R.id.btnTheme2).setOnClickListener { changeTheme("green") }
-        findViewById<View>(R.id.btnTheme3).setOnClickListener { changeTheme("red") }
-        findViewById<View>(R.id.btnTheme4).setOnClickListener { changeTheme("pink") }
+        findViewById<View>(R.id.btnTheme2).setOnClickListener { changeTheme("pink") }
+        findViewById<View>(R.id.btnTheme3).setOnClickListener { changeTheme("green") }
+        findViewById<View>(R.id.btnTheme4).setOnClickListener { changeTheme("red") }
 
-        // 4. Configurar el botón de regreso
         findViewById<View>(R.id.btnBack).setOnClickListener {
-            finish() // Cierra esta pantalla y regresa al perfil
+            finish()
         }
+
+        marcarTemaSeleccionado()
     }
 
-    private fun applySavedTheme() {
-        val themeKey = sessionManager.getTheme()
-
-        when (themeKey) {
-            "green" -> setTheme(R.style.Theme_LumiKids_Green)
-            "red" -> setTheme(R.style.Theme_LumiKids_Red)
-            "pink" -> setTheme(R.style.Theme_LumiKids_Pink)
-            else -> setTheme(R.style.Theme_LumiKids_Blue)
-        }
-    }
 
     private fun changeTheme(themeName: String) {
-        // 1. Guardar la nueva elección de color
         sessionManager.setTheme(themeName)
         Toast.makeText(this, "Paleta actualizada", Toast.LENGTH_SHORT).show()
-
-        // 2. Usar recreate() en lugar de finish() + startActivity()
-        // Esto evita el error de Binder (Operation not permitted) en dispositivos con capas de personalización estrictas.
         recreate()
+    }
+
+    private fun marcarTemaSeleccionado() {
+        val temaActual = sessionManager.getTheme()
+
+        checkBlue.visibility = View.INVISIBLE
+        checkPink.visibility = View.INVISIBLE
+        checkGreen.visibility = View.INVISIBLE
+        checkRed.visibility = View.INVISIBLE
+
+        when (temaActual) {
+            "blue" -> checkBlue.visibility = View.VISIBLE
+            "pink" -> checkPink.visibility = View.VISIBLE
+            "green" -> checkGreen.visibility = View.VISIBLE
+            "red" -> checkRed.visibility = View.VISIBLE
+            else -> checkBlue.visibility = View.VISIBLE // Azul por defecto
+        }
     }
 }
