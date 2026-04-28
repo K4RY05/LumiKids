@@ -8,7 +8,6 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
@@ -64,11 +63,9 @@ class ChangePasswordActivity : BaseActivity() {
         btnConfirm = findViewById(R.id.btnConfirm)
         val btnBack = findViewById<AppCompatButton>(R.id.btnBack)
 
-        // Enlazamos los botones del "ojito" (Asegúrate de que estos IDs existan en tu XML)
         val btnToggleNew = findViewById<ImageButton>(R.id.btnToggleNewPassword)
         val btnToggleConfirm = findViewById<ImageButton>(R.id.btnToggleConfirmPassword)
 
-        // Configuramos los listeners para alternar la visibilidad
         btnToggleNew.setOnClickListener {
             isNewPasswordVisible = !isNewPasswordVisible
             togglePasswordVisibility(etNewPassword, btnToggleNew, isNewPasswordVisible)
@@ -170,15 +167,12 @@ class ChangePasswordActivity : BaseActivity() {
 
     private fun togglePasswordVisibility(editText: EditText, button: ImageButton, isVisible: Boolean) {
         if (isVisible) {
-            // Mostrar contraseña
             editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             button.setImageResource(R.drawable.ic_eye_open)
         } else {
-            // Ocultar contraseña
             editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             button.setImageResource(R.drawable.ic_eye_closed)
         }
-        // Mover el cursor al final del texto para que no salte al inicio
         editText.setSelection(editText.text.length)
     }
 }

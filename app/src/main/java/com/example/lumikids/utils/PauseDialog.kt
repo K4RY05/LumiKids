@@ -3,7 +3,7 @@ package com.example.lumikids.utils
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
+import androidx.core.graphics.drawable.toDrawable
 import android.media.AudioManager
 import android.view.ViewGroup
 import android.view.Window
@@ -16,7 +16,7 @@ import com.example.lumikids.R
 
 class PauseDialog(private val context: Context) {
 
-    private val MAX_VOLUME_PERCENTAGE = 0.9f
+    private val maxVolumePercentage = 0.9f
 
     fun showDialog(onResume: () -> Unit, onExit: () -> Unit) {
         val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
@@ -29,7 +29,7 @@ class PauseDialog(private val context: Context) {
 
         // Configuración de la ventana del diálogo
         dialog.window?.let { window ->
-            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
             WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -56,7 +56,7 @@ class PauseDialog(private val context: Context) {
         val audioService = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val deviceMaxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-        val safeMaxVolume = (deviceMaxVolume * MAX_VOLUME_PERCENTAGE).toInt()
+        val safeMaxVolume = (deviceMaxVolume * maxVolumePercentage).toInt()
 
         seekVolume?.max = safeMaxVolume
 

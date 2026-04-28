@@ -177,11 +177,11 @@ class MemoryGame : MiniGame() {
 
                 // 3. REANUDAMOS LAS INSTRUCCIONES DESPUÉS DE UN TIEMPO
                 lifecycleScope.launch {
-                    delay(2500) // Esperamos 2.5 segundos a que termine el audio del objeto
+                    delay(3000)
 
                     // Solo reanudamos si el juego aún no ha terminado
                     if (!boardCards.all { it.isMatched }) {
-                        gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
+                        gameAudio.startLocalLoop(R.raw.intruc_memory, 10000L)
                     }
                 }
 
@@ -193,7 +193,7 @@ class MemoryGame : MiniGame() {
                 gameAudio.playEffect(R.raw.fail)
 
                 lifecycleScope.launch {
-                    delay(1000)
+                    delay(1500)
                     firstSelectedView?.let { firstView ->
                         flipCardsDown(firstView, view, R.drawable.ic_logo) {
                             view.tag = false

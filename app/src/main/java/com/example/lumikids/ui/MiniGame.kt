@@ -3,7 +3,6 @@ package com.example.lumikids.ui
 import android.content.Context
 import android.media.AudioManager
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.lumikids.R
 import com.example.lumikids.model.GameResult
@@ -46,13 +45,15 @@ abstract class MiniGame : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         gameAudio.releaseAll()
+        gameAudio.stopLoop()
+        gameAudio.stopNetworkAudio()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
             val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            val safeMaxVolume = (maxVolume * 0.8f).toInt()
+            val safeMaxVolume = (maxVolume * 0.9f).toInt()
             val currentVolume = audioService.getStreamVolume(AudioManager.STREAM_MUSIC)
 
             if (currentVolume >= safeMaxVolume) {
@@ -62,6 +63,17 @@ abstract class MiniGame : BaseActivity() {
 
         return super.onKeyDown(keyCode, event)
     }
+
+    override fun onPause() {
+        super.onPause()
+
+        gameAudio.stopLoop()
+        gameAudio.stopNetworkAudio()
+
+        gameTimer.pause()
+    }
+
+
 
     abstract fun initViews()
     abstract fun loadGameData()
