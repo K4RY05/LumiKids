@@ -33,9 +33,6 @@ class MemoryGame : MiniGame() {
     private var firstSelectedView: ImageView? = null
     private var isBusy = false
 
-    // Definimos la URL globalmente para poder usarla al pausar y reanudar
-    private val instructionUrl = RetrofitClient.BASE_URL_SOUNDS + "games/instruc_memory.mp3"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_memory)
@@ -53,12 +50,13 @@ class MemoryGame : MiniGame() {
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
             gameAudio.stopNetworkAudio()
-            gameAudio.stopLoop()
+            gameAudio.stopLoop() // Detiene la instrucción al pausar
 
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
-                    gameAudio.startLoop(instructionUrl, 8000L) // Reanudamos la instrucción
+                    // Reanuda la instrucción local cada 7 segundos
+                    gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
                 },
                 onExit = { finish() }
             )
@@ -71,8 +69,6 @@ class MemoryGame : MiniGame() {
                 try {
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
-                    // --- LOG: Petición GET ---
-                    // Como BASE_URL es privado en tu RetrofitClient, usamos BASE_URL_IMAGES quitando "images/"
                     val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
                     Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
 
@@ -102,8 +98,8 @@ class MemoryGame : MiniGame() {
 
             if (success) {
                 createDynamicBoard()
-                // Iniciamos la instrucción de voz cada 8 segundos
-                gameAudio.startLoop(instructionUrl, 8000L)
+                // Inicia la instrucción local cada 7 segundos al empezar el juego
+                gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -129,9 +125,7 @@ class MemoryGame : MiniGame() {
         for (i in boardCards.indices) {
             val cardData = boardCards[i]
 
-            // --- LOG: Carga de Imagen ---
             val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl
-            Log.d("MINIGAME_DEBUG", "IMG: $imageUrlCompleta")
 
             val view = ImageView(this).apply {
                 layoutParams = GridLayout.LayoutParams().apply {
@@ -158,9 +152,6 @@ class MemoryGame : MiniGame() {
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
         if (isBusy || view.tag == true || card.isMatched) return
 
-        // --- LOG: Selección de Carta ---
-        Log.d("MINIGAME_DEBUG", "Seleccion: ${card.gameObject.name} Stage: memory_card")
-
         flipCardUp(view, card.gameObject.imageUrl)
         view.tag = true
 
@@ -175,12 +166,24 @@ class MemoryGame : MiniGame() {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
+                // 1. DETENEMOS LAS INSTRUCCIONES PARA QUE NO SE EMPALMEN
+                gameAudio.stopLoop()
+
+                // 2. REPRODUCIMOS EL AUDIO DEL OBJETO O EL EFECTO DE VICTORIA
                 card.gameObject.audioShortUrl?.let {
                     val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
-                    // --- LOG: Reproducción de Audio ---
-                    Log.d("MINIGAME_DEBUG", "Audio URL: $audioUrl")
                     gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
+
+                // 3. REANUDAMOS LAS INSTRUCCIONES DESPUÉS DE UN TIEMPO
+                lifecycleScope.launch {
+                    delay(2500) // Esperamos 2.5 segundos a que termine el audio del objeto
+
+                    // Solo reanudamos si el juego aún no ha terminado
+                    if (!boardCards.all { it.isMatched }) {
+                        gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
+                    }
+                }
 
                 resetSelection()
                 isBusy = false

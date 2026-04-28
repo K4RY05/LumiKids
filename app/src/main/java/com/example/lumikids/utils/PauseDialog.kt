@@ -16,7 +16,7 @@ import com.example.lumikids.R
 
 class PauseDialog(private val context: Context) {
 
-    private val MAX_VOLUME_PERCENTAGE = 0.8f
+    private val MAX_VOLUME_PERCENTAGE = 0.9f
 
     fun showDialog(onResume: () -> Unit, onExit: () -> Unit) {
         val dialog = Dialog(context, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)

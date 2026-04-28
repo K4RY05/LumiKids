@@ -29,7 +29,6 @@ class GameAudioManager(
     }
 
 
-
     fun playUrl(url: String) {
         stopNetworkAudio()
         try {
@@ -58,8 +57,7 @@ class GameAudioManager(
     }
 
 
-    //Inicia un bucle que reproduce un audio de internet cada X milisegundos
-
+    // Inicia un bucle que reproduce un audio de internet cada X milisegundos
     fun startLoop(url: String, delayMs: Long = 8000L) {
         stopLoop() // Nos aseguramos de detener cualquier bucle anterior
 
@@ -71,15 +69,25 @@ class GameAudioManager(
         }
     }
 
-    // Detiene temporalmente el bucle de repetición
+    // NUEVO: Inicia un bucle que reproduce un audio LOCAL (res/raw) cada X milisegundos
+    fun startLocalLoop(resId: Int, delayMs: Long = 8000L) {
+        stopLoop() // Detenemos cualquier bucle anterior (sea de red o local)
 
+        loopJob = scope.launch {
+            while (isActive) {
+                playEffect(resId)
+                delay(delayMs)
+            }
+        }
+    }
+
+    // Detiene temporalmente el bucle de repetición
     fun stopLoop() {
         loopJob?.cancel()
         loopJob = null
     }
 
     // Detiene el audio de internet que esté sonando en este momento
-
     fun stopNetworkAudio() {
         try {
             networkMediaPlayer?.let {
