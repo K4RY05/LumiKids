@@ -61,7 +61,8 @@ class PecsBoardActivity : AppCompatActivity() {
             ComplementData("banana", "food/banana.jpg", "food"),
             ComplementData("cookie", "food/cookie.jpg", "food"),
             ComplementData("sweetbread", "food/sweetbread.jpg", "food"),
-            ComplementData("yogurt", "food/yogurt.jpg", "food")
+            ComplementData("yogurt", "food/yogurt.jpg", "food"),
+            ComplementData("sandwich", "food/sandwich.jpg", "food")
         ),
 
         "drink" to listOf(
@@ -75,14 +76,6 @@ class PecsBoardActivity : AppCompatActivity() {
             ComplementData("patio", "place/patio.jpg", "place"),
             ComplementData("school", "place/school.jpg", "place"),
             ComplementData("street", "place/street.jpg", "place")
-        ),
-
-        "walk" to listOf(
-            ComplementData("park", "place/park.jpg", "place"),
-            ComplementData("school", "place/school.jpg", "place"),
-            ComplementData("street", "place/street.jpg", "place"),
-            ComplementData("home", "place/home.jpg", "place"),
-            ComplementData("patio", "place/patio.jpg", "place")
         ),
 
         "play" to listOf(
@@ -109,7 +102,7 @@ class PecsBoardActivity : AppCompatActivity() {
         "paint" to listOf(
             ComplementData("paper", "school/paper.jpg", "school"),
             ComplementData("box", "school/box.jpg", "school"),
-            ComplementData("face", "personal_hygiene/face.jpg", "personal_hygiene")
+            ComplementData("whiteboard", "school/whiteboard.jpg", "school")
         ),
 
         "sleep" to listOf(
@@ -185,17 +178,27 @@ class PecsBoardActivity : AppCompatActivity() {
             }
             "complement" -> {
                 val resultIcon = findViewById<ImageView>(R.id.resultIcon)
+
                 val isCorrect = complementMap[selectedVerb]?.any {
                     it.text.equals(item.text, ignoreCase = true)
                 } ?: false
 
                 Log.d(TAG, "Validación: item=${item.text} verbo=$selectedVerb correcto=$isCorrect")
 
+                val compData = complementMap[selectedVerb]?.find { it.text == audioName }
+                    ?: complementMap.values.flatten().find { it.text == audioName }
+
+                val soundUrl = if (compData != null) {
+                    "${RetrofitClient.BASE_URL_SOUNDS}${compData.soundCategory}/${compData.text}.mp3"
+                } else ""
                 stopRepeatingSound()
 
+                if (soundUrl.isNotEmpty()) {
+                    playSound(soundUrl)
+                }
                 handler.postDelayed({
                     showValidationResult(isCorrect, resultIcon)
-                }, 950)
+                }, 1100)
             }
         }
     }
