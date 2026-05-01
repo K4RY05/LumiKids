@@ -9,8 +9,8 @@ object RetrofitClient {
 
 
 
-   // const val BASE_URL = "http://192.168.100.132:3000/"
-    const val BASE_URL = "http://10.90.140.40:3000/"
+    const val BASE_URL = "http://192.168.100.132:3000/"
+   // const val BASE_URL = "http://10.90.140.40:3000/"
 
     const val BASE_URL_IMAGES = "${BASE_URL}images/"
     const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"

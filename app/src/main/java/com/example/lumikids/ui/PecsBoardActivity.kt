@@ -29,16 +29,16 @@ class PecsBoardActivity : AppCompatActivity() {
 
     private lateinit var rvOptions: RecyclerView
     private lateinit var sentenceBar: LinearLayout
-
+    private lateinit var btnSpeak: ImageButton
     private var currentStage = "pronoun"
     private var selectedPronounFolder = ""
     private var selectedVerb = ""
 
-    // Player principal: para sonidos de selección
     @Volatile
     private var mediaPlayer: MediaPlayer? = null
-
     private var repeatPlayer: MediaPlayer? = null
+
+    private var validationRunnable: Runnable? = null
 
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
@@ -55,7 +55,6 @@ class PecsBoardActivity : AppCompatActivity() {
     // MAPA
     // =========================
     private val complementMap = mapOf(
-
         "eat" to listOf(
             ComplementData("apple", "food/apple.jpg", "food"),
             ComplementData("banana", "food/banana.jpg", "food"),
@@ -64,20 +63,17 @@ class PecsBoardActivity : AppCompatActivity() {
             ComplementData("yogurt", "food/yogurt.jpg", "food"),
             ComplementData("sandwich", "food/sandwich.jpg", "food")
         ),
-
         "drink" to listOf(
             ComplementData("water", "food/water.jpg", "food"),
             ComplementData("juice", "food/juice.jpg", "food"),
             ComplementData("milk", "food/milk.jpg", "food")
         ),
-
         "run" to listOf(
             ComplementData("park", "place/park.jpg", "place"),
             ComplementData("patio", "place/patio.jpg", "place"),
             ComplementData("school", "place/school.jpg", "place"),
             ComplementData("street", "place/street.jpg", "place")
         ),
-
         "play" to listOf(
             ComplementData("car", "games/car.jpg", "games"),
             ComplementData("doll", "games/doll.jpg", "games"),
@@ -85,26 +81,22 @@ class PecsBoardActivity : AppCompatActivity() {
             ComplementData("blocks", "games/blocks.jpg", "games"),
             ComplementData("bubbles", "games/bubbles.jpg", "games")
         ),
-
         "write" to listOf(
             ComplementData("letter", "school/letter.jpg", "school"),
             ComplementData("number", "school/number.jpg", "school"),
             ComplementData("whiteboard", "school/whiteboard.jpg", "school")
         ),
-
         "cut" to listOf(
             ComplementData("paper", "school/paper.jpg", "school"),
             ComplementData("circle", "school/circle.png", "school"),
             ComplementData("square", "school/square.png", "school"),
             ComplementData("triangle", "school/triangle.png", "school")
         ),
-
         "paint" to listOf(
             ComplementData("paper", "school/paper.jpg", "school"),
             ComplementData("box", "school/box.jpg", "school"),
             ComplementData("whiteboard", "school/whiteboard.jpg", "school")
         ),
-
         "sleep" to listOf(
             ComplementData("bed", "furniure/bed.jpg", "furniure"),
             ComplementData("sofa", "furniure/sofa.jpg", "furniure"),
@@ -125,6 +117,10 @@ class PecsBoardActivity : AppCompatActivity() {
         rvOptions = findViewById(R.id.rvOptions)
         sentenceBar = findViewById(R.id.sentenceBar)
 
+        btnSpeak = findViewById(R.id.btnSpeak)
+        btnSpeak.isEnabled = false
+        btnSpeak.alpha = 0.5f
+
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageButton>(R.id.btnClear).setOnClickListener { removeLastItem() }
 
@@ -139,7 +135,7 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // SELECCIÓN
+    // SELECCIÓN - FIX PRINCIPAL: audio no se duplica
     // =========================
     private fun onItemSelected(item: PecsItem) {
         val stageAtSelection = currentStage
@@ -151,31 +147,41 @@ class PecsBoardActivity : AppCompatActivity() {
 
         val audioName = getAudioName(item, stageAtSelection)
 
-        // --- LÓGICA DE AUDIO ---
-        val soundUrl = when (stageAtSelection) {
-            "complement" -> {
-                val comp = complementMap[selectedVerb]?.find { it.text == audioName }
-                if (comp == null) "" else "${RetrofitClient.BASE_URL_SOUNDS}${comp.soundCategory}/${comp.text}.mp3"
-            }
-            else -> "${RetrofitClient.BASE_URL_SOUNDS}$stageAtSelection/$audioName.mp3"
-        }
-
-        if (soundUrl.isNotEmpty()) {
-            playSound(soundUrl)
-        }
-
-
         when (stageAtSelection) {
             "pronoun" -> {
                 selectedPronounFolder = audioName
                 currentStage = "verb"
-                loadPecs("verb")
+                val soundUrl = "${RetrofitClient.BASE_URL_SOUNDS}pronoun/$audioName.mp3"
+                // FIX: detener repetición, luego cargar verbs SOLO cuando termina el audio
+                stopRepeatingSound()
+                if (soundUrl.isNotEmpty()) {
+                    playSound(soundUrl) {
+                        loadPecs("verb")
+                        if (sentenceBar.childCount > 0) startRepeatingSound()
+                    }
+                } else {
+                    loadPecs("verb")
+                    if (sentenceBar.childCount > 0) startRepeatingSound()
+                }
             }
+
             "verb" -> {
                 selectedVerb = item.text.lowercase()
                 currentStage = "complement"
-                loadComplements(selectedVerb)
+                val soundUrl = "${RetrofitClient.BASE_URL_SOUNDS}verb/$audioName.mp3"
+                // FIX: detener repetición, luego cargar complementos SOLO cuando termina el audio
+                stopRepeatingSound()
+                if (soundUrl.isNotEmpty()) {
+                    playSound(soundUrl) {
+                        loadComplements(selectedVerb)
+                        if (sentenceBar.childCount > 0) startRepeatingSound()
+                    }
+                } else {
+                    loadComplements(selectedVerb)
+                    if (sentenceBar.childCount > 0) startRepeatingSound()
+                }
             }
+
             "complement" -> {
                 val resultIcon = findViewById<ImageView>(R.id.resultIcon)
 
@@ -188,17 +194,28 @@ class PecsBoardActivity : AppCompatActivity() {
                 val compData = complementMap[selectedVerb]?.find { it.text == audioName }
                     ?: complementMap.values.flatten().find { it.text == audioName }
 
-                val soundUrl = if (compData != null) {
+                val finalSoundUrl = if (compData != null) {
                     "${RetrofitClient.BASE_URL_SOUNDS}${compData.soundCategory}/${compData.text}.mp3"
                 } else ""
-                stopRepeatingSound()
 
-                if (soundUrl.isNotEmpty()) {
-                    playSound(soundUrl)
-                }
-                handler.postDelayed({
+                // FIX: detener TODO antes de reproducir sonido del complemento
+                stopRepeatingSound()
+                rvOptions.adapter = PecsAdapter(emptyList()) {}
+
+                if (finalSoundUrl.isNotEmpty()) {
+                    // FIX: mostrar resultado SOLO cuando termina el audio, no con postDelayed fijo
+                    playSound(finalSoundUrl) {
+                        handler.post { showValidationResult(isCorrect, resultIcon) }
+                    }
+                } else {
                     showValidationResult(isCorrect, resultIcon)
-                }, 1100)
+                }
+                validationRunnable = Runnable {
+                    showValidationResult(isCorrect, resultIcon)
+                    validationRunnable = null // Limpiamos al terminar
+                }
+                handler.postDelayed(validationRunnable!!, 1100)
+
             }
         }
     }
@@ -221,10 +238,9 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // SENTENCE BAR
+    // SENTENCE BAR - FIX: ya NO inicia repetición aquí
     // =========================
     private fun addToSentenceBar(item: PecsItem) {
-
         Log.d(TAG, "addToSentenceBar: ${item.text}")
 
         val view = LayoutInflater.from(this)
@@ -239,12 +255,18 @@ class PecsBoardActivity : AppCompatActivity() {
         img.load(item.imageUrl)
 
         view.setOnClickListener {
+            validationRunnable?.let {
+                handler.removeCallbacks(it)
+                validationRunnable = null
+                Log.d(TAG, "Validación automática cancelada por clic manual")
+            }
+
             val index = sentenceBar.indexOfChild(view)
             Log.d(TAG, "sentenceBar click: eliminando index=$index item=${item.text}")
+
             sentenceBar.removeView(view)
             deleteSelectionFromDB(item.id)
             handleDeletion(index)
-
             if (sentenceBar.childCount == 0) {
                 Log.d(TAG, "sentenceBar vacío tras click: deteniendo sonido repetido")
                 stopRepeatingSound()
@@ -252,18 +274,14 @@ class PecsBoardActivity : AppCompatActivity() {
         }
 
         sentenceBar.addView(view)
-
-        if (sentenceBar.childCount == 1) {
-            Log.d(TAG, "Primer item en sentenceBar: iniciando sonido repetido")
-            startRepeatingSound()
-        }
+        // FIX: removido startRepeatingSound() de aquí
+        // La repetición ahora la inicia onItemSelected en el onComplete del audio
     }
 
     // =========================
     // API GET
     // =========================
     private fun loadPecs(category: String) {
-
         val userId = SessionManager(this).getUserId() ?: run {
             Log.e(TAG, "loadPecs: userId es null, abortando")
             return
@@ -315,7 +333,6 @@ class PecsBoardActivity : AppCompatActivity() {
     // COMPLEMENTOS
     // =========================
     private fun loadComplements(verb: String) {
-
         Log.d(TAG, "loadComplements: verb=$verb")
 
         val correctList = complementMap[verb] ?: run {
@@ -349,7 +366,7 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // AUDIO PRINCIPAL
+    // AUDIO PRINCIPAL - FIX: onComplete callback
     // =========================
     private fun playSound(url: String, onComplete: (() -> Unit)? = null) {
         Log.d(TAG, "playSound: $url")
@@ -373,6 +390,8 @@ class PecsBoardActivity : AppCompatActivity() {
                 Log.e(TAG, "playSound ERROR: $what en $url")
                 try { mp.release() } catch (e: Exception) {}
                 if (mediaPlayer == mp) mediaPlayer = null
+                // FIX: invocar onComplete incluso si hay error, para no bloquear el flujo
+                onComplete?.invoke()
                 true
             }
 
@@ -387,23 +406,35 @@ class PecsBoardActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e(TAG, "playSound EXCEPTION: ${e.message}")
+            // FIX: invocar onComplete si hay excepción, para no bloquear el flujo
+            onComplete?.invoke()
         }
     }
+
     // =========================
-    // AUDIO REPETIDO
+    // AUDIO REPETIDO - FIX: respeta audio principal activo
     // =========================
     private val repeatSoundRunnable = object : Runnable {
         override fun run() {
             val count = sentenceBar.childCount
             Log.d(TAG, "repeatSoundRunnable: tick | childCount=$count")
 
-            if (count >= 3) {
-                Log.d(TAG, "Máximo alcanzado (complemento). Ejecutando sonido final y deteniendo repetición.")
-                playRepeatSound()
+            if (count == 0) return
+
+            // FIX: no reproducir si el audio principal está activo
+            if (mediaPlayer?.isPlaying == true) {
+                Log.d(TAG, "repeatSoundRunnable: audio principal activo, esperando...")
+                handler.postDelayed(this, 5000)
                 return
             }
+
             playRepeatSound()
-            handler.postDelayed(this, 5000)
+
+            // FIX: solo re-programar si aún no está completa la oración
+            if (count < 3) {
+                handler.postDelayed(this, 5000)
+            }
+            // Si count >= 3: oración completa, no repetir más
         }
     }
 
@@ -487,7 +518,6 @@ class PecsBoardActivity : AppCompatActivity() {
     private fun startRepeatingSound() {
         Log.d(TAG, "startRepeatingSound: iniciando handler (delay 4000ms)")
         handler.removeCallbacks(repeatSoundRunnable)
-        // FIX: postDelayed en lugar de post para no solaparse con el sonido de selección
         handler.postDelayed(repeatSoundRunnable, 4000)
     }
 
@@ -531,7 +561,6 @@ class PecsBoardActivity : AppCompatActivity() {
     // API POST
     // =========================
     private fun saveSelectionToDB(themeId: Int) {
-
         val userId = SessionManager(this).getUserId() ?: run {
             Log.e(TAG, "saveSelectionToDB: userId null, abortando")
             return
@@ -563,7 +592,6 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private fun deleteSelectionFromDB(themeId: Int) {
-
         val userId = SessionManager(this).getUserId() ?: run {
             Log.e(TAG, "deleteSelectionFromDB: userId null, abortando")
             return
@@ -586,7 +614,6 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private fun clearBoardInDB(onSuccess: () -> Unit = {}) {
-
         val userId = SessionManager(this).getUserId() ?: run {
             Log.e(TAG, "clearBoardInDB: userId null, abortando")
             return
@@ -618,6 +645,10 @@ class PecsBoardActivity : AppCompatActivity() {
     // RESET
     // =========================
     private fun removeLastItem() {
+        validationRunnable?.let {
+            handler.removeCallbacks(it)
+            validationRunnable = null
+        }
         val count = sentenceBar.childCount
         Log.d(TAG, "removeLastItem: childCount=$count")
 
@@ -642,6 +673,8 @@ class PecsBoardActivity : AppCompatActivity() {
             Log.d(TAG, "removeLastItem: sentenceBar vacío, deteniendo sonido repetido")
             stopRepeatingSound()
         }
+        btnSpeak.isEnabled = false
+        btnSpeak.alpha = 0.5f
     }
 
     private fun handleDeletion(index: Int) {
@@ -661,6 +694,8 @@ class PecsBoardActivity : AppCompatActivity() {
                 loadComplements(selectedVerb)
             }
         }
+        btnSpeak.isEnabled = false
+        btnSpeak.alpha = 0.5f
     }
 
     private fun resetToPronouns() {
@@ -670,6 +705,8 @@ class PecsBoardActivity : AppCompatActivity() {
         selectedVerb = ""
         sentenceBar.removeAllViews()
         loadPecs("pronoun")
+        btnSpeak.isEnabled = false
+        btnSpeak.alpha = 0.5f
     }
 
     // =========================
@@ -681,9 +718,13 @@ class PecsBoardActivity : AppCompatActivity() {
         if (isCorrect) {
             resultIcon.setImageResource(R.drawable.ic_correct)
             playLocalSound(R.raw.win)
+            btnSpeak.isEnabled = true
+            btnSpeak.alpha = 1.0f
         } else {
             resultIcon.setImageResource(R.drawable.ic_error)
             playLocalSound(R.raw.fail)
+            btnSpeak.isEnabled = false
+            btnSpeak.alpha = 0.5f
         }
 
         resultIcon.visibility = android.view.View.VISIBLE
