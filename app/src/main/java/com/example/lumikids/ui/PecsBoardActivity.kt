@@ -1,5 +1,6 @@
 package com.example.lumikids.ui
 
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
@@ -23,27 +24,48 @@ import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
+import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class PecsBoardActivity : AppCompatActivity() {
 
     private val TAG = "PECS_DEBUG"
+
+    // ── Volumen global de todos los sonidos (0.0f – 1.0f) ──────────────────
+    // Ajusta este valor para subir/bajar el volumen de la app.
+    // 0.65f = ~65 % del volumen máximo del stream, apropiado para niños.
+    private val SOUND_VOLUME = 0.65f
 
     private lateinit var rvOptions: RecyclerView
     private lateinit var sentenceBar: LinearLayout
     private lateinit var btnSpeak: ImageButton
     private lateinit var imageLoader: ImageLoader
 
-    @Volatile private var mediaPlayer: MediaPlayer? = null
+    // ── Protección contra clicks múltiples rápidos ──────────────────────────
+    // AtomicBoolean es seguro entre threads; isSelecting se consulta en el hilo principal
+    // pero la corrutina de red también lo lee.
+    private val isSelecting = AtomicBoolean(false)
+
+    // Debounce: tiempo mínimo entre dos selecciones válidas (ms)
+    private val DEBOUNCE_MS = 600L
+    private var lastSelectTime = 0L
+
+    // ── ID de sesión de audio: cada sonido nuevo incrementa este contador.
+    // Los callbacks comprueban que el ID no cambió antes de ejecutar lógica.
+    // Esto evita que un audio "viejo" dispare acciones cuando ya fue cancelado.
+    private val audioSession = AtomicInteger(0)
+
+    private var mediaPlayer: MediaPlayer? = null
     private var repeatPlayer: MediaPlayer? = null
     private var validationRunnable: Runnable? = null
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     // =========================
-    // ESTADO CENTRAL — fuente única de verdad
-    // Nunca leer sentenceBar.childCount para saber el stage
+    // ESTADO CENTRAL
     // =========================
     private enum class Stage { PRONOUN, VERB, COMPLEMENT }
 
@@ -63,7 +85,6 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private var sentence = SentenceState()
-    private var isSelecting = false
 
     // =========================
     // DATA CLASS & MAPA
@@ -131,6 +152,12 @@ class PecsBoardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
 
+        // Bajar el volumen del stream de música/media al nivel deseado para niños
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val targetVol = (maxVol * SOUND_VOLUME).toInt().coerceAtLeast(1)
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
+
         imageLoader = ImageLoader.Builder(this)
             .memoryCache { MemoryCache.Builder(this).maxSizePercent(0.25).build() }
             .okHttpClient { RetrofitClient.getClient(this) }
@@ -143,40 +170,33 @@ class PecsBoardActivity : AppCompatActivity() {
         btnSpeak.isEnabled = false
         btnSpeak.alpha = 0.5f
 
-        // ── Botón speaker: reproduce la oración completa ──────────────────────
-        btnSpeak.setOnClickListener {
-            playSentenceAudio()
-        }
+        btnSpeak.setOnClickListener { playSentenceAudio() }
 
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener  { finish() }
+        // Debounce también en el botón clear para clickers rápidos
         findViewById<ImageButton>(R.id.btnClear).setOnClickListener { removeLastItem() }
 
         rvOptions.layoutManager = GridLayoutManager(this, 3)
 
         clearBoardInDB {
-            applyState(SentenceState())  // estado limpio
+            applyState(SentenceState())
             prefetchAllComplements()
         }
     }
 
     // =========================
     // RENDERIZAR ESTADO → UI
-    // Un solo lugar que sincroniza estado con vistas
     // =========================
     private fun applyState(newState: SentenceState) {
         sentence = newState
-        Log.d(TAG, "applyState: stage=${sentence.stage} pronoun=${sentence.pronoun?.text} verb=${sentence.verb?.text} complement=${sentence.complement?.text}")
+        Log.d(TAG, "applyState: stage=${sentence.stage}")
 
-        // Reconstruir sentenceBar desde el estado, no al revés
         sentenceBar.removeAllViews()
-        listOfNotNull(sentence.pronoun, sentence.verb, sentence.complement).forEach { item ->
-            addViewToSentenceBar(item)
-        }
+        listOfNotNull(sentence.pronoun, sentence.verb, sentence.complement).forEach { addViewToSentenceBar(it) }
 
         btnSpeak.isEnabled = false
         btnSpeak.alpha = 0.5f
 
-        // Cargar opciones según el stage actual
         when (sentence.stage) {
             Stage.PRONOUN    -> loadPecs("pronoun")
             Stage.VERB       -> loadPecs("verb")
@@ -185,23 +205,28 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     // =========================
-    // SELECCIÓN
+    // SELECCIÓN — con debounce y protección multi-click
     // =========================
     private fun onItemSelected(item: PecsItem) {
-        if (isSelecting) return
-        if (sentence.isFull) return
+        // ── Debounce: ignora clicks más rápidos que DEBOUNCE_MS ──────────────
+        val now = System.currentTimeMillis()
+        if (now - lastSelectTime < DEBOUNCE_MS) return
+        lastSelectTime = now
 
-        val currentStage = sentence.stage
-        isSelecting = true
+        // ── Bloqueo atómico: solo un click activo a la vez ──────────────────
+        if (!isSelecting.compareAndSet(false, true)) return
+        if (sentence.isFull) { isSelecting.set(false); return }
+
+        // Feedback visual inmediato para que el niño sepa que el click funcionó
         rvOptions.isEnabled = false
         rvOptions.alpha = 0.5f
 
+        val currentStage = sentence.stage
         val audioName = getAudioName(item, currentStage)
 
         when (currentStage) {
             Stage.PRONOUN -> {
-                val newState = sentence.copy(pronoun = item)
-                sentence = newState
+                sentence = sentence.copy(pronoun = item)
                 saveSelectionToDB(item.id)
                 addViewToSentenceBar(item)
 
@@ -213,8 +238,7 @@ class PecsBoardActivity : AppCompatActivity() {
             }
 
             Stage.VERB -> {
-                val newState = sentence.copy(verb = item)
-                sentence = newState
+                sentence = sentence.copy(verb = item)
                 saveSelectionToDB(item.id)
                 addViewToSentenceBar(item)
 
@@ -227,8 +251,7 @@ class PecsBoardActivity : AppCompatActivity() {
             }
 
             Stage.COMPLEMENT -> {
-                val newState = sentence.copy(complement = item)
-                sentence = newState
+                sentence = sentence.copy(complement = item)
                 saveSelectionToDB(item.id)
                 addViewToSentenceBar(item)
 
@@ -237,19 +260,20 @@ class PecsBoardActivity : AppCompatActivity() {
                     ?.any { it.text.equals(item.text, ignoreCase = true) } ?: false
 
                 stopAllSounds()
+                // Limpiar el grid inmediatamente para evitar más selecciones
                 rvOptions.adapter = PecsAdapter(emptyList()) {}
                 unlockSelection()
 
-                // ── Reproducir audio del complemento y luego la oración completa ──
                 val compData = complementMap[verbText]?.find { it.text == audioName }
                     ?: complementMap.values.flatten().find { it.text == audioName }
                 val complementSoundUrl = compData
-                    ?.let { "${RetrofitClient.BASE_URL_SOUNDS}${it.soundCategory}/${it.text}.mp3" }
-                    ?: ""
+                    ?.let { "${RetrofitClient.BASE_URL_SOUNDS}${it.soundCategory}/${it.text}.mp3" } ?: ""
+
+                // Cancelar cualquier validación pendiente antes de programar una nueva
+                cancelPendingValidation()
 
                 if (complementSoundUrl.isNotEmpty()) {
                     playSound(complementSoundUrl) {
-                        // Después del complemento, reproducir la oración completa (si es correcta)
                         if (isCorrect) {
                             playSentenceAudio {
                                 handler.post { showValidationResult(true) }
@@ -260,22 +284,37 @@ class PecsBoardActivity : AppCompatActivity() {
                     }
                 } else {
                     if (isCorrect) {
-                        playSentenceAudio {
-                            handler.post { showValidationResult(true) }
-                        }
+                        playSentenceAudio { handler.post { showValidationResult(true) } }
                     } else {
                         showValidationResult(false)
                     }
                 }
 
-                validationRunnable = Runnable {
-                    showValidationResult(isCorrect)
-                    validationRunnable = null
-                }
-                // Retraso ampliado para dar tiempo al audio del complemento + oración completa
-                handler.postDelayed(validationRunnable!!, 3500)
+                // Fallback: si el audio tarda más de lo esperado, mostrar resultado de todos modos
+                scheduleValidationFallback(isCorrect, 5000L)
             }
         }
+    }
+
+    // =========================
+    // VALIDACIÓN — helpers de timing
+    // =========================
+    private fun cancelPendingValidation() {
+        validationRunnable?.let { handler.removeCallbacks(it) }
+        validationRunnable = null
+    }
+
+    private fun scheduleValidationFallback(isCorrect: Boolean, delayMs: Long) {
+        val r = Runnable {
+            // Solo actúa si la validación aún no se ejecutó (resultIcon invisible)
+            val resultIcon = findViewById<ImageView>(R.id.resultIcon)
+            if (resultIcon.visibility != android.view.View.VISIBLE) {
+                showValidationResult(isCorrect)
+            }
+            validationRunnable = null
+        }
+        validationRunnable = r
+        handler.postDelayed(r, delayMs)
     }
 
     private fun getAudioName(item: PecsItem, stage: Stage): String {
@@ -292,15 +331,7 @@ class PecsBoardActivity : AppCompatActivity() {
 
     // =========================
     // AUDIO — ORACIÓN COMPLETA
-    // Carpeta: sounds/sentence/{pronoun}_{verb}_{complement}.mp3
-    // Ejemplo: sounds/sentence/she_eat_apple.mp3
     // =========================
-
-    /**
-     * Construye la URL del audio de la oración completa.
-     * Formato del archivo: {pronounAudio}_{verb}_{complement}.mp3
-     * Carpeta en servidor: sounds/sentence/
-     */
     private fun buildSentenceAudioUrl(): String {
         val pronoun    = sentence.pronoun    ?: return ""
         val verb       = sentence.verb       ?: return ""
@@ -310,33 +341,18 @@ class PecsBoardActivity : AppCompatActivity() {
         val verbAudio       = verb.text.lowercase()
         val complementAudio = complement.text.lowercase()
 
-        val url = "${RetrofitClient.BASE_URL_SOUNDS}sentence/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
-        Log.d(TAG, "buildSentenceAudioUrl: $url")
-        return url
+        return "${RetrofitClient.BASE_URL_SOUNDS}sentence/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
     }
 
-    /**
-     * Reproduce el audio de la oración completa.
-     * Se invoca:
-     *   1. Automáticamente al validar la oración correcta (después del audio del complemento).
-     *   2. Al pulsar el botón speaker (btnSpeak) cuando la oración está completa y es correcta.
-     *
-     * @param onComplete Callback opcional al terminar la reproducción.
-     */
     private fun playSentenceAudio(onComplete: (() -> Unit)? = null) {
         val url = buildSentenceAudioUrl()
-        if (url.isEmpty()) {
-            Log.w(TAG, "playSentenceAudio: URL vacía, oración incompleta")
-            onComplete?.invoke()
-            return
-        }
-        Log.d(TAG, "playSentenceAudio: reproduciendo $url")
+        if (url.isEmpty()) { onComplete?.invoke(); return }
         stopAllSounds()
         playSound(url, onComplete)
     }
 
     // =========================
-    // SENTENCE BAR — solo agrega vistas, no maneja estado
+    // SENTENCE BAR
     // =========================
     private fun addViewToSentenceBar(item: PecsItem) {
         val view = LayoutInflater.from(this).inflate(R.layout.item_sentence, sentenceBar, false)
@@ -345,8 +361,13 @@ class PecsBoardActivity : AppCompatActivity() {
         view.findViewById<ImageView>(R.id.imgSentence).load(item.imageUrl, imageLoader)
 
         view.setOnClickListener {
-            if (isSelecting) return@setOnClickListener
-            validationRunnable?.let { handler.removeCallbacks(it); validationRunnable = null }
+            // Debounce en clicks de la sentenceBar también
+            val now = System.currentTimeMillis()
+            if (now - lastSelectTime < DEBOUNCE_MS) return@setOnClickListener
+            lastSelectTime = now
+
+            if (isSelecting.get()) return@setOnClickListener
+            cancelPendingValidation()
 
             val newState = when (item) {
                 sentence.pronoun    -> SentenceState()
@@ -382,9 +403,7 @@ class PecsBoardActivity : AppCompatActivity() {
     private fun loadPecs(category: String) {
         val userId = SessionManager(this).getUserId() ?: return
         val pronounFolder = when {
-            category == "verb" -> getAudioName(
-                sentence.pronoun ?: return, Stage.PRONOUN
-            )
+            category == "verb" -> getAudioName(sentence.pronoun ?: return, Stage.PRONOUN)
             else -> ""
         }
         val endpoint = if (category == "verb") "verb/$pronounFolder" else category
@@ -406,7 +425,8 @@ class PecsBoardActivity : AppCompatActivity() {
                 prefetchItems(list)
 
                 withContext(Dispatchers.Main) {
-                    if (sentence.stage == if (category == "pronoun") Stage.PRONOUN else Stage.VERB) {
+                    val expectedStage = if (category == "pronoun") Stage.PRONOUN else Stage.VERB
+                    if (sentence.stage == expectedStage) {
                         rvOptions.adapter = PecsAdapter(list) { onItemSelected(it) }
                     }
                     unlockSelection()
@@ -434,7 +454,7 @@ class PecsBoardActivity : AppCompatActivity() {
     }
 
     private fun unlockSelection() {
-        isSelecting = false
+        isSelecting.set(false)
         rvOptions.isEnabled = true
         rvOptions.alpha = 1.0f
     }
@@ -455,7 +475,6 @@ class PecsBoardActivity : AppCompatActivity() {
                     }
                 }
             }.awaitAll()
-            Log.d(TAG, "prefetchAllComplements: COMPLETO")
         }
     }
 
@@ -488,36 +507,81 @@ class PecsBoardActivity : AppCompatActivity() {
 
     // =========================
     // AUDIO — GENERAL
+    // Uso de WeakReference en callbacks para evitar fugas de memoria.
+    // El volumen se aplica con setVolume() en cada MediaPlayer.
     // =========================
     private fun stopAllSounds() {
         stopRepeatingSound()
-        runCatching { mediaPlayer?.let { if (it.isPlaying) it.stop(); it.release() } }
+        // Incrementar el ID de sesión invalida todos los callbacks pendientes
+        audioSession.incrementAndGet()
+        releasePlayer(mediaPlayer)
         mediaPlayer = null
     }
 
-    private fun playSound(url: String, onComplete: (() -> Unit)? = null) {
-        try {
-            val mp = MediaPlayer()
-            mp.setDataSource(url)
-            mp.setOnPreparedListener { it.start(); mediaPlayer = it }
-            mp.setOnErrorListener { it, _, _ ->
-                Log.e(TAG, "playSound onError: $url")
-                runCatching { it.release() }
-                if (mediaPlayer == it) mediaPlayer = null
-                onComplete?.invoke(); true
-            }
-            mp.setOnCompletionListener {
-                it.release()
-                if (mediaPlayer == it) mediaPlayer = null
-                onComplete?.invoke()
-            }
-            mp.prepareAsync()
-        } catch (e: Exception) {
-            Log.e(TAG, "playSound EXCEPTION: ${e.message}")
-            onComplete?.invoke()
+    private fun releasePlayer(mp: MediaPlayer?) {
+        mp ?: return
+        runCatching {
+            if (mp.isPlaying) mp.stop()
+            mp.release()
         }
     }
 
+    /**
+     * Reproduce un sonido desde URL.
+     * - Volumen regulado por SOUND_VOLUME.
+     * - El callback onComplete solo se ejecuta si el audioSession no cambió
+     *   (es decir, si no se llamó stopAllSounds() mientras preparaba el audio).
+     */
+    private fun playSound(url: String, onComplete: (() -> Unit)? = null) {
+        val sessionAtStart = audioSession.get()
+        // WeakReference a la Activity para evitar fuga si se destruye antes de que prepare
+        val weakThis = WeakReference(this)
+
+        try {
+            val mp = MediaPlayer()
+            mp.setDataSource(url)
+            mp.setVolume(SOUND_VOLUME, SOUND_VOLUME)
+
+            mp.setOnPreparedListener { player ->
+                val activity = weakThis.get() ?: run { player.release(); return@setOnPreparedListener }
+                // Si el session cambió, este audio ya no es relevante
+                if (activity.audioSession.get() != sessionAtStart) {
+                    player.release()
+                    return@setOnPreparedListener
+                }
+                player.start()
+                activity.mediaPlayer = player
+            }
+
+            mp.setOnErrorListener { player, _, _ ->
+                val activity = weakThis.get()
+                runCatching { player.release() }
+                if (activity != null && activity.mediaPlayer == player) activity.mediaPlayer = null
+                if (activity != null && activity.audioSession.get() == sessionAtStart) {
+                    activity.handler.post { onComplete?.invoke() }
+                }
+                true
+            }
+
+            mp.setOnCompletionListener { player ->
+                val activity = weakThis.get()
+                player.release()
+                if (activity != null && activity.mediaPlayer == player) activity.mediaPlayer = null
+                if (activity != null && activity.audioSession.get() == sessionAtStart) {
+                    activity.handler.post { onComplete?.invoke() }
+                }
+            }
+
+            mp.prepareAsync()
+        } catch (e: Exception) {
+            Log.e(TAG, "playSound EXCEPTION: ${e.message}")
+            if (audioSession.get() == sessionAtStart) onComplete?.invoke()
+        }
+    }
+
+    // =========================
+    // AUDIO — REPETICIÓN
+    // =========================
     private val repeatSoundRunnable = object : Runnable {
         override fun run() {
             if (sentence.isEmpty) return
@@ -554,12 +618,22 @@ class PecsBoardActivity : AppCompatActivity() {
         if (soundUrl.isEmpty()) return
 
         try {
-            val prev = repeatPlayer; repeatPlayer = null
+            val prev = repeatPlayer
+            repeatPlayer = null
             val rp = MediaPlayer()
             rp.setDataSource(soundUrl)
-            rp.setOnPreparedListener { runCatching { prev?.release() }; it.start(); repeatPlayer = it }
+            rp.setVolume(SOUND_VOLUME, SOUND_VOLUME)
+            rp.setOnPreparedListener {
+                runCatching { prev?.release() }
+                it.start()
+                repeatPlayer = it
+            }
             rp.setOnCompletionListener { it.release(); if (repeatPlayer == it) repeatPlayer = null }
-            rp.setOnErrorListener { it, _, _ -> it.release(); if (repeatPlayer == it) repeatPlayer = null; true }
+            rp.setOnErrorListener { it, _, _ ->
+                runCatching { it.release() }
+                if (repeatPlayer == it) repeatPlayer = null
+                true
+            }
             repeatPlayer = rp
             rp.prepareAsync()
         } catch (e: Exception) { Log.e(TAG, "playRepeatSound EXCEPTION: ${e.message}") }
@@ -572,16 +646,19 @@ class PecsBoardActivity : AppCompatActivity() {
 
     private fun stopRepeatingSound() {
         handler.removeCallbacks(repeatSoundRunnable)
-        runCatching { repeatPlayer?.release() }
+        releasePlayer(repeatPlayer)
         repeatPlayer = null
     }
 
     private fun playLocalSound(resId: Int) {
         try {
-            val prev = mediaPlayer; mediaPlayer = null
-            runCatching { prev?.release() }
+            val prev = mediaPlayer
+            mediaPlayer = null
+            releasePlayer(prev)
             val mp = MediaPlayer.create(this, resId) ?: return
-            mediaPlayer = mp; mp.start()
+            mp.setVolume(SOUND_VOLUME, SOUND_VOLUME)
+            mediaPlayer = mp
+            mp.start()
         } catch (e: Exception) { Log.e(TAG, "playLocalSound ERROR: ${e.message}") }
     }
 
@@ -589,11 +666,12 @@ class PecsBoardActivity : AppCompatActivity() {
     // VALIDACIÓN
     // =========================
     private fun showValidationResult(isCorrect: Boolean) {
+        // Si la validación ya fue ejecutada por el callback de audio, el fallback no repite
+        cancelPendingValidation()
+
         val resultIcon = findViewById<ImageView>(R.id.resultIcon)
         if (isCorrect) {
             resultIcon.setImageResource(R.drawable.ic_correct)
-            // El audio de la oración ya se reprodujo antes de llegar aquí;
-            // solo reproducimos el sonido de victoria local.
             playLocalSound(R.raw.win)
             btnSpeak.isEnabled = true
             btnSpeak.alpha = 1.0f
@@ -620,8 +698,13 @@ class PecsBoardActivity : AppCompatActivity() {
     // BORRAR ÚLTIMO ITEM (botón clear)
     // =========================
     private fun removeLastItem() {
-        if (isSelecting) return
-        validationRunnable?.let { handler.removeCallbacks(it); validationRunnable = null }
+        // Debounce para el botón clear también
+        val now = System.currentTimeMillis()
+        if (now - lastSelectTime < DEBOUNCE_MS) return
+        lastSelectTime = now
+
+        if (isSelecting.get()) return
+        cancelPendingValidation()
 
         val newState = when {
             sentence.complement != null -> {
@@ -708,6 +791,7 @@ class PecsBoardActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         activityScope.cancel()
+        cancelPendingValidation()
         stopAllSounds()
         mediaPlayer = null
         imageLoader.shutdown()
