@@ -28,14 +28,23 @@ class EditProfileActivity : BaseActivity() {
     private var userId: String = ""
     private var verifiedPassword = ""
     private var fieldWaitingToUnlock = ""
-
-    // Guardamos el correo real de la base de datos para no perderlo si el usuario lo edita
+    private var originalName = ""
     private var originalEmail = ""
 
     private lateinit var etName: EditText
     private lateinit var etEmail: EditText
-    private lateinit var btnEditName: ImageButton
-    private lateinit var btnEditEmail: ImageButton
+
+    private lateinit var btnStartEditName: ImageButton
+    private lateinit var btnStartEditEmail: ImageButton
+
+    // Referencias a los contenedores y botones de Guardar/Cancelar
+    private lateinit var containerNameActions: LinearLayout
+    private lateinit var containerEmailActions: LinearLayout
+    private lateinit var btnSaveName: AppCompatButton
+    private lateinit var btnCancelName: AppCompatButton
+    private lateinit var btnSaveEmail: AppCompatButton
+    private lateinit var btnCancelEmail: AppCompatButton
+
     private lateinit var btnChangePassword: AppCompatButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,8 +69,18 @@ class EditProfileActivity : BaseActivity() {
     private fun initViews() {
         etName = findViewById(R.id.etName)
         etEmail = findViewById(R.id.etEmail)
-        btnEditName = findViewById(R.id.btnEditName)
-        btnEditEmail = findViewById(R.id.btnEditEmail)
+
+        btnStartEditName = findViewById(R.id.btnStartEditName)
+        btnStartEditEmail = findViewById(R.id.btnStartEditEmail)
+
+        containerNameActions = findViewById(R.id.containerNameActions)
+        containerEmailActions = findViewById(R.id.containerEmailActions)
+
+        btnSaveName = findViewById(R.id.btnSaveName)
+        btnCancelName = findViewById(R.id.btnCancelName)
+        btnSaveEmail = findViewById(R.id.btnSaveEmail)
+        btnCancelEmail = findViewById(R.id.btnCancelEmail)
+
         btnChangePassword = findViewById(R.id.btnChangePassword)
     }
 
@@ -75,32 +94,44 @@ class EditProfileActivity : BaseActivity() {
             showDeleteAccountDialog()
         }
 
-        btnEditName.setOnClickListener {
-            if (!etName.isEnabled) {
-                // Validación: No permitir editar ambos al mismo tiempo
-                if (etEmail.isEnabled) {
-                    Toast.makeText(this, "Guarda los cambios de tu correo primero", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                fieldWaitingToUnlock = "name"
-                showPasswordDialog() // Siempre pedimos la contraseña
-            } else {
-                saveChanges()
+        // ==================== LÓGICA NOMBRE ====================
+        btnStartEditName.setOnClickListener {
+            // Validación: No permitir editar ambos al mismo tiempo
+            if (etEmail.isEnabled) {
+                Toast.makeText(this, "Guarda los cambios de tu correo primero", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+            fieldWaitingToUnlock = "name"
+            showPasswordDialog()
         }
 
-        btnEditEmail.setOnClickListener {
-            if (!etEmail.isEnabled) {
-                // Validación: No permitir editar ambos al mismo tiempo
-                if (etName.isEnabled) {
-                    Toast.makeText(this, "Guarda los cambios de tu nombre primero", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                fieldWaitingToUnlock = "email"
-                showPasswordDialog() // Siempre pedimos la contraseña
-            } else {
-                saveChanges()
+        btnCancelName.setOnClickListener {
+            etName.setText(originalName)
+            lockAllFields()
+            hideKeyboard()
+        }
+
+        btnSaveName.setOnClickListener {
+            saveChanges("name")
+        }
+
+        btnStartEditEmail.setOnClickListener {
+            if (etName.isEnabled) {
+                Toast.makeText(this, "Guarda los cambios de tu nombre primero", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+            fieldWaitingToUnlock = "email"
+            showPasswordDialog()
+        }
+
+        btnCancelEmail.setOnClickListener {
+            etEmail.setText(originalEmail)
+            lockAllFields()
+            hideKeyboard()
+        }
+
+        btnSaveEmail.setOnClickListener {
+            saveChanges("email")
         }
 
         btnChangePassword.setOnClickListener {
@@ -124,7 +155,9 @@ class EditProfileActivity : BaseActivity() {
                         val user = response.body()!!
                         etName.setText(user.name)
                         etEmail.setText(user.email)
-                        originalEmail = user.email // Almacenamos el correo verificado
+
+                        originalName = user.name
+                        originalEmail = user.email
                     } else {
                         Toast.makeText(this@EditProfileActivity, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
                     }
@@ -160,14 +193,13 @@ class EditProfileActivity : BaseActivity() {
         builder.show()
     }
 
-    // Ahora usa Corrutinas y el correo original seguro
     private fun verifyPassword(password: String) {
         val request = LoginRequest(originalEmail, password)
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val api = RetrofitClient.instance.create(AuthApi::class.java)
-                val response = api.login(request).execute() // Petición síncrona dentro del hilo IO
+                val response = api.login(request).execute()
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
@@ -191,13 +223,15 @@ class EditProfileActivity : BaseActivity() {
                 etName.isEnabled = true
                 etName.requestFocus()
                 showKeyboard(etName)
-                btnEditName.setImageResource(android.R.drawable.ic_menu_save)
+                btnStartEditName.visibility = View.GONE
+                containerNameActions.visibility = View.VISIBLE
             }
             "email" -> {
                 etEmail.isEnabled = true
                 etEmail.requestFocus()
                 showKeyboard(etEmail)
-                btnEditEmail.setImageResource(android.R.drawable.ic_menu_save)
+                btnStartEditEmail.visibility = View.GONE
+                containerEmailActions.visibility = View.VISIBLE
             }
             "password" -> goToChangePasswordScreen()
             "delete_account" -> deleteAccount()
@@ -205,17 +239,19 @@ class EditProfileActivity : BaseActivity() {
         fieldWaitingToUnlock = ""
     }
 
-    private fun goToChangePasswordScreen() {
-        val intent = Intent(this, ChangePasswordActivity::class.java)
-        intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
-        intent.putExtra("CURRENT_NAME", etName.text.toString().trim())
-        intent.putExtra("CURRENT_EMAIL", etEmail.text.toString().trim())
-        startActivity(intent)
-        lockAllFields()
-        fetchUserData()
+    private fun lockAllFields() {
+        verifiedPassword = ""
+
+        etName.isEnabled = false
+        btnStartEditName.visibility = View.VISIBLE
+        containerNameActions.visibility = View.GONE
+
+        etEmail.isEnabled = false
+        btnStartEditEmail.visibility = View.VISIBLE
+        containerEmailActions.visibility = View.GONE
     }
 
-    private fun saveChanges() {
+    private fun saveChanges(fieldType: String) {
         val newName = etName.text.toString().trim()
         val newEmail = etEmail.text.toString().trim()
 
@@ -224,8 +260,14 @@ class EditProfileActivity : BaseActivity() {
             return
         }
 
-        btnEditName.isEnabled = false
-        btnEditEmail.isEnabled = false
+        if (fieldType == "name") {
+            btnSaveName.isEnabled = false
+            btnCancelName.isEnabled = false
+        } else {
+            btnSaveEmail.isEnabled = false
+            btnCancelEmail.isEnabled = false
+        }
+
         hideKeyboard()
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -235,8 +277,10 @@ class EditProfileActivity : BaseActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Toast.makeText(this@EditProfileActivity, "Campo actualizado", Toast.LENGTH_SHORT).show()
-                        originalEmail = newEmail // Actualizamos nuestra referencia segura
+                        Toast.makeText(this@EditProfileActivity, "Actualizado correctamente", Toast.LENGTH_SHORT).show()
+                        originalName = newName
+                        originalEmail = newEmail
+
                         lockAllFields()
                     } else {
                         val errorBody = response.errorBody()?.string()
@@ -251,15 +295,21 @@ class EditProfileActivity : BaseActivity() {
                         }
 
                         Toast.makeText(this@EditProfileActivity, errorMessage, Toast.LENGTH_LONG).show()
-                        btnEditName.isEnabled = true
-                        btnEditEmail.isEnabled = true
                     }
+
+                    // Restaurar clics de los botones
+                    btnSaveName.isEnabled = true
+                    btnCancelName.isEnabled = true
+                    btnSaveEmail.isEnabled = true
+                    btnCancelEmail.isEnabled = true
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditProfileActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
-                    btnEditName.isEnabled = true
-                    btnEditEmail.isEnabled = true
+                    btnSaveName.isEnabled = true
+                    btnCancelName.isEnabled = true
+                    btnSaveEmail.isEnabled = true
+                    btnCancelEmail.isEnabled = true
                 }
             }
         }
@@ -271,7 +321,7 @@ class EditProfileActivity : BaseActivity() {
             .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
                 fieldWaitingToUnlock = "delete_account"
-                showPasswordDialog() // Siempre pedimos contraseña antes de borrar
+                showPasswordDialog()
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -301,15 +351,14 @@ class EditProfileActivity : BaseActivity() {
         }
     }
 
-    private fun lockAllFields() {
-        verifiedPassword = "" // Limpiamos la contraseña temporal
-        etName.isEnabled = false
-        btnEditName.isEnabled = true
-        btnEditName.setImageResource(android.R.drawable.ic_menu_edit)
-
-        etEmail.isEnabled = false
-        btnEditEmail.isEnabled = true
-        btnEditEmail.setImageResource(android.R.drawable.ic_menu_edit)
+    private fun goToChangePasswordScreen() {
+        val intent = Intent(this, ChangePasswordActivity::class.java)
+        intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
+        intent.putExtra("CURRENT_NAME", etName.text.toString().trim())
+        intent.putExtra("CURRENT_EMAIL", etEmail.text.toString().trim())
+        startActivity(intent)
+        lockAllFields()
+        fetchUserData()
     }
 
     private fun showKeyboard(view: View) {

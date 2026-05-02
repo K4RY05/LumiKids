@@ -41,14 +41,13 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 🔥 LÓGICA PARA EL BOTÓN DE VER CONTRASEÑA
         binding.ivTogglePassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
 
             if (isPasswordVisible) {
                 // Mostrar texto
                 binding.etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open) // Verifica tener este ícono en res/drawable
+                binding.ivTogglePassword.setImageResource(R.drawable.ic_eye_open)
             } else {
                 // Ocultar texto
                 binding.etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
@@ -58,13 +57,11 @@ class LoginActivity : AppCompatActivity() {
             binding.etPassword.setSelection(binding.etPassword.text.length)
         }
 
-        // 🔥 LÓGICA DEL BOTÓN DE LOGIN
         binding.btnLogin.setOnClickListener {
 
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
 
-            // 1. Limpiar errores previos visuales
             binding.etEmail.error = null
             binding.etPassword.error = null
 
@@ -81,11 +78,9 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Si todo está bien, llamamos al servidor
             loginUsuario(email, password)
         }
 
-        // 🔥 NAVEGACIÓN AL REGISTRO
         binding.tvSignUp.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
@@ -105,7 +100,7 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.success == true) {
 
                     // 1. Obtenemos el userId de la respuesta
-                    val userId = response.body()?.ID_user.toString()
+                    val userId = response.body()?.userId.toString()
 
                     // 2. Guardamos la sesión con ambos datos
                     sessionManager.saveLogin(email, userId)
@@ -133,7 +128,6 @@ class LoginActivity : AppCompatActivity() {
                 call: Call<ApiResponse>,
                 t: Throwable
             ) {
-                // Snackbar para errores de red o servidor caído
                 Snackbar.make(
                     binding.root,
                     "Error de conexión: Verifica tu internet o el servidor local",

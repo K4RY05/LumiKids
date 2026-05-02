@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.lumikids.R
 
 class ObjectLevelPickerActivity : BaseActivity() {
@@ -22,6 +25,7 @@ class ObjectLevelPickerActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
         enableEdgeToEdge()
+        setupImmersiveMode()
 
 
         theme = intent.getStringExtra("THEME") ?: "furniure"
@@ -53,6 +57,11 @@ class ObjectLevelPickerActivity : BaseActivity() {
         btnStart.setOnClickListener {
             startGame()
         }
+    }
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun updateUi() {

@@ -8,29 +8,27 @@
 
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="@dimen/game_icon_size"
+        android:layout_height="@dimen/game_icon_size"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:padding="@dimen/game_icon_padding"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="2dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_left"
-        android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ImageButton
         android:id="@+id/btnPause"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="@dimen/game_icon_size"
+        android:layout_height="@dimen/game_icon_size"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        android:padding="@dimen/game_icon_padding"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="2dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_pause"
-        android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

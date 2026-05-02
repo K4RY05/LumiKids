@@ -176,7 +176,6 @@ class ObjectRecognition : MiniGame() {
 
         roundOptions.forEachIndexed { index, gameObject ->
 
-            // --- LOG: Carga de Imagen ---
             val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl
             Log.d("MINIGAME_DEBUG", "IMG: $imageUrlCompleta")
 
@@ -191,7 +190,6 @@ class ObjectRecognition : MiniGame() {
                 setOnClickListener {
                     gameAudio.stopLoop()
 
-                    // --- LOG: Selección de Carta ---
                     Log.d("MINIGAME_DEBUG", "Seleccion: ${gameObject.name} Stage: object")
 
                     val isCorrect = (gameObject.id == currentRound?.correctObject?.id)

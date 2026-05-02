@@ -20,7 +20,7 @@
     <dimen name="selector_arrow_size">120dp</dimen>
     <dimen name="selector_card_size">220dp</dimen>
     <dimen name="selector_number_text">140sp</dimen>
-    <dimen name="selector_title_text">42sp</dimen>
+    <dimen name="selector_title_text">48sp</dimen>
     <dimen name="button_start_text">48sp</dimen>
     <dimen name="button_start_padding">64dp</dimen>
 
@@ -43,7 +43,12 @@
     <dimen name="profile_max_width">550dp</dimen>
     <dimen name="profile_margin_top_standard">40dp</dimen>
 
-    <dimen name="text_instruction">64sp</dimen>
+    <dimen name="text_instruction">62sp</dimen>
 
+
+    <dimen name="game_icon_size">150dp</dimen>
+    <dimen name="game_icon_padding">16dp</dimen>
+
+    <dimen name="result_icon_size">200dp</dimen>
 
 </resources>
