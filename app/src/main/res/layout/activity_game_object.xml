@@ -70,7 +70,7 @@
             android:id="@+id/imgOption1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />
@@ -102,7 +102,7 @@
             android:id="@+id/imgOption2"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />
@@ -134,7 +134,7 @@
             android:id="@+id/imgOption3"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />

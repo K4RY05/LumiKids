@@ -3,6 +3,7 @@ package com.example.lumikids.ui
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -15,6 +16,8 @@ import com.example.lumikids.model.UpdateProfileRequest
 import com.example.lumikids.network.EditProfileApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.SessionManager
+import com.nulabinc.zxcvbn.Zxcvbn
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,14 +43,12 @@ class ChangePasswordActivity : BaseActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Verificamos la sesión de inmediato
         if (sessionManager.getUserId() == null) {
             Toast.makeText(this, "Error de sesión.", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        // Recibimos los datos enviados desde EditProfileActivity
         verifiedPassword = intent.getStringExtra("CURRENT_PASSWORD") ?: ""
         currentName = intent.getStringExtra("CURRENT_NAME") ?: ""
         currentEmail = intent.getStringExtra("CURRENT_EMAIL") ?: ""
@@ -87,6 +88,32 @@ class ChangePasswordActivity : BaseActivity() {
         }
     }
 
+    private fun getForceMessage(warning: String, pass: String): String {
+        if (warning.isNotEmpty()) {
+            return when {
+                warning.contains("repeated", ignoreCase = true) || warning.contains("repeat", ignoreCase = true) ->
+                    "La contraseña es muy repetitiva (ej. aaaa o 111)."
+                warning.contains("sequence", ignoreCase = true) ->
+                    "Evita usar secuencias como abc o 123."
+                warning.contains("common", ignoreCase = true) || warning.contains("dictionary", ignoreCase = true) ->
+                    "Esta contraseña es demasiado común o fácil de adivinar."
+                warning.contains("name", ignoreCase = true) || warning.contains("surname", ignoreCase = true) ->
+                    "Evita usar nombres propios o apellidos."
+                else -> "Contraseña débil. Agrega más complejidad."
+            }
+        }
+
+        val tieneNumero = pass.any { it.isDigit() }
+        val tieneCaracterEspecial = pass.any { !it.isLetterOrDigit() }
+
+        return when {
+            pass.length < 8 -> "Tu contraseña es muy corta. Usa al menos 8 caracteres." // Actualizado a 8 por consistencia
+            !tieneNumero -> "Contraseña débil: Te falta agregar al menos un número."
+            !tieneCaracterEspecial -> "Contraseña débil: Agrega un carácter especial (ej. @, #, !)."
+            else -> "La contraseña es muy sencilla. Agrega más letras, números o símbolos."
+        }
+    }
+
     private fun changePassword() {
         val newPass = etNewPassword.text.toString().trim()
         val confirmPass = etConfirmNewPassword.text.toString().trim()
@@ -96,10 +123,22 @@ class ChangePasswordActivity : BaseActivity() {
             return
         }
 
-        if (newPass.length < 6) {
-            Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+        if (newPass.length < 8) {
+            Toast.makeText(this, "La contraseña debe tener al menos 8 caracteres", Toast.LENGTH_SHORT).show()
             return
         }
+
+        val zxcvbn = Zxcvbn()
+        val strength = zxcvbn.measure(newPass)
+
+        if (strength.score < 2) {
+            val feedbackUsuario = getForceMessage(strength.feedback.warning, newPass)
+            Log.w("CHANGE_PASS_DEBUG", "Registro fallido: Contraseña débil (Score: ${strength.score}) -> $feedbackUsuario")
+
+            Toast.makeText(this, feedbackUsuario, Toast.LENGTH_LONG).show()
+            return
+        }
+
 
         if (newPass != confirmPass) {
             Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
@@ -110,6 +149,9 @@ class ChangePasswordActivity : BaseActivity() {
             Toast.makeText(this, "La nueva contraseña debe ser diferente a la actual", Toast.LENGTH_SHORT).show()
             return
         }
+
+
+
 
         val userId = sessionManager.getUserId() ?: return
 
@@ -134,7 +176,7 @@ class ChangePasswordActivity : BaseActivity() {
                         val errorMessage = if (!errorBody.isNullOrEmpty()) {
                             try {
                                 org.json.JSONObject(errorBody).optString("message", "Error al actualizar")
-                            } catch (_: Exception) { // Usamos '_' para ignorar la advertencia si falla el parseo
+                            } catch (_: Exception) {
                                 "Error en el formato de respuesta"
                             }
                         } else {
@@ -145,9 +187,7 @@ class ChangePasswordActivity : BaseActivity() {
                     }
                 }
             } catch (e: Exception) {
-                // Usamos 'e' para dejar un registro oculto en Logcat, útil para depurar
                 android.util.Log.e("ChangePassword", "Fallo en la red: ${e.message}", e)
-
                 withContext(Dispatchers.Main) {
                     btnConfirm.text = "Guardar nueva contraseña"
                     btnConfirm.isEnabled = true

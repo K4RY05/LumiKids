@@ -94,9 +94,7 @@ class EditProfileActivity : BaseActivity() {
             showDeleteAccountDialog()
         }
 
-        // ==================== LÓGICA NOMBRE ====================
         btnStartEditName.setOnClickListener {
-            // Validación: No permitir editar ambos al mismo tiempo
             if (etEmail.isEnabled) {
                 Toast.makeText(this, "Guarda los cambios de tu correo primero", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -147,12 +145,14 @@ class EditProfileActivity : BaseActivity() {
     private fun fetchUserData() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                Log.d("EDIT_PROFILE_DEBUG", "Solicitando datos para el userId: $userId")
                 val api = RetrofitClient.instance.create(EditProfileApi::class.java)
                 val response = api.getUserProfile(userId)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val user = response.body()!!
+                        Log.d("EDIT_PROFILE_DEBUG", "Nombre: ${user.name}, Correo: ${user.email}")
                         etName.setText(user.name)
                         etEmail.setText(user.email)
 
@@ -204,6 +204,7 @@ class EditProfileActivity : BaseActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
                         verifiedPassword = password
+                        Log.d("EDIT_PROFILE_DEBUG", "Contraseña verificada con éxito.")
                         unlockField()
                     } else {
                         Toast.makeText(this@EditProfileActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
@@ -274,7 +275,7 @@ class EditProfileActivity : BaseActivity() {
             try {
                 val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
-
+                Log.d("EDIT_PROFILE_DEBUG", "Código HTTP de respuesta al guardar: ${response.code()}")
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
                         Toast.makeText(this@EditProfileActivity, "Actualizado correctamente", Toast.LENGTH_SHORT).show()

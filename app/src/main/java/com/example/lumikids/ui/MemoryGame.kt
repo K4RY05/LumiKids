@@ -70,8 +70,8 @@ class MemoryGame : MiniGame() {
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
                     val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
+                    Log.d("MINIGAME_DEBUG", "Pares requeridos: $numPairsWanted")
                     Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
-
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -88,6 +88,8 @@ class MemoryGame : MiniGame() {
                         boardCards = memoryCards.shuffled()
                         gameTimer.start()
                         return@withContext true
+                    }else {
+                        Log.e("MINIGAME_DEBUG", "Error en la respuesta de la API: ${call.code()} - ${call.message()}")
                     }
                     false
                 } catch (e: Exception) {
@@ -98,7 +100,6 @@ class MemoryGame : MiniGame() {
 
             if (success) {
                 createDynamicBoard()
-                // Inicia la instrucción local cada 7 segundos al empezar el juego
                 gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
@@ -134,7 +135,7 @@ class MemoryGame : MiniGame() {
                     setMargins(margin, margin, margin, margin)
                     setGravity(Gravity.CENTER)
                 }
-                setBackgroundResource(R.drawable.bg_card)
+                setBackgroundResource(R.drawable.bg_white_card)
                 setPadding(margin, margin, margin, margin)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
@@ -166,20 +167,16 @@ class MemoryGame : MiniGame() {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
-                // 1. DETENEMOS LAS INSTRUCCIONES PARA QUE NO SE EMPALMEN
                 gameAudio.stopLoop()
 
-                // 2. REPRODUCIMOS EL AUDIO DEL OBJETO O EL EFECTO DE VICTORIA
                 card.gameObject.audioShortUrl?.let {
                     val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
                     gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
 
-                // 3. REANUDAMOS LAS INSTRUCCIONES DESPUÉS DE UN TIEMPO
                 lifecycleScope.launch {
                     delay(3000)
 
-                    // Solo reanudamos si el juego aún no ha terminado
                     if (!boardCards.all { it.isMatched }) {
                         gameAudio.startLocalLoop(R.raw.intruc_memory, 10000L)
                     }
