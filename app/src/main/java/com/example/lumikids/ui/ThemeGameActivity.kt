@@ -26,13 +26,13 @@ class ThemeGameActivity : BaseActivity() {
 
     private fun initViews() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
-        val furniure = findViewById<ImageView>(R.id.cardFur)
+        val furniture = findViewById<ImageView>(R.id.cardFur)
         val emotions = findViewById<ImageView>(R.id.cardEmociones)
         val clothes = findViewById<ImageView>(R.id.cardClot)
 
         btnBack.setOnClickListener { finish() }
 
-        furniure.setOnClickListener { openGame("furniure") }
+        furniture.setOnClickListener { openGame("furniture") }
         emotions.setOnClickListener { openGame("emotions") }
         clothes.setOnClickListener { openGame("clothing") }
     }

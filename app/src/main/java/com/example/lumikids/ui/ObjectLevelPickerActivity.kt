@@ -15,7 +15,7 @@ class ObjectLevelPickerActivity : BaseActivity() {
     // Estado
     private var selectedRounds: Int = 3
     private val minRounds = 1
-    private val maxRounds = 8
+    private val maxRounds = 12
 
     private lateinit var tvRoundCount: TextView
 
@@ -28,7 +28,7 @@ class ObjectLevelPickerActivity : BaseActivity() {
         setupImmersiveMode()
 
 
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+        theme = intent.getStringExtra("THEME") ?: "emotions"
 
         tvRoundCount = findViewById(R.id.tvRoundCount)
         val btnBack = findViewById<ImageView>(R.id.btnBack)

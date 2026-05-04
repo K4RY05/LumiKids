@@ -20,7 +20,7 @@ class MemoryLevelActivity : BaseActivity() {
         setupImmersiveMode()
 
 
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+        theme = intent.getStringExtra("THEME") ?: "emotions"
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
             finish()

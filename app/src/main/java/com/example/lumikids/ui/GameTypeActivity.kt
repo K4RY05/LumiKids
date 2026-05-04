@@ -23,7 +23,7 @@ class GameTypeActivity : BaseActivity() {
             finish()
         }
 
-        val theme = intent.getStringExtra("THEME") ?: "furniure"
+        val theme = intent.getStringExtra("THEME") ?: "emotions"
 
         val cardObject = findViewById<ImageView>(R.id.cardObjeto)
         val cardMemory = findViewById<ImageView>(R.id.cardMemorama)
