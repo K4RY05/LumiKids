@@ -30,7 +30,7 @@ import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-class PecsBoardActivity : AppCompatActivity() {
+class PecsBoardActivity : BaseActivity() {
 
     private val TAG = "PECS_DEBUG"
 
@@ -341,7 +341,10 @@ class PecsBoardActivity : AppCompatActivity() {
         val verbAudio       = verb.text.lowercase()
         val complementAudio = complement.text.lowercase()
 
-        return "${RetrofitClient.BASE_URL_SOUNDS}sentence/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
+        val url = "${RetrofitClient.BASE_URL_SOUNDS}sentences/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
+
+        Log.d(TAG, "Intentando reproducir oración: $url")
+        return url
     }
 
     private fun playSentenceAudio(onComplete: (() -> Unit)? = null) {

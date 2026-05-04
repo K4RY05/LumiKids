@@ -24,12 +24,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 
-class NotificationActivity : AppCompatActivity() {
+class NotificationActivity : BaseActivity() {
 
     private lateinit var adapter: NotificacionAdapter
     private lateinit var sessionManager: SessionManager
     private val listaNoti = mutableListOf<NotificationEntity>()
     private var idEditando: Int? = null
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +43,21 @@ class NotificationActivity : AppCompatActivity() {
         setupRecyclerView()
         initClickListeners()
         cargarDatos()
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Recordatorios LumiKids"
+            val descriptionText = "Canal para alarmas de minijuegos y rutinas"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("LumiKidsChannel", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     private fun solicitarPermisos() {

@@ -260,6 +260,7 @@
             android:layout_width="@dimen/profile_button_width"
             android:layout_height="@dimen/profile_button_height"
             android:text="@string/desc_btn_back"
+            android:textSize="@dimen/profile_input_text_size"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:background="@drawable/bg_button"

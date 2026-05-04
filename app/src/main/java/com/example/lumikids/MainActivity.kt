@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.lumikids.ui.BaseActivity
+import com.example.lumikids.ui.PecsBoardActivity
 
 class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +40,10 @@ class MainActivity : BaseActivity() {
         }
 
         btnTablero.setOnClickListener {
-            Toast.makeText(this, "Presionaste Tablero", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Abriendo tablero", Toast.LENGTH_SHORT).show()
+
+            val intent = Intent(this, PecsBoardActivity::class.java)
+            startActivity(intent)
         }
 
         btnMinijuegos.setOnClickListener {

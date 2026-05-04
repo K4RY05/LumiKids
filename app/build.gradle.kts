@@ -61,4 +61,7 @@ dependencies {
     // Image loading (ambas librerías conservadas)
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("io.coil-kt:coil:2.6.0")
+
+    implementation("com.nulab-inc:zxcvbn:1.3.1")
+
 }

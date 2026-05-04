@@ -60,4 +60,19 @@
 
     <dimen name="result_icon_size">100dp</dimen>
 
+
+    <dimen name="pecs_control_button_size">70dp</dimen>
+    <dimen name="pecs_result_icon_size">120dp</dimen>
+    <dimen name="pecs_control_margin">16dp</dimen>
+    <dimen name="pecs_icon_padding">12dp</dimen>
+    <dimen name="pecs_vertical_gap">16dp</dimen>
+
+    <dimen name="notif_btn_cancel_size">60dp</dimen>
+    <dimen name="notif_btn_add_size">90dp</dimen>
+    <dimen name="notif_btn_accept_height">60dp</dimen>
+
+    <dimen name="notif_title_text_size">35sp</dimen>
+    <dimen name="notif_label_text_size">18sp</dimen>
+    <dimen name="notif_btn_accept_text_size">20sp</dimen>
+
 </resources>
