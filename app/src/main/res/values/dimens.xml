@@ -48,9 +48,16 @@
     <dimen name="profile_avatar_size">120dp</dimen>
     <dimen name="profile_input_text_size">18sp</dimen>
     <dimen name="profile_label_text_size">16sp</dimen>
-    <dimen name="profile_button_height">55dp</dimen>
+    <dimen name="profile_button_height">56dp</dimen>
     <dimen name="profile_button_width">220dp</dimen>
     <dimen name="profile_max_width">1000dp</dimen>
     <dimen name="profile_margin_top_standard">24dp</dimen>
+
+    <dimen name="text_instruction">26sp</dimen>
+
+    <dimen name="game_icon_size">68dp</dimen>
+    <dimen name="game_icon_padding">4dp</dimen>
+
+    <dimen name="result_icon_size">100dp</dimen>
 
 </resources>

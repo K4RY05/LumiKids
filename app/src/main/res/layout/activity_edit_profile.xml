@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="@color/c_four">
+    android:background="?attr/color_fondo_pantalla">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
             android:text="Datos de Usuario"
             android:textSize="@dimen/profile_title_size"
             android:textStyle="bold"
-            android:textColor="@color/c_one"
+            android:textColor="?attr/color_primario"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -30,14 +30,30 @@
             android:layout_width="@dimen/profile_avatar_size"
             android:layout_height="@dimen/profile_avatar_size"
             android:background="@drawable/circle_bg"
+            android:backgroundTint="?attr/color_terciario"
             android:clipToOutline="true"
             android:outlineProvider="background"
             android:src="@drawable/ic_user"
             android:scaleType="centerCrop"
+            android:contentDescription="Foto de perfil del usuario"
             app:layout_constraintTop_toBottomOf="@id/tvTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="@dimen/profile_margin_top_standard"/>
+
+        <TextView
+            android:id="@+id/tvNameLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nombre de Usuario"
+            android:textSize="@dimen/profile_input_text_size"
+            android:textColor="?attr/color_primario"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="32dp"
+            app:layout_constraintTop_toBottomOf="@id/imgAvatar"
+            app:layout_constraintStart_toStartOf="@id/rowName"/>
 
         <LinearLayout
             android:id="@+id/rowName"
@@ -50,10 +66,10 @@
             android:background="@drawable/bg_input_rounded_pill"
             android:elevation="4dp"
             app:layout_constraintWidth_max="@dimen/profile_max_width"
-            app:layout_constraintTop_toBottomOf="@id/imgAvatar"
+            app:layout_constraintTop_toBottomOf="@id/tvNameLabel"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="32dp">
+            android:layout_marginTop="4dp">
 
             <EditText
                 android:id="@+id/etName"
@@ -63,19 +79,72 @@
                 android:background="@null"
                 android:textSize="@dimen/profile_input_text_size"
                 android:textStyle="bold"
-                android:textColor="@android:color/black"
+                android:textColor="@color/black"
                 android:enabled="false"
                 android:inputType="textPersonName"
                 android:padding="8dp"/>
 
             <ImageButton
-                android:id="@+id/btnEditName"
+                android:id="@+id/btnStartEditName"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@android:drawable/ic_menu_edit"
-                android:background="?selectableItemBackgroundBorderless"
-                app:tint="@color/c_one"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="?attr/color_primario"
+                android:contentDescription="Editar nombre de usuario"/>
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/containerNameActions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
+            app:layout_constraintTop_toBottomOf="@id/rowName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCancelName"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Cancelar"
+                android:textSize="@dimen/profile_input_text_size"
+                android:textAllCaps="false"
+                android:textColor="?attr/color_primario"
+                android:background="@drawable/bg_input_rounded_pill"
+                android:layout_marginEnd="8dp"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSaveName"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Guardar"
+                android:textSize="@dimen/profile_input_text_size"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_button"
+                android:backgroundTint="?attr/color_secundario"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvEmailLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Correo Electrónico"
+            android:textSize="@dimen/profile_input_text_size"
+            android:textColor="?attr/color_primario"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/containerNameActions"
+            app:layout_constraintStart_toStartOf="@id/rowEmail"/>
 
         <LinearLayout
             android:id="@+id/rowEmail"
@@ -88,10 +157,10 @@
             android:background="@drawable/bg_input_rounded_pill"
             android:elevation="4dp"
             app:layout_constraintWidth_max="@dimen/profile_max_width"
-            app:layout_constraintTop_toBottomOf="@id/rowName"
+            app:layout_constraintTop_toBottomOf="@id/tvEmailLabel"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="4dp">
 
             <EditText
                 android:id="@+id/etEmail"
@@ -100,18 +169,57 @@
                 android:layout_height="wrap_content"
                 android:background="@null"
                 android:textSize="@dimen/profile_label_text_size"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="@color/black"
                 android:enabled="false"
                 android:inputType="textEmailAddress"
                 android:padding="8dp"/>
 
             <ImageButton
-                android:id="@+id/btnEditEmail"
+                android:id="@+id/btnStartEditEmail"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@android:drawable/ic_menu_edit"
-                android:background="?selectableItemBackgroundBorderless"
-                app:tint="@color/c_one"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="?attr/color_primario"
+                android:contentDescription="Editar correo electrónico"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/containerEmailActions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            app:layout_constraintWidth_max="@dimen/profile_max_width"
+            app:layout_constraintTop_toBottomOf="@id/rowEmail"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCancelEmail"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Cancelar"
+                android:textSize="@dimen/profile_input_text_size"
+                android:textAllCaps="false"
+                android:textColor="?attr/color_primario"
+                android:background="@drawable/bg_input_rounded_pill"
+                android:layout_marginEnd="8dp"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSaveEmail"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Guardar"
+                android:textSize="@dimen/profile_input_text_size"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_button"
+                android:backgroundTint="?attr/color_secundario"
+                android:layout_marginStart="8dp"/>
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatButton
@@ -121,9 +229,11 @@
             android:text="Cambiar contraseña"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
+            android:textSize="@dimen/profile_input_text_size"
             android:background="@drawable/bg_button"
+            android:backgroundTint="?attr/color_primario"
             app:layout_constraintWidth_max="@dimen/profile_max_width"
-            app:layout_constraintTop_toBottomOf="@id/rowEmail"
+            app:layout_constraintTop_toBottomOf="@id/containerEmailActions"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="40dp"/>
@@ -137,7 +247,7 @@
             android:textStyle="bold"
             android:textSize="@dimen/profile_label_text_size"
             android:padding="8dp"
-            android:background="?selectableItemBackground"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintTop_toBottomOf="@id/btnChangePassword"
@@ -149,10 +259,11 @@
             android:id="@+id/btnBack"
             android:layout_width="@dimen/profile_button_width"
             android:layout_height="@dimen/profile_button_height"
-            android:text="Volver"
+            android:text="@string/desc_btn_back"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:background="@drawable/bg_button"
+            android:backgroundTint="?attr/color_secundario"
             app:layout_constraintTop_toBottomOf="@id/tvDelete"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

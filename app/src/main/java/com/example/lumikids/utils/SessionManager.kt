@@ -32,16 +32,20 @@ class SessionManager(context: Context) {
 
         return id
     }
-    fun getUserEmail(): String? {
-        val email = prefs.getString("user_email", null)
-        if (email == "null" || email.isNullOrEmpty()) {
-            return null
-        }
-        return email
-    }
 
     // Limpia las preferencias al cerrar sesión
     fun logout() {
         prefs.edit().clear().apply()
+    }
+
+    fun setTheme(themeName: String) {
+        prefs.edit().apply {
+            putString("selected_theme", themeName)
+            apply()
+        }
+    }
+
+    fun getTheme(): String {
+        return prefs.getString("selected_theme", "blue") ?: "blue"
     }
 }

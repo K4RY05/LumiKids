@@ -4,30 +4,31 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.lumikids.R
-import com.example.lumikids.ui.ObjectRecognition
 
-class ObjectLevelPickerActivity : AppCompatActivity() {
+class ObjectLevelPickerActivity : BaseActivity() {
 
     // Estado
     private var selectedRounds: Int = 3
     private val minRounds = 1
-    private val maxRounds = 10
+    private val maxRounds = 12
 
-    // UI
     private lateinit var tvRoundCount: TextView
 
-    // Ahora el tema es un String directamente
     private lateinit var theme: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object_level)
+        enableEdgeToEdge()
+        setupImmersiveMode()
 
-        // Recibimos el String directamente.
-        // Mantenemos "furniure" como valor por defecto para evitar nulos y coincidir con tu servidor.
-        theme = intent.getStringExtra("THEME") ?: "furniure"
+
+        theme = intent.getStringExtra("THEME") ?: "emotions"
 
         tvRoundCount = findViewById(R.id.tvRoundCount)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
@@ -56,6 +57,11 @@ class ObjectLevelPickerActivity : AppCompatActivity() {
         btnStart.setOnClickListener {
             startGame()
         }
+    }
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     private fun updateUi() {

@@ -1,9 +1,33 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.LumiKids" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+
+    <style name="Theme.LumiKids.Blue" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="color_primario">@color/c_one</item>
+        <item name="color_secundario">@color/c_two</item>
+        <item name="color_terciario">@color/c_three</item>
+        <item name="color_fondo_pantalla">@color/c_four</item>
     </style>
 
-    <style name="Theme.LumiKids" parent="Base.Theme.LumiKids" />
+    <style name="Theme.LumiKids.Green" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="color_primario">@color/green_one</item>
+        <item name="color_secundario">@color/green_two</item>
+        <item name="color_terciario">@color/green_three</item>
+        <item name="color_fondo_pantalla">@color/green_four</item>
+    </style>
+
+    <style name="Theme.LumiKids.Red" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="color_primario">@color/red_one</item>
+        <item name="color_secundario">@color/red_two</item>
+        <item name="color_terciario">@color/red_three</item>
+        <item name="color_fondo_pantalla">@color/red_four</item>
+    </style>
+
+    <style name="Theme.LumiKids.Pink" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="color_primario">@color/pink_one</item>
+        <item name="color_secundario">@color/pink_two</item>
+        <item name="color_terciario">@color/pink_three</item>
+        <item name="color_fondo_pantalla">@color/pink_four</item>
+    </style>
+
+
 </resources>

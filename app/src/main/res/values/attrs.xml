@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="color_primario" format="color" />
+    <attr name="color_secundario" format="color" />
+    <attr name="color_terciario" format="color" />
+    <attr name="color_fondo_pantalla" format="color" />
+</resources>

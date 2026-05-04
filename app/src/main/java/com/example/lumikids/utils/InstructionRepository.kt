@@ -12,7 +12,7 @@ object InstructionRepository {
      */
     fun getPrefix(theme: String): String {
         return when (theme.lowercase()) {
-            "furniure" -> "furniure_"
+            "furniture" -> "furniture_"
             "clothing" -> "clothing_"
             "emotions" -> "emotions_"
             else -> ""
@@ -27,7 +27,7 @@ object InstructionRepository {
         return when (theme.lowercase()) {
             "clothing" -> 3
             "emotions" -> 5
-            "furniure" -> 8
+            "furniture" -> 8
             else -> 0
         }
     }

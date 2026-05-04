@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/result_title_success"
-            android:textColor="@color/c_one"
+            android:textColor="?attr/color_primario"
             android:textSize="@dimen/text_size_result_title"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent"
@@ -66,7 +66,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="8s"
-                    android:textColor="@color/c_one"
+                    android:textColor="?attr/color_primario"
                     android:textSize="@dimen/text_size_result_value"
                     android:textStyle="bold"/>
             </LinearLayout>
@@ -98,7 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     tools:text="2"
-                    android:textColor="@color/c_one"
+                    android:textColor="?attr/color_primario"
                     android:textSize="@dimen/text_size_result_value"
                     android:textStyle="bold"/>
             </LinearLayout>

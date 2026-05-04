@@ -1,32 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/c_four">
+    android:background="?attr/color_fondo_pantalla">
 
-    <ImageView
+    <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="@dimen/ic_top_corner"
-        android:layout_height="@dimen/ic_top_corner"
+        android:layout_width="@dimen/game_icon_size"
+        android:layout_height="@dimen/game_icon_size"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
+        android:padding="@dimen/game_icon_padding"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_left"
-        android:clickable="true"
-        android:focusable="true"
         android:contentDescription="Botón para regresar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/btnPause"
-        android:layout_width="@dimen/ic_top_corner"
-        android:layout_height="@dimen/ic_top_corner"
+        android:layout_width="@dimen/game_icon_size"
+        android:layout_height="@dimen/game_icon_size"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
+        android:padding="@dimen/game_icon_padding"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_pause"
-        android:clickable="true"
-        android:focusable="true"
         android:contentDescription="Botón de pausa"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -35,13 +38,14 @@
         android:id="@+id/tvInstruction"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:text="Selecciona el objeto"
-        android:textSize="40sp"
+        android:textSize="@dimen/text_instruction"
         android:textStyle="bold"
-        android:textColor="@color/c_one"
+        android:textColor="?attr/color_primario"
         android:gravity="center"
         android:maxLines="2"
-        android:padding="8dp"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintEnd_toStartOf="@id/btnPause"
         app:layout_constraintTop_toTopOf="@id/btnBack"
@@ -66,15 +70,15 @@
             android:id="@+id/imgOption1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />
 
         <ImageView
             android:id="@+id/imgResult1"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/result_icon_size"
+            android:layout_height="@dimen/result_icon_size"
             android:layout_gravity="center"
             android:elevation="8dp"
             android:visibility="invisible" />
@@ -98,15 +102,15 @@
             android:id="@+id/imgOption2"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />
 
         <ImageView
             android:id="@+id/imgResult2"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/result_icon_size"
+            android:layout_height="@dimen/result_icon_size"
             android:layout_gravity="center"
             android:elevation="8dp"
             android:visibility="invisible" />
@@ -130,15 +134,15 @@
             android:id="@+id/imgOption3"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_white_card"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="fitCenter" />
 
         <ImageView
             android:id="@+id/imgResult3"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/result_icon_size"
+            android:layout_height="@dimen/result_icon_size"
             android:layout_gravity="center"
             android:elevation="8dp"
             android:visibility="invisible" />

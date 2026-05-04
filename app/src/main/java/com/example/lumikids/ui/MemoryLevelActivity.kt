@@ -3,45 +3,51 @@ package com.example.lumikids.ui
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.lumikids.R
-import com.example.lumikids.ui.MemoryGame
 
-class MemoryLevelActivity : AppCompatActivity() {
+class MemoryLevelActivity : BaseActivity() {
 
-    // Ahora usamos String para el tema
     private lateinit var theme: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memory_level)
+        enableEdgeToEdge()
+        setupImmersiveMode()
 
-        // Recibir el String directamente.
-        // Si es nulo, usamos "emotions" como valor por defecto.
-        theme = intent.getStringExtra("THEME") ?: "furniure"
 
-        // Botón regresar
+        theme = intent.getStringExtra("THEME") ?: "emotions"
+
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
             finish()
         }
 
-        // Eventos de dificultad
         setupCard(R.id.card6, 6)
         setupCard(R.id.card8, 8)
         setupCard(R.id.card10, 10)
     }
 
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+
     private fun setupCard(viewId: Int, numCards: Int) {
         findViewById<ImageView>(viewId).setOnClickListener {
-            iniciarMemorama(numCards)
+            startMemoryGame(numCards)
         }
     }
 
-    private fun iniciarMemorama(numeroDeCartas: Int) {
+    private fun startMemoryGame(totalCards: Int) {
         val intent = Intent(this, MemoryGame::class.java).apply {
-            // Pasamos el String tal cual lo recibimos
             putExtra("THEME", theme)
-            putExtra("NUM_CARDS", numeroDeCartas)
+            putExtra("NUM_CARDS", totalCards)
         }
         startActivity(intent)
     }

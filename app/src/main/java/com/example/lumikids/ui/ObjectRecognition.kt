@@ -1,19 +1,20 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.ui.MiniGame
-import com.example.lumikids.model.ObjectRound
 import com.example.lumikids.model.GameObject
-import com.example.lumikids.network.AuthApi
+import com.example.lumikids.model.ObjectRound
+import com.example.lumikids.network.GameApi
 import com.example.lumikids.network.RetrofitClient
 import com.example.lumikids.utils.InstructionRepository
 import com.example.lumikids.utils.PauseDialog
@@ -23,10 +24,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 
-// ✨ CAMBIO CLAVE: Heredamos de BaseMiniGameActivity
 class ObjectRecognition : MiniGame() {
 
     private var allItems: MutableList<GameObject> = mutableListOf()
+    private var availableItems: MutableList<GameObject> = mutableListOf()
+
     private var currentRoundCount: Int = 0
     private var currentRound: ObjectRound? = null
     private var totalRoundsWanted: Int = 3
@@ -40,16 +42,15 @@ class ObjectRecognition : MiniGame() {
     private lateinit var btnBack: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ✨ El super.onCreate ya configura el modo inmersivo, el theme y el gameAudio
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game_n1)
+        setContentView(R.layout.activity_game_object)
+        enableEdgeToEdge()
 
         totalRoundsWanted = intent.getIntExtra("NUM_ROUNDS", 3)
 
         initViews()
         loadGameData()
     }
-
 
     override fun initViews() {
         tvInstruction = findViewById(R.id.tvInstruction)
@@ -73,6 +74,7 @@ class ObjectRecognition : MiniGame() {
         btnPause.setOnClickListener {
             gameTimer.pause()
             gameAudio.stopLoop()
+            gameAudio.stopNetworkAudio()
 
             PauseDialog(this).showDialog(
                 onResume = {
@@ -91,7 +93,11 @@ class ObjectRecognition : MiniGame() {
                     val categoryId = InstructionRepository.getCategoryId(theme)
                     val instructionMap =
                         InstructionRepository.loadInstructionsByTheme(this@ObjectRecognition, theme)
-                    val api = RetrofitClient.instance.create(AuthApi::class.java)
+
+                    val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
+                    Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
+
+                    val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
                     if (call.isSuccessful) {
@@ -99,8 +105,17 @@ class ObjectRecognition : MiniGame() {
                         if (downloadedObjects.isEmpty()) return@withContext false
 
                         allItems = downloadedObjects.map { item ->
-                            val localText = instructionMap[item.name] ?: "Selecciona el objeto"
-                            item.copy(instructionText = localText)
+                            val localText = instructionMap[item.name]
+
+                            if (localText == null) {
+                                Log.w("MINIGAME_DEBUG", "Instrucción visual faltante para: ${item.name}")
+                            }
+
+                            item.copy(instructionText = localText ?: "Selecciona el objeto")
+                        }.toMutableList()
+
+                        availableItems = allItems.filter { item ->
+                            instructionMap.containsKey(item.name) && item.audioInstructionUrl != null
                         }.toMutableList()
 
                         if (allItems.size >= 3) {
@@ -110,6 +125,7 @@ class ObjectRecognition : MiniGame() {
                     }
                     false
                 } catch (e: Exception) {
+                    Log.e("MINIGAME_DEBUG", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
@@ -125,16 +141,25 @@ class ObjectRecognition : MiniGame() {
 
     private fun startNewRound() {
         if (currentRoundCount >= totalRoundsWanted) {
-            // ✨ MEJORA: Usamos la función integrada de la clase padre para mostrar la victoria
             showResults("Identificar Objeto")
             return
         }
 
-        if (allItems.size < 3) return
+        if (availableItems.isEmpty() || allItems.size < 3) {
+            showResults("Identificar Objeto")
+            return
+        }
 
         currentRoundCount++
-        val roundOptions = allItems.shuffled().take(3)
-        val correctObject = roundOptions.random()
+
+        availableItems.shuffle()
+        val correctObject = availableItems.removeAt(0)
+
+        val distractors = allItems.filter { it.id != correctObject.id }
+            .shuffled()
+            .take(2)
+
+        val roundOptions = (distractors + correctObject).shuffled()
         currentRound = ObjectRound(roundOptions, correctObject)
 
         tvInstruction.text = correctObject.instructionText
@@ -150,9 +175,13 @@ class ObjectRecognition : MiniGame() {
         resetImagesBackground()
 
         roundOptions.forEachIndexed { index, gameObject ->
+
+            val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl
+            Log.d("MINIGAME_DEBUG", "IMG: $imageUrlCompleta")
+
             images[index].apply {
                 Glide.with(this@ObjectRecognition)
-                    .load(RetrofitClient.BASE_URL_IMAGES + gameObject.imageUrl)
+                    .load(imageUrlCompleta)
                     .placeholder(R.drawable.ic_logo)
                     .transform(CenterCrop(), RoundedCorners(30))
                     .into(this)
@@ -160,10 +189,15 @@ class ObjectRecognition : MiniGame() {
                 isEnabled = true
                 setOnClickListener {
                     gameAudio.stopLoop()
-                    val isCorrect = gameObject == currentRound?.correctObject
+
+                    Log.d("MINIGAME_DEBUG", "Seleccion: ${gameObject.name} Stage: object")
+
+                    val isCorrect = (gameObject.id == currentRound?.correctObject?.id)
 
                     if (gameObject.audioShortUrl != null) {
-                        gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl)
+                        val audioUrl = RetrofitClient.BASE_URL_SOUNDS + gameObject.audioShortUrl
+                        Log.d("MINIGAME_DEBUG", "Audio URL: $audioUrl")
+                        gameAudio.playUrl(audioUrl)
                     }
                     handleSelection(this, isCorrect)
                 }
@@ -172,14 +206,12 @@ class ObjectRecognition : MiniGame() {
     }
 
     private fun handleSelection(view: ImageView, isCorrect: Boolean) {
-        // Deshabilitamos clics para evitar toques múltiples
         images.forEach { it.isEnabled = false }
 
         val index = images.indexOf(view)
         if (index != -1 && index < resultIcons.size) {
             val resultIcon = resultIcons[index]
 
-            // Mostramos el icono visual de acierto o error
             if (isCorrect) {
                 resultIcon.setImageResource(R.drawable.ic_correct)
             } else {
@@ -188,16 +220,22 @@ class ObjectRecognition : MiniGame() {
             resultIcon.visibility = View.VISIBLE
 
             lifecycleScope.launch {
-                delay(500) // Respuesta visual rápida
+                delay(500)
                 if (isCorrect) {
                     gameAudio.playEffect(R.raw.win)
-                    delay(1000) // Esperamos antes de la siguiente ronda
+                    delay(1000)
                     startNewRound()
                 } else {
                     errors++
                     gameAudio.playEffect(R.raw.fail)
+
+                    delay(1000)
                     resultIcon.visibility = View.INVISIBLE
                     images.forEach { it.isEnabled = true }
+
+                    urlAudioActual?.let {
+                        gameAudio.startLoop(it)
+                    }
                 }
             }
         }
@@ -207,5 +245,4 @@ class ObjectRecognition : MiniGame() {
         resultIcons.forEach { it.visibility = View.INVISIBLE }
         images.forEach { it.isEnabled = true }
     }
-
 }

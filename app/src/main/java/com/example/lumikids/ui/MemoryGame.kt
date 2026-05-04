@@ -1,16 +1,17 @@
 package com.example.lumikids.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.lumikids.R
-import com.example.lumikids.ui.MiniGame
 import com.example.lumikids.model.MemoryCard
 import com.example.lumikids.network.GameApi
 import com.example.lumikids.network.RetrofitClient
@@ -34,7 +35,8 @@ class MemoryGame : MiniGame() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game_n2)
+        setContentView(R.layout.activity_game_memory)
+        enableEdgeToEdge()
 
         numPairsWanted = intent.getIntExtra("NUM_CARDS", 6) / 2
 
@@ -44,10 +46,18 @@ class MemoryGame : MiniGame() {
 
     override fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
+            gameAudio.stopNetworkAudio()
+            gameAudio.stopLoop() // Detiene la instrucción al pausar
+
             PauseDialog(this).showDialog(
-                onResume = { gameTimer.resume() },
+                onResume = {
+                    gameTimer.resume()
+                    // Reanuda la instrucción local cada 7 segundos
+                    gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
+                },
                 onExit = { finish() }
             )
         }
@@ -57,10 +67,11 @@ class MemoryGame : MiniGame() {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try {
-                    // ✨ MEJORA: Usamos el repositorio centralizado en lugar del 'when' repetido
                     val categoryId = InstructionRepository.getCategoryId(theme)
 
-                    // ✨ CORRECCIÓN: Cambiado AuthApi por GameApi
+                    val baseUrl = RetrofitClient.BASE_URL_IMAGES.replace("images/", "")
+                    Log.d("MINIGAME_DEBUG", "Pares requeridos: $numPairsWanted")
+                    Log.d("MINIGAME_DEBUG", "GET: ${baseUrl}api/games/game-objects/$categoryId")
                     val api = RetrofitClient.instance.create(GameApi::class.java)
                     val call = api.getGameObjects(categoryId).awaitResponse()
 
@@ -77,15 +88,19 @@ class MemoryGame : MiniGame() {
                         boardCards = memoryCards.shuffled()
                         gameTimer.start()
                         return@withContext true
+                    }else {
+                        Log.e("MINIGAME_DEBUG", "Error en la respuesta de la API: ${call.code()} - ${call.message()}")
                     }
                     false
                 } catch (e: Exception) {
+                    Log.e("MINIGAME_DEBUG", "Error al cargar objetos: ${e.message}")
                     false
                 }
             }
 
             if (success) {
                 createDynamicBoard()
+                gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -110,6 +125,9 @@ class MemoryGame : MiniGame() {
 
         for (i in boardCards.indices) {
             val cardData = boardCards[i]
+
+            val imageUrlCompleta = RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl
+
             val view = ImageView(this).apply {
                 layoutParams = GridLayout.LayoutParams().apply {
                     width = size
@@ -117,14 +135,14 @@ class MemoryGame : MiniGame() {
                     setMargins(margin, margin, margin, margin)
                     setGravity(Gravity.CENTER)
                 }
-                setBackgroundResource(R.drawable.bg_card)
+                setBackgroundResource(R.drawable.bg_white_card)
                 setPadding(margin, margin, margin, margin)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 setImageResource(R.drawable.ic_logo)
                 tag = false
 
                 Glide.with(this@MemoryGame)
-                    .load(RetrofitClient.BASE_URL_IMAGES + cardData.gameObject.imageUrl)
+                    .load(imageUrlCompleta)
                     .preload()
             }
             view.setOnClickListener { handleCardClick(view, cardData) }
@@ -149,9 +167,20 @@ class MemoryGame : MiniGame() {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
+                gameAudio.stopLoop()
+
                 card.gameObject.audioShortUrl?.let {
-                    gameAudio.playUrl(RetrofitClient.BASE_URL_SOUNDS + it)
+                    val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
+                    gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
+
+                lifecycleScope.launch {
+                    delay(3000)
+
+                    if (!boardCards.all { it.isMatched }) {
+                        gameAudio.startLocalLoop(R.raw.intruc_memory, 10000L)
+                    }
+                }
 
                 resetSelection()
                 isBusy = false
@@ -161,7 +190,7 @@ class MemoryGame : MiniGame() {
                 gameAudio.playEffect(R.raw.fail)
 
                 lifecycleScope.launch {
-                    delay(1000)
+                    delay(1500)
                     firstSelectedView?.let { firstView ->
                         flipCardsDown(firstView, view, R.drawable.ic_logo) {
                             view.tag = false
@@ -228,6 +257,8 @@ class MemoryGame : MiniGame() {
 
     private fun checkGameFinished() {
         if (boardCards.all { it.isMatched }) {
+            gameAudio.stopLoop()
+
             lifecycleScope.launch {
                 delay(1000)
                 showResults("Memorama")
