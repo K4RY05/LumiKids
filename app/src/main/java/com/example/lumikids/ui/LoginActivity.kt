@@ -100,10 +100,10 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body()?.success == true) {
 
                     // 1. Obtenemos el userId de la respuesta
-                    val userId = response.body()?.userId.toString()
+                    val ID_user = response.body()?.userId.toString()
 
                     // 2. Guardamos la sesión con ambos datos
-                    sessionManager.saveLogin(email, userId)
+                    sessionManager.saveLogin(email, ID_user)
 
                     // 3. Mostramos mensaje de éxito y cambiamos de pantalla
                     Toast.makeText(

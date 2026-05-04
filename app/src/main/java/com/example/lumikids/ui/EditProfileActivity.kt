@@ -37,7 +37,6 @@ class EditProfileActivity : BaseActivity() {
     private lateinit var btnStartEditName: ImageButton
     private lateinit var btnStartEditEmail: ImageButton
 
-    // Referencias a los contenedores y botones de Guardar/Cancelar
     private lateinit var containerNameActions: LinearLayout
     private lateinit var containerEmailActions: LinearLayout
     private lateinit var btnSaveName: AppCompatButton
@@ -54,8 +53,9 @@ class EditProfileActivity : BaseActivity() {
         sessionManager = SessionManager(this)
         val id = sessionManager.getUserId()
 
+        // Si el ID es nulo o "null", redirigir al login
         if (id == null) {
-            Toast.makeText(this, "Error de sesión. Vuelve a ingresar.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Sesión no válida. Inicia sesión de nuevo.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -69,18 +69,14 @@ class EditProfileActivity : BaseActivity() {
     private fun initViews() {
         etName = findViewById(R.id.etName)
         etEmail = findViewById(R.id.etEmail)
-
         btnStartEditName = findViewById(R.id.btnStartEditName)
         btnStartEditEmail = findViewById(R.id.btnStartEditEmail)
-
         containerNameActions = findViewById(R.id.containerNameActions)
         containerEmailActions = findViewById(R.id.containerEmailActions)
-
         btnSaveName = findViewById(R.id.btnSaveName)
         btnCancelName = findViewById(R.id.btnCancelName)
         btnSaveEmail = findViewById(R.id.btnSaveEmail)
         btnCancelEmail = findViewById(R.id.btnCancelEmail)
-
         btnChangePassword = findViewById(R.id.btnChangePassword)
     }
 
@@ -109,9 +105,7 @@ class EditProfileActivity : BaseActivity() {
             hideKeyboard()
         }
 
-        btnSaveName.setOnClickListener {
-            saveChanges("name")
-        }
+        btnSaveName.setOnClickListener { saveChanges("name") }
 
         btnStartEditEmail.setOnClickListener {
             if (etName.isEnabled) {
@@ -128,9 +122,7 @@ class EditProfileActivity : BaseActivity() {
             hideKeyboard()
         }
 
-        btnSaveEmail.setOnClickListener {
-            saveChanges("email")
-        }
+        btnSaveEmail.setOnClickListener { saveChanges("email") }
 
         btnChangePassword.setOnClickListener {
             if (etName.isEnabled || etEmail.isEnabled) {
@@ -145,27 +137,29 @@ class EditProfileActivity : BaseActivity() {
     private fun fetchUserData() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                Log.d("EDIT_PROFILE_DEBUG", "Solicitando datos para el userId: $userId")
+                Log.d("EDIT_PROFILE_DEBUG", "Solicitando datos para: $userId")
                 val api = RetrofitClient.instance.create(EditProfileApi::class.java)
                 val response = api.getUserProfile(userId)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val user = response.body()!!
-                        Log.d("EDIT_PROFILE_DEBUG", "Nombre: ${user.name}, Correo: ${user.email}")
+                        // Asignación de datos desde UserProfileResponse (usa ID_user internamente)
                         etName.setText(user.name)
                         etEmail.setText(user.email)
-
                         originalName = user.name
                         originalEmail = user.email
+                        Log.d("EDIT_PROFILE_DEBUG", "Datos cargados: ${user.name}")
                     } else {
-                        Toast.makeText(this@EditProfileActivity, "Error al cargar datos del servidor", Toast.LENGTH_SHORT).show()
+                        val code = response.code()
+                        Log.e("EDIT_PROFILE_ERROR", "Error HTTP: $code")
+                        Toast.makeText(this@EditProfileActivity, "Error servidor ($code). Revisa tu conexión.", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Log.e("EDIT_PROFILE", "Error al cargar datos: ${e.message}")
-                    Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
+                    Log.e("EDIT_PROFILE_EXCEPTION", "Fallo: ${e.message}")
+                    Toast.makeText(this@EditProfileActivity, "Error de red: Datos no recibidos", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -173,12 +167,12 @@ class EditProfileActivity : BaseActivity() {
 
     private fun showPasswordDialog() {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Verificación de Identidad")
-        builder.setMessage("Por seguridad, ingresa tu contraseña actual:")
+        builder.setTitle("Verificación")
+        builder.setMessage("Ingresa tu contraseña para editar:")
 
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        input.hint = "Contraseña"
+        input.hint = "Contraseña actual"
 
         val layout = FrameLayout(this)
         layout.setPadding(60, 20, 60, 0)
@@ -194,6 +188,7 @@ class EditProfileActivity : BaseActivity() {
     }
 
     private fun verifyPassword(password: String) {
+        // Se usa el email original para verificar contra el endpoint de login
         val request = LoginRequest(originalEmail, password)
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -204,7 +199,6 @@ class EditProfileActivity : BaseActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
                         verifiedPassword = password
-                        Log.d("EDIT_PROFILE_DEBUG", "Contraseña verificada con éxito.")
                         unlockField()
                     } else {
                         Toast.makeText(this@EditProfileActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
@@ -212,7 +206,7 @@ class EditProfileActivity : BaseActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditProfileActivity, "Error de red al verificar", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditProfileActivity, "Error de verificación", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -242,11 +236,9 @@ class EditProfileActivity : BaseActivity() {
 
     private fun lockAllFields() {
         verifiedPassword = ""
-
         etName.isEnabled = false
         btnStartEditName.visibility = View.VISIBLE
         containerNameActions.visibility = View.GONE
-
         etEmail.isEnabled = false
         btnStartEditEmail.visibility = View.VISIBLE
         containerEmailActions.visibility = View.GONE
@@ -257,60 +249,41 @@ class EditProfileActivity : BaseActivity() {
         val newEmail = etEmail.text.toString().trim()
 
         if (newName.isEmpty() || newEmail.isEmpty()) {
-            Toast.makeText(this, "Ningún campo puede quedar en blanco", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Campos obligatorios", Toast.LENGTH_SHORT).show()
             return
-        }
-
-        if (fieldType == "name") {
-            btnSaveName.isEnabled = false
-            btnCancelName.isEnabled = false
-        } else {
-            btnSaveEmail.isEnabled = false
-            btnCancelEmail.isEnabled = false
         }
 
         hideKeyboard()
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // Se envía el ID_user correctamente en el request de actualización
                 val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
-                Log.d("EDIT_PROFILE_DEBUG", "Código HTTP de respuesta al guardar: ${response.code()}")
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body()?.success == true) {
-                        Toast.makeText(this@EditProfileActivity, "Actualizado correctamente", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EditProfileActivity, "Cambios guardados", Toast.LENGTH_SHORT).show()
                         originalName = newName
                         originalEmail = newEmail
-
                         lockAllFields()
                     } else {
                         val errorBody = response.errorBody()?.string()
-                        val errorMessage = if (!errorBody.isNullOrEmpty()) {
+                        val mensajeAMostrar = if (!errorBody.isNullOrEmpty()) {
                             try {
-                                org.json.JSONObject(errorBody).optString("message", "Error al actualizar")
+                                org.json.JSONObject(errorBody).getString("message")
                             } catch (e: Exception) {
                                 "Error en el formato de respuesta"
                             }
                         } else {
-                            response.body()?.message ?: "Error desconocido"
+                            "Error desconocido"
                         }
-
-                        Toast.makeText(this@EditProfileActivity, errorMessage, Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@EditProfileActivity, mensajeAMostrar, Toast.LENGTH_LONG).show()
                     }
-
-                    // Restaurar clics de los botones
-                    btnSaveName.isEnabled = true
-                    btnCancelName.isEnabled = true
-                    btnSaveEmail.isEnabled = true
-                    btnCancelEmail.isEnabled = true
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditProfileActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
-                    btnSaveName.isEnabled = true
-                    btnCancelName.isEnabled = true
-                    btnSaveEmail.isEnabled = true
-                    btnCancelEmail.isEnabled = true
+                    Toast.makeText(this@EditProfileActivity, "Error de conexión al guardar", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -319,7 +292,7 @@ class EditProfileActivity : BaseActivity() {
     private fun showDeleteAccountDialog() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
-            .setMessage("¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.")
+            .setMessage("¿Confirmas la eliminación permanente?")
             .setPositiveButton("Eliminar") { _, _ ->
                 fieldWaitingToUnlock = "delete_account"
                 showPasswordDialog()
@@ -341,12 +314,12 @@ class EditProfileActivity : BaseActivity() {
                         startActivity(intent)
                         finish()
                     } else {
-                        Toast.makeText(this@EditProfileActivity, response.body()?.message ?: "Error", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EditProfileActivity, "Error al eliminar", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditProfileActivity, "Error de conexión", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditProfileActivity, "Error de red", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -355,8 +328,8 @@ class EditProfileActivity : BaseActivity() {
     private fun goToChangePasswordScreen() {
         val intent = Intent(this, ChangePasswordActivity::class.java)
         intent.putExtra("CURRENT_PASSWORD", verifiedPassword)
-        intent.putExtra("CURRENT_NAME", etName.text.toString().trim())
-        intent.putExtra("CURRENT_EMAIL", etEmail.text.toString().trim())
+        intent.putExtra("CURRENT_NAME", originalName)
+        intent.putExtra("CURRENT_EMAIL", originalEmail)
         startActivity(intent)
         lockAllFields()
         fetchUserData()
