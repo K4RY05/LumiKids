@@ -159,8 +159,6 @@ class PecsBoardActivity : BaseActivity() {
         setContentView(R.layout.activity_pecsboard)
 
         setupImmersiveMode()
-
-        // Bajar el volumen del stream de música/media al nivel deseado para niños
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val targetVol = (maxVol * SOUND_VOLUME).toInt().coerceAtLeast(1)
@@ -176,7 +174,7 @@ class PecsBoardActivity : BaseActivity() {
         sentenceBar = findViewById(R.id.sentenceBar)
         btnSpeak    = findViewById(R.id.btnSpeak)
         btnSpeak.isEnabled = false
-        btnSpeak.alpha = 0.5f
+        btnSpeak.alpha = 0.3f
 
         btnSpeak.setOnClickListener { playSentenceAudio() }
 
