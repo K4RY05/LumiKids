@@ -15,13 +15,13 @@
       android:strokeLineJoin="round"
       android:strokeWidth="46.3"
       android:fillColor="#7dc243"
-      android:strokeColor="#dadada"
+      android:strokeColor="?attr/color_fondo_pantalla"
       android:strokeLineCap="round"/>
   <path
       android:pathData="m142.57,121.14l0,0L369.15,389.31"
       android:strokeLineJoin="round"
       android:strokeWidth="46.3"
       android:fillColor="#7dc243"
-      android:strokeColor="#dadada"
+      android:strokeColor="?attr/color_fondo_pantalla"
       android:strokeLineCap="round"/>
 </vector>

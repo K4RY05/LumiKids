@@ -47,6 +47,8 @@ class ProfileActivity : BaseActivity() {
         }
 
         btnNotificaciones.setOnClickListener {
+            val intent = Intent(this, NotificationActivity::class.java)
+            startActivity(intent)
         }
 
         btnTemas.setOnClickListener {
