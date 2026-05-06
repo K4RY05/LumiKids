@@ -93,6 +93,17 @@
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="@dimen/profile_label_text_size" />
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_parental_control"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/profile_button_height"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_button"
+            android:backgroundTint="?attr/color_secundario"
+            android:text="Control Parental"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/profile_label_text_size" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCerrarSesion"

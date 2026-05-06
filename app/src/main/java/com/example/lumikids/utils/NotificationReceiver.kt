@@ -13,28 +13,36 @@ class NotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 
-        val titulo = intent.getStringExtra("titulo") ?: "LumiKids"
-        val mensaje = intent.getStringExtra("mensaje") ?: "Tienes una actividad pendiente"
+        val esControl = intent.getBooleanExtra("control_parental", false)
+
+        val titulo: String
+        val mensaje: String
+
+        if (esControl) {
+            titulo = "Control parental"
+            mensaje = intent.getStringExtra("mensaje") ?: ""
+        } else {
+            titulo = intent.getStringExtra("titulo") ?: "LumiKids"
+            mensaje = intent.getStringExtra("mensaje") ?: ""
+        }
 
         val channelId = "lumikids_channel"
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Canal obligatorio Android 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
                 "Notificaciones LumiKids",
                 NotificationManager.IMPORTANCE_HIGH
             )
-            notificationManager.createNotificationChannel(channel)
+            manager.createNotificationChannel(channel)
         }
 
         val intentActivity = Intent(context, NotificationActivity::class.java)
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            System.currentTimeMillis().toInt(),
             intentActivity,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -48,6 +56,6 @@ class NotificationReceiver : BroadcastReceiver() {
             .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        manager.notify(System.currentTimeMillis().toInt(), notification)
     }
 }

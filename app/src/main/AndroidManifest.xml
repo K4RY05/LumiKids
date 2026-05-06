@@ -102,6 +102,9 @@
             android:name=".ui.PecsBoardActivity"
             android:screenOrientation="landscape" />
 
+        <activity android:name=".ui.ParentalControlActivity"
+            android:screenOrientation="portrait" />
+
         <!-- Splash -->
         <activity
             android:name=".ui.SplashActivity"

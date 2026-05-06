@@ -34,6 +34,7 @@ class ProfileActivity : BaseActivity() {
         val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)
         val btnTemas = findViewById<Button>(R.id.btnTemas)
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
+        val bntParentalControl = findViewById<Button>(R.id.btn_parental_control)
 
         txtTitulo.text = "Configuraciones"
 
@@ -53,6 +54,10 @@ class ProfileActivity : BaseActivity() {
 
         btnTemas.setOnClickListener {
             val intent = Intent(this, ThemeColorActivity::class.java)
+            startActivity(intent)
+        }
+        bntParentalControl.setOnClickListener {
+            val intent = Intent(this, ParentalControlActivity::class.java)
             startActivity(intent)
         }
 
