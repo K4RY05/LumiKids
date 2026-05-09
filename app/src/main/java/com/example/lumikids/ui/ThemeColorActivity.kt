@@ -36,7 +36,7 @@ class ThemeColorActivity : BaseActivity() {
             finish()
         }
 
-        marcarTemaSeleccionado()
+        markSelectedTopic()
     }
 
 
@@ -46,7 +46,7 @@ class ThemeColorActivity : BaseActivity() {
         recreate()
     }
 
-    private fun marcarTemaSeleccionado() {
+    private fun markSelectedTopic() {
         val temaActual = sessionManager.getTheme()
 
         checkBlue.visibility = View.INVISIBLE

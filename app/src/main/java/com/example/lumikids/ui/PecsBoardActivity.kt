@@ -8,7 +8,9 @@ import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.ImageLoader
@@ -34,9 +36,6 @@ class PecsBoardActivity : BaseActivity() {
 
     private val TAG = "PECS_DEBUG"
 
-    // ── Volumen global de todos los sonidos (0.0f – 1.0f) ──────────────────
-    // Ajusta este valor para subir/bajar el volumen de la app.
-    // 0.65f = ~65 % del volumen máximo del stream, apropiado para niños.
     private val SOUND_VOLUME = 0.65f
 
     private lateinit var rvOptions: RecyclerView
@@ -44,12 +43,9 @@ class PecsBoardActivity : BaseActivity() {
     private lateinit var btnSpeak: ImageButton
     private lateinit var imageLoader: ImageLoader
 
-    // ── Protección contra clicks múltiples rápidos ──────────────────────────
-    // AtomicBoolean es seguro entre threads; isSelecting se consulta en el hilo principal
-    // pero la corrutina de red también lo lee.
+
     private val isSelecting = AtomicBoolean(false)
 
-    // Debounce: tiempo mínimo entre dos selecciones válidas (ms)
     private val DEBOUNCE_MS = 600L
     private var lastSelectTime = 0L
 
@@ -63,6 +59,16 @@ class PecsBoardActivity : BaseActivity() {
     private var validationRunnable: Runnable? = null
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    private fun setupImmersiveMode() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+    }
 
     // =========================
     // ESTADO CENTRAL
@@ -152,7 +158,7 @@ class PecsBoardActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pecsboard)
 
-        // Bajar el volumen del stream de música/media al nivel deseado para niños
+        setupImmersiveMode()
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val targetVol = (maxVol * SOUND_VOLUME).toInt().coerceAtLeast(1)
@@ -168,7 +174,7 @@ class PecsBoardActivity : BaseActivity() {
         sentenceBar = findViewById(R.id.sentenceBar)
         btnSpeak    = findViewById(R.id.btnSpeak)
         btnSpeak.isEnabled = false
-        btnSpeak.alpha = 0.5f
+        btnSpeak.alpha = 0.3f
 
         btnSpeak.setOnClickListener { playSentenceAudio() }
 
@@ -341,10 +347,7 @@ class PecsBoardActivity : BaseActivity() {
         val verbAudio       = verb.text.lowercase()
         val complementAudio = complement.text.lowercase()
 
-        val url = "${RetrofitClient.BASE_URL_SOUNDS}sentences/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
-
-        Log.d(TAG, "Intentando reproducir oración: $url")
-        return url
+        return "${RetrofitClient.BASE_URL_SOUNDS}sentence/${pronounAudio}_${verbAudio}_${complementAudio}.mp3"
     }
 
     private fun playSentenceAudio(onComplete: (() -> Unit)? = null) {

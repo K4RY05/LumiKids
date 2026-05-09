@@ -25,7 +25,7 @@ abstract class MiniGame : BaseActivity() {
 
         val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val safeMaxVolume = (maxVolume * 0.9f).toInt()
+        val safeMaxVolume = (maxVolume * 0.7f).toInt()
 
         if (audioService.getStreamVolume(AudioManager.STREAM_MUSIC) > safeMaxVolume) {
             audioService.setStreamVolume(AudioManager.STREAM_MUSIC, safeMaxVolume, 0)
