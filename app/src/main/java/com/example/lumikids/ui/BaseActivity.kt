@@ -1,7 +1,9 @@
 package com.example.lumikids.ui
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.lumikids.MainActivity
 import com.example.lumikids.R
@@ -25,6 +27,16 @@ open class BaseActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+
+        // ✅ Fullscreen en todas las Activities
+        setFullScreen()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // ✅ Re-aplicar fullscreen cuando la app recupera el foco
+        // (por ejemplo al cerrar un dialog o volver de otra app)
+        if (hasFocus) setFullScreen()
     }
 
     override fun onResume() {
@@ -36,7 +48,6 @@ open class BaseActivity : AppCompatActivity() {
             return
         }
 
-        // Evitar bucles: LockActivity y ParentalControlActivity nunca se bloquean
         if (this is LockActivity || this is ParentalControlActivity || this is MainActivity || this is SplashActivity) return
 
         if (isBlocked()) {
@@ -45,20 +56,37 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Devuelve TRUE si la app debe estar bloqueada en este momento.
-     *
-     * Lógica:
-     *   - Si no hay configuración guardada → NO bloquear.
-     *   - Horario normal  (start < end, ej. 08:00–20:00):
-     *       Permitido si current está DENTRO del rango → bloquear si está FUERA.
-     *   - Horario nocturno (start > end, ej. 22:00–08:00):
-     *       Permitido si current >= start O current < end → bloquear si está FUERA.
-     */
+    private fun setFullScreen() {
+        // Ocultar ActionBar
+        supportActionBar?.hide()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+
+            window.insetsController?.let {
+                it.hide(
+                    android.view.WindowInsets.Type.statusBars() or
+                            android.view.WindowInsets.Type.navigationBars()
+                )
+                it.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            // Android 10 y anteriores
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    )
+        }
+    }
+
     private fun isBlocked(): Boolean {
         val prefs = getSharedPreferences("control_parental", MODE_PRIVATE)
 
-        // Sin configuración → no bloquear
         if (!prefs.contains("start_hour") || !prefs.contains("end_hour")) return false
 
         val startH = prefs.getInt("start_hour", 8)
@@ -71,19 +99,14 @@ open class BaseActivity : AppCompatActivity() {
         val start   = startH * 60 + startM
         val end     = endH   * 60 + endM
 
-        // Misma hora de inicio y fin → sin restricción
         if (start == end) return false
 
         val isWithinAllowedTime = if (start < end) {
-            // Horario normal: ej. 08:00 → 20:00
-            // Permitido si current está entre start y end
             current in start until end
         } else {
-            // Horario nocturno: ej. 22:00 → 08:00 (cruza medianoche)
-            // Permitido si current >= start (noche) O current < end (madrugada)
             current >= start || current < end
         }
 
-        return !isWithinAllowedTime  // bloquear = estar FUERA del horario permitido
+        return !isWithinAllowedTime
     }
 }

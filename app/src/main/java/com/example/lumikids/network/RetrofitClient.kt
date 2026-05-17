@@ -1,69 +1,43 @@
 package com.example.lumikids.network
 
-import android.content.Context
-import okhttp3.Cache
+import com.example.lumikids.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.File
 
 object RetrofitClient {
 
-    const val BASE_URL        = "http://192.168.100.132:3000/"
+    const val BASE_URL= "http://192.168.100.132:3000/"
     const val BASE_URL_IMAGES = "${BASE_URL}images/"
     const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"
 
-    private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
+    @Volatile private var _client: OkHttpClient? = null
+    @Volatile private var _retrofit: Retrofit?   = null
 
-    private var _client: OkHttpClient? = null
+    val httpClient: OkHttpClient
+        get() = getClient()
 
-    fun getClient(context: Context): OkHttpClient {
-        if (_client != null) return _client!!
+    val instance: Retrofit
+        get() = _retrofit ?: synchronized(this) {
+            _retrofit ?: Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(getClient())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .also { _retrofit = it }
+        }
 
-        val cacheDir  = File(context.cacheDir, "http_cache")
-        val cacheSize = 20L * 1024 * 1024 // 20 MB
-
-        _client = OkHttpClient.Builder()
-            .cache(Cache(cacheDir, cacheSize))
-            .addInterceptor(logging)
-            .addNetworkInterceptor { chain ->
-                val response = chain.proceed(chain.request())
-                val url = chain.request().url.toString()
-
-                if (url.contains("/api/pecs/img/")) {
-                    response.newBuilder()
-                        .header("Cache-Control", "public, max-age=604800") // 7 días
-                        .build()
-                } else {
-                    response
-                }
-            }
-            .build()
-
-        return _client!!
-    }
-
-    fun getInstance(context: Context): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(getClient(context))
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    val instance: Retrofit by lazy {
-        val client = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
-
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    private fun getClient(): OkHttpClient {
+        return _client ?: synchronized(this) {
+            _client ?: OkHttpClient.Builder()
+                .addInterceptor(
+                    HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    }
+                )
+                .build()
+                .also { _client = it }
+        }
     }
 }
-

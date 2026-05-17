@@ -14,9 +14,11 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.ImageLoader
+import coil.disk.DiskCache
 import coil.load
 import coil.memory.MemoryCache
 import coil.request.ImageRequest
+import coil.size.Size
 import com.example.lumikids.R
 import com.example.lumikids.model.PecsItem
 import com.example.lumikids.network.RetrofitClient
@@ -25,6 +27,7 @@ import com.example.lumikids.utils.SessionManager
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.io.OutputStreamWriter
 import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
@@ -60,6 +63,7 @@ class PecsBoardActivity : BaseActivity() {
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+
     private fun setupImmersiveMode() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -92,6 +96,7 @@ class PecsBoardActivity : BaseActivity() {
 
     private var sentence = SentenceState()
 
+
     // =========================
     // DATA CLASS & MAPA
     // =========================
@@ -113,8 +118,7 @@ class PecsBoardActivity : BaseActivity() {
         ),
         "run" to listOf(
             ComplementData("park",   "place/park.jpg",   "place"),
-            ComplementData("patio",  "place/patio.jpg",  "place"),
-            ComplementData("school", "place/school.jpg", "place"),
+            ComplementData("yard",  "place/yard.jpg",  "place"),
             ComplementData("street", "place/street.jpg", "place")
         ),
         "play" to listOf(
@@ -149,7 +153,9 @@ class PecsBoardActivity : BaseActivity() {
         )
     )
 
-    private fun imgUrl(path: String) = "${RetrofitClient.BASE_URL}img/$path?w=200"
+    // ⬆️ CAMBIO CLAVE: de ?w=200 a ?w=512&q=100 para alta resolución
+
+    private fun imgUrl(path: String) = "${RetrofitClient.BASE_URL}img/$path?w=512&q=90"
 
     // =========================
     // onCreate
@@ -164,9 +170,20 @@ class PecsBoardActivity : BaseActivity() {
         val targetVol = (maxVol * SOUND_VOLUME).toInt().coerceAtLeast(1)
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
 
+        // ⬆️ ImageLoader con memoria y disco aumentados para alta resolución
         imageLoader = ImageLoader.Builder(this)
-            .memoryCache { MemoryCache.Builder(this).maxSizePercent(0.25).build() }
-            .okHttpClient { RetrofitClient.getClient(this) }
+            .memoryCache {
+                MemoryCache.Builder(this)
+                    .maxSizePercent(0.35) // ⬆️ 35% de RAM para imágenes
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(File(cacheDir, "image_cache"))
+                    .maxSizeBytes(100L * 1024 * 1024) // ⬆️ 100 MB en disco
+                    .build()
+            }
+            .okHttpClient { RetrofitClient.httpClient }
             .crossfade(true)
             .build()
 
@@ -364,7 +381,12 @@ class PecsBoardActivity : BaseActivity() {
         val view = LayoutInflater.from(this).inflate(R.layout.item_sentence, sentenceBar, false)
         view.tag = item
         view.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-        view.findViewById<ImageView>(R.id.imgSentence).load(item.imageUrl, imageLoader)
+
+        // ⬆️ Carga de imágenes en alta resolución en la barra de sentencias
+        view.findViewById<ImageView>(R.id.imgSentence).load(item.imageUrl, imageLoader) {
+            size(Size.ORIGINAL)
+            allowHardware(true)
+        }
 
         view.setOnClickListener {
             // Debounce en clicks de la sentenceBar también
@@ -476,7 +498,12 @@ class PecsBoardActivity : BaseActivity() {
                     runCatching {
                         imageLoader.execute(
                             ImageRequest.Builder(this@PecsBoardActivity)
-                                .data(url).memoryCacheKey(url).diskCacheKey(url).build()
+                                .data(url)
+                                .size(Size.ORIGINAL)
+                                .allowHardware(true)
+                                .memoryCacheKey(url)
+                                .diskCacheKey(url)
+                                .build()
                         )
                     }
                 }
@@ -488,7 +515,12 @@ class PecsBoardActivity : BaseActivity() {
         items.forEach { item ->
             imageLoader.enqueue(
                 ImageRequest.Builder(this)
-                    .data(item.imageUrl).memoryCacheKey(item.imageUrl).diskCacheKey(item.imageUrl).build()
+                    .data(item.imageUrl)
+                    .size(Size.ORIGINAL)
+                    .allowHardware(true)
+                    .memoryCacheKey(item.imageUrl)
+                    .diskCacheKey(item.imageUrl)
+                    .build()
             )
         }
     }
@@ -503,7 +535,12 @@ class PecsBoardActivity : BaseActivity() {
                     runCatching {
                         imageLoader.execute(
                             ImageRequest.Builder(this@PecsBoardActivity)
-                                .data(url).memoryCacheKey(url).diskCacheKey(url).build()
+                                .data(url)
+                                .size(Size.ORIGINAL)
+                                .allowHardware(true)
+                                .memoryCacheKey(url)
+                                .diskCacheKey(url)
+                                .build()
                         )
                     }
                 }

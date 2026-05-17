@@ -1,38 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="content_max_width">580dp</dimen>
     <dimen name="card_margin_bottom">64dp</dimen>
-
     <dimen name="card_min_height">400dp</dimen>
-
-    <!-- Nubes -->
+    <!--  Nubes  -->
     <dimen name="cloud_size">180dp</dimen>
-
-    <!-- Titulo main -->
+    <!--  Titulo main  -->
     <dimen name="title_size">60sp</dimen>
-
-
     <dimen name="ic_top_corner">120dp</dimen>
-
-
     <dimen name="tarjeta_memorama">130dp</dimen>
-
     <dimen name="selector_arrow_size">120dp</dimen>
     <dimen name="selector_card_size">220dp</dimen>
     <dimen name="selector_number_text">140sp</dimen>
     <dimen name="selector_title_text">48sp</dimen>
     <dimen name="button_start_text">48sp</dimen>
     <dimen name="button_start_padding">64dp</dimen>
-
-
     <dimen name="pause_title_size">36sp</dimen>
-
     <dimen name="text_size_result_title">42sp</dimen>
     <dimen name="text_size_result_label">32sp</dimen>
     <dimen name="text_size_result_value">64sp</dimen>
-
-
-
     <dimen name="fab_margin">200dp</dimen>
     <dimen name="profile_title_size">60sp</dimen>
     <dimen name="profile_avatar_size">200dp</dimen>
@@ -42,13 +27,19 @@
     <dimen name="profile_button_width">380dp</dimen>
     <dimen name="profile_max_width">550dp</dimen>
     <dimen name="profile_margin_top_standard">40dp</dimen>
-
     <dimen name="text_instruction">62sp</dimen>
-
-
     <dimen name="game_icon_size">150dp</dimen>
     <dimen name="game_icon_padding">16dp</dimen>
-
     <dimen name="result_icon_size">200dp</dimen>
-
+    <dimen name="pecs_control_button_size">140dp</dimen>
+    <dimen name="pecs_icon_padding">24dp</dimen>
+    <dimen name="pecs_control_margin">24dp</dimen>
+    <dimen name="pecs_vertical_gap">24dp</dimen>
+    <dimen name="pecs_result_icon_size">200dp</dimen>
+    <dimen name="notif_btn_cancel_size">90dp</dimen>
+    <dimen name="notif_btn_add_size">90dp</dimen>
+    <dimen name="notif_btn_accept_height">64dp</dimen>
+    <dimen name="notif_title_text_size">62sp</dimen>
+    <dimen name="notif_label_text_size">24sp</dimen>
+    <dimen name="notif_btn_accept_text_size">40sp</dimen>
 </resources>
