@@ -22,16 +22,15 @@ import com.example.lumikids.R
 import com.example.lumikids.utils.NotificationReceiver
 import java.util.*
 
-
 class ParentalControlActivity : BaseActivity() {
 
     private lateinit var tvStartTime: TextView
     private lateinit var tvEndTime: TextView
 
-    private var startHour = 15
+    private var startHour   = 15
     private var startMinute = 0
-    private var endHour = 16
-    private var endMinute = 0
+    private var endHour     = 16
+    private var endMinute   = 0
 
     private var captchaCode: String = ""
 
@@ -64,9 +63,12 @@ class ParentalControlActivity : BaseActivity() {
             Toast.makeText(this, "Horario guardado", Toast.LENGTH_SHORT).show()
         }
 
-        // ✅ Lo primero que se ve al entrar
         showCaptchaDialog()
     }
+
+    // ─────────────────────────────────────────────
+    // CAPTCHA
+    // ─────────────────────────────────────────────
 
     private fun showCaptchaDialog() {
         val dialog = Dialog(this)
@@ -87,7 +89,6 @@ class ParentalControlActivity : BaseActivity() {
             imgCaptcha.setImageBitmap(generateCaptchaBitmap(captchaCode))
         }
 
-        // Cancelar — regresa a la pantalla anterior
         btnCancelar.setOnClickListener {
             dialog.dismiss()
             finish()
@@ -95,9 +96,7 @@ class ParentalControlActivity : BaseActivity() {
 
         btnAceptar.setOnClickListener {
             val userInput = edtCaptcha.text.toString().trim()
-
             if (userInput.equals(captchaCode, ignoreCase = true)) {
-                // ✅ Correcto — cierra el dialog y muestra la pantalla
                 dialog.dismiss()
             } else {
                 Toast.makeText(this, "Captcha incorrecto", Toast.LENGTH_SHORT).show()
@@ -119,7 +118,6 @@ class ParentalControlActivity : BaseActivity() {
     }
 
     private fun generateCaptchaCode(length: Int = 6): String {
-        // Más caracteres y longitud 6
         val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789@#&"
         return (1..length).map { chars.random() }.joinToString("")
     }
@@ -131,97 +129,58 @@ class ParentalControlActivity : BaseActivity() {
         val canvas = Canvas(bitmap)
         val random = java.util.Random()
 
-        // Fondo con gradiente manual
         canvas.drawColor(Color.rgb(220, 220, 220))
 
-        // ── Líneas de ruido de fondo ──
-        val noisePaint = Paint().apply {
-            strokeWidth = 1.5f
-            isAntiAlias = true
-        }
+        val noisePaint = Paint().apply { strokeWidth = 1.5f; isAntiAlias = true }
         repeat(12) {
-            noisePaint.color = Color.rgb(
-                random.nextInt(180),
-                random.nextInt(180),
-                random.nextInt(180)
-            )
+            noisePaint.color = Color.rgb(random.nextInt(180), random.nextInt(180), random.nextInt(180))
             canvas.drawLine(
-                random.nextFloat() * width,
-                random.nextFloat() * height,
-                random.nextFloat() * width,
-                random.nextFloat() * height,
+                random.nextFloat() * width, random.nextFloat() * height,
+                random.nextFloat() * width, random.nextFloat() * height,
                 noisePaint
             )
         }
 
-        // ── Puntos de ruido ──
         val dotPaint = Paint().apply { strokeWidth = 3f }
         repeat(80) {
-            dotPaint.color = Color.rgb(
-                random.nextInt(200),
-                random.nextInt(200),
-                random.nextInt(200)
-            )
-            canvas.drawPoint(
-                random.nextFloat() * width,
-                random.nextFloat() * height,
-                dotPaint
-            )
+            dotPaint.color = Color.rgb(random.nextInt(200), random.nextInt(200), random.nextInt(200))
+            canvas.drawPoint(random.nextFloat() * width, random.nextFloat() * height, dotPaint)
         }
 
-        // ── Cada letra con rotación, color y posición aleatoria ──
         val letterPaint = Paint().apply {
-            textSize     = 58f
+            textSize       = 58f
             isFakeBoldText = true
-            isAntiAlias  = true
-            typeface     = android.graphics.Typeface.MONOSPACE
+            isAntiAlias    = true
+            typeface       = android.graphics.Typeface.MONOSPACE
         }
 
         val letterWidth = width.toFloat() / text.length
         text.forEachIndexed { i, char ->
-            letterPaint.color = Color.rgb(
-                random.nextInt(100),       // colores oscuros para legibilidad mínima
-                random.nextInt(100),
-                random.nextInt(100)
-            )
-
+            letterPaint.color = Color.rgb(random.nextInt(100), random.nextInt(100), random.nextInt(100))
             canvas.save()
-
             val x = letterWidth * i + letterWidth / 2
-            val y = height / 2f + 20f + random.nextInt(20) - 10  // variación vertical
-
-            canvas.rotate(
-                (random.nextFloat() * 40f) - 20f,  // rotación ±20°
-                x,
-                y
-            )
-
+            val y = height / 2f + 20f + random.nextInt(20) - 10
+            canvas.rotate((random.nextFloat() * 40f) - 20f, x, y)
             canvas.drawText(char.toString(), x - 18f, y, letterPaint)
             canvas.restore()
         }
 
-        // ── Líneas encima del texto ──
-        val overPaint = Paint().apply {
-            strokeWidth = 2f
-            isAntiAlias = true
-        }
+        val overPaint = Paint().apply { strokeWidth = 2f; isAntiAlias = true }
         repeat(4) {
-            overPaint.color = Color.rgb(
-                random.nextInt(150),
-                random.nextInt(150),
-                random.nextInt(150)
-            )
+            overPaint.color = Color.rgb(random.nextInt(150), random.nextInt(150), random.nextInt(150))
             canvas.drawLine(
-                random.nextFloat() * width,
-                random.nextFloat() * height,
-                random.nextFloat() * width,
-                random.nextFloat() * height,
+                random.nextFloat() * width, random.nextFloat() * height,
+                random.nextFloat() * width, random.nextFloat() * height,
                 overPaint
             )
         }
 
         return bitmap
     }
+
+    // ─────────────────────────────────────────────
+    // TIME PICKER
+    // ─────────────────────────────────────────────
 
     private fun showTimePicker(isStart: Boolean) {
         val hour   = if (isStart) startHour else endHour
@@ -244,54 +203,96 @@ class ParentalControlActivity : BaseActivity() {
         return String.format("%02d:%02d %s", h12, minute, period)
     }
 
+    // ─────────────────────────────────────────────
+    // GUARDAR / CARGAR
+    // ─────────────────────────────────────────────
+
     private fun saveTimes() {
         getSharedPreferences("control_parental", MODE_PRIVATE).edit()
-            .putInt("start_hour", startHour).putInt("start_minute", startMinute)
-            .putInt("end_hour", endHour).putInt("end_minute", endMinute)
+            .putInt("start_hour",   startHour)
+            .putInt("start_minute", startMinute)
+            .putInt("end_hour",     endHour)
+            .putInt("end_minute",   endMinute)
             .apply()
     }
 
     private fun loadSavedTimes() {
         val prefs   = getSharedPreferences("control_parental", MODE_PRIVATE)
-        startHour   = prefs.getInt("start_hour", 8);   startMinute = prefs.getInt("start_minute", 0)
-        endHour     = prefs.getInt("end_hour", 20);    endMinute   = prefs.getInt("end_minute", 0)
+        startHour   = prefs.getInt("start_hour",   8)
+        startMinute = prefs.getInt("start_minute", 0)
+        endHour     = prefs.getInt("end_hour",     20)
+        endMinute   = prefs.getInt("end_minute",   0)
         tvStartTime.text = formatTime(startHour, startMinute)
         tvEndTime.text   = formatTime(endHour, endMinute)
     }
 
+    // ─────────────────────────────────────────────
+    // ALARMAS
+    // ─────────────────────────────────────────────
+
     private fun getTargetTimeMillis(hour: Int, minute: Int, offsetMillis: Long = 0): Long {
-        return Calendar.getInstance().apply {
+        val baseTime = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            if (timeInMillis - offsetMillis <= System.currentTimeMillis()) {
+            // ✅ Verifica si la hora BASE ya pasó (sin offset)
+            if (timeInMillis <= System.currentTimeMillis()) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
-        }.timeInMillis - offsetMillis
+        }.timeInMillis
+        // ✅ Resta el offset DESPUÉS de tener el tiempo base correcto
+        return baseTime - offsetMillis
     }
 
     private fun scheduleNotifications() {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-            scheduleNotificationsFallback(); return
+            scheduleNotificationsFallback()
+            return
         }
+
+        // Notificaciones 10 y 5 minutos antes
         setAlarm(alarmManager, getTargetTimeMillis(endHour, endMinute, 10 * 60 * 1000L), "Faltan 10 minutos para el bloqueo")
         setAlarm(alarmManager, getTargetTimeMillis(endHour, endMinute,  5 * 60 * 1000L), "Faltan 5 minutos para el bloqueo")
+
+
+        setAlarmCountdown(alarmManager, getTargetTimeMillis(endHour, endMinute, 10 * 1000L))
     }
 
     private fun scheduleNotificationsFallback() {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
         listOf(
             getTargetTimeMillis(endHour, endMinute, 10 * 60 * 1000L) to "Faltan 10 minutos para el bloqueo",
             getTargetTimeMillis(endHour, endMinute,  5 * 60 * 1000L) to "Faltan 5 minutos para el bloqueo"
         ).forEach { (time, msg) ->
             alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, buildPendingIntent(msg))
         }
+
+
+        setAlarmCountdown(alarmManager, getTargetTimeMillis(endHour, endMinute, 10 * 1000L))
     }
 
     private fun setAlarm(alarmManager: AlarmManager, time: Long, message: String) {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, time, buildPendingIntent(message))
+    }
+
+    private fun setAlarmCountdown(alarmManager: AlarmManager, time: Long) {
+        val intent = Intent(this, CountdownDialogActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 998, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            (getSystemService(Context.ALARM_SERVICE) as AlarmManager).canScheduleExactAlarms()) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, time, pendingIntent)
+        }
     }
 
     private fun buildPendingIntent(message: String): PendingIntent {

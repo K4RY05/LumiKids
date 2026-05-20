@@ -1,6 +1,7 @@
 package com.example.lumikids.ui
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -15,40 +16,30 @@ open class BaseActivity : AppCompatActivity() {
     private lateinit var baseSessionManager: SessionManager
     private var appliedTheme: String = ""
 
+     open fun requiredOrientation(): Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enforceOrientation()
         baseSessionManager = SessionManager(this)
         appliedTheme = baseSessionManager.getTheme()
-
-        when (appliedTheme) {
-            "green" -> setTheme(R.style.Theme_LumiKids_Green)
-            "red"   -> setTheme(R.style.Theme_LumiKids_Red)
-            "pink"  -> setTheme(R.style.Theme_LumiKids_Pink)
-            else    -> setTheme(R.style.Theme_LumiKids_Blue)
-        }
-
+        applyUserTheme(appliedTheme)
         super.onCreate(savedInstanceState)
-
-        // ✅ Fullscreen en todas las Activities
         setFullScreen()
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        // ✅ Re-aplicar fullscreen cuando la app recupera el foco
-        // (por ejemplo al cerrar un dialog o volver de otra app)
-        if (hasFocus) setFullScreen()
     }
 
     override fun onResume() {
         super.onResume()
+        enforceOrientation()
 
         val currentTheme = baseSessionManager.getTheme()
         if (appliedTheme != currentTheme) {
+            appliedTheme = currentTheme
             recreate()
             return
         }
 
-        if (this is LockActivity || this is ParentalControlActivity || this is MainActivity || this is SplashActivity) return
+        if (this is LockActivity || this is ParentalControlActivity ||
+            this is MainActivity  || this is SplashActivity) return
 
         if (isBlocked()) {
             startActivity(Intent(this, LockActivity::class.java))
@@ -56,12 +47,31 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    private fun setFullScreen() {
-        // Ocultar ActionBar
-        supportActionBar?.hide()
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) setFullScreen()
+    }
 
+    private fun enforceOrientation() {
+        val required = requiredOrientation()
+        if (required != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED &&
+            requestedOrientation != required) {
+            requestedOrientation = required
+        }
+    }
+
+    private fun applyUserTheme(theme: String) {
+        when (theme) {
+            "green" -> setTheme(R.style.Theme_LumiKids_Green)
+            "red"   -> setTheme(R.style.Theme_LumiKids_Red)
+            "pink"  -> setTheme(R.style.Theme_LumiKids_Pink)
+            else    -> setTheme(R.style.Theme_LumiKids_Blue)
+        }
+    }
+
+    private fun setFullScreen() {
+        supportActionBar?.hide()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+
             window.insetsController?.let {
                 it.hide(
                     android.view.WindowInsets.Type.statusBars() or
@@ -71,7 +81,6 @@ open class BaseActivity : AppCompatActivity() {
                     android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
-            // Android 10 y anteriores
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                     View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -86,7 +95,6 @@ open class BaseActivity : AppCompatActivity() {
 
     private fun isBlocked(): Boolean {
         val prefs = getSharedPreferences("control_parental", MODE_PRIVATE)
-
         if (!prefs.contains("start_hour") || !prefs.contains("end_hour")) return false
 
         val startH = prefs.getInt("start_hour", 8)

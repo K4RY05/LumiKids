@@ -12,6 +12,7 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
+        android:appCategory="game"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,6 +22,11 @@
         android:roundIcon="@mipmap/ic_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids.Blue">
+
+
+        <property
+            android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+            android:value="true" />
 
         <!-- Receiver -->
         <receiver
@@ -96,14 +102,27 @@
         <!-- Extras -->
         <activity
             android:name=".ui.NotificationActivity"
-            android:screenOrientation="portrait" />
+            />
 
         <activity
             android:name=".ui.PecsBoardActivity"
             android:screenOrientation="landscape" />
 
-        <activity android:name=".ui.ParentalControlActivity"
+        <activity
+            android:name=".ui.ParentalControlActivity"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.CountdownDialogActivity"
+            android:theme="@style/Theme.Translucent"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <activity
+            android:name=".ui.LockActivity"
+            android:theme="@style/Theme.LumiKids.Blue"
+            android:screenOrientation="landscape" />
 
         <!-- Splash -->
         <activity
