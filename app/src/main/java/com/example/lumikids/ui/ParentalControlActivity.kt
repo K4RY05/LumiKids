@@ -97,7 +97,7 @@ class ParentalControlActivity : BaseActivity() {
             val userInput = edtCaptcha.text.toString().trim()
 
             if (userInput.equals(captchaCode, ignoreCase = true)) {
-                // ✅ Correcto — cierra el dialog y muestra la pantalla
+                //  Correcto — cierra el dialog y muestra la pantalla
                 dialog.dismiss()
             } else {
                 Toast.makeText(this, "Captcha incorrecto", Toast.LENGTH_SHORT).show()

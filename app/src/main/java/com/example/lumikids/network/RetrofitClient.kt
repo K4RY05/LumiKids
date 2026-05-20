@@ -1,14 +1,12 @@
 package com.example.lumikids.network
 
-import com.example.lumikids.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-
-    const val BASE_URL= "http://192.168.100.132:3000/"
+    const val BASE_URL= "http://192.168.100.13:3000/"
     const val BASE_URL_IMAGES = "${BASE_URL}images/"
     const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"
 

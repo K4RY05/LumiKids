@@ -2,90 +2,103 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/color_fondo_pantalla">
 
-    <!-- Botón regresar -->
+    <!-- Botón Back -->
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_margin="16dp"
-        android:background="?attr/color_fondo_pantalla"
+        android:layout_width="@dimen/pecs_control_button_size"
+        android:layout_height="@dimen/pecs_control_button_size"
+        android:layout_margin="@dimen/pecs_control_margin"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_left"
         android:scaleType="centerInside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <!-- Barra de oración -->
+    <!-- Barra de oración dinámica (NO fija) -->
     <LinearLayout
         android:id="@+id/sentenceBar"
-        android:layout_width="552dp"
-        android:layout_height="164dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="12dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/pecs_control_margin"
+        android:layout_marginTop="@dimen/pecs_control_margin"
+        android:layout_marginEnd="@dimen/pecs_control_margin"
         android:background="@drawable/bg_card"
         android:orientation="horizontal"
         android:padding="5dp"
         android:weightSum="3"
+        app:layout_constraintDimensionRatio="3.5:1"
         app:layout_constraintEnd_toStartOf="@id/sideButtons"
         app:layout_constraintStart_toEndOf="@id/btnBack"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ✔️ RESULTADO  -->
+    <!-- Icono de Resultado -->
     <ImageView
         android:id="@+id/resultIcon"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="@dimen/pecs_result_icon_size"
+        android:layout_height="@dimen/pecs_result_icon_size"
         android:visibility="gone"
         android:elevation="10dp"
         android:translationZ="10dp"
         android:src="@drawable/ic_correct"
+        android:scaleType="fitCenter"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Botones laterales -->
-    <LinearLayout
+    <!-- Contenedor de Botones Laterales dinámico -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/sideButtons"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/pecs_control_button_size"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="@dimen/pecs_control_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/btnClear"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="12dp"
-            android:background="?attr/color_fondo_pantalla"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/pecs_control_margin"
+            android:background="@drawable/bg_button"
+            android:backgroundTint="?attr/color_fondo_pantalla"
             android:src="@drawable/ic_delete"
-            android:scaleType="centerInside"/>
+            android:scaleType="centerInside"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintDimensionRatio="1:1"/>
 
         <ImageButton
             android:id="@+id/btnSpeak"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:background="?attr/color_fondo_pantalla"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="@dimen/pecs_control_margin"
+            android:background="@drawable/bg_button"
+            android:backgroundTint="?attr/color_fondo_pantalla"
             android:src="@drawable/ic_speaker"
-            android:scaleType="centerInside"/>
-    </LinearLayout>
+            android:scaleType="centerInside"
+            app:layout_constraintTop_toBottomOf="@id/btnClear"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"/>
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOptions"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_marginTop="@dimen/pecs_vertical_gap"
+        android:layout_marginBottom="@dimen/pecs_control_margin"
         app:layout_constraintTop_toBottomOf="@id/sentenceBar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/pecs_control_margin"
+        android:layout_marginEnd="@dimen/pecs_control_margin"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

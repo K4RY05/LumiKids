@@ -5,76 +5,79 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     app:cardCornerRadius="15dp"
-    app:cardElevation="0dp">
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="15dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvTitulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hora de Dormir"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/ivFlecha"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:src="@android:drawable/arrow_down_float" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutExpandible"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="15dp">
+        android:visibility="gone"
+        android:layout_marginTop="10dp">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/tvTitulo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hora de Dormir"
-                android:textColor="#000000"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/ivFlecha"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_alignParentEnd="true"
-                android:src="@android:drawable/arrow_down_float" />
-        </RelativeLayout>
-
-        <LinearLayout
-            android:id="@+id/layoutExpandible"
+        <TextView
+            android:id="@+id/tvMensaje"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginTop="10dp">
+            android:text="Es hora de ponerle la pijama a los niños"
+            android:textColor="#555555" />
 
-            <TextView
-                android:id="@+id/tvMensaje"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Es hora de ponerle la pijama a los niños"
-                android:textColor="#555555" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_marginTop="15dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:layout_marginTop="15dp">
+            <ImageButton
+                android:id="@+id/btnEliminar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackground"
+                android:src="@android:drawable/ic_delete"
+                app:tint="#D32F2F" />
 
-                <ImageButton
-                    android:id="@+id/btnEliminar"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:src="@android:drawable/ic_delete"
-                    app:tint="#D32F2F" />
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <ImageButton
-                    android:id="@+id/btnEditar"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:src="@android:drawable/ic_menu_edit" />
-            </LinearLayout>
+            <ImageButton
+                android:id="@+id/btnEditar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackground"
+                android:src="@android:drawable/ic_menu_edit"
+                app:tint="#000000" />
         </LinearLayout>
     </LinearLayout>
+</LinearLayout>
 </androidx.cardview.widget.CardView>

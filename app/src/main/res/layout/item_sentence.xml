@@ -4,13 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/containerSentence"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:layout_margin="6dp"
-    app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="16dp"
+    android:layout_height="match_parent"
+    android:layout_margin="2dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
-    app:strokeColor="#F0F0F0"
-    app:strokeWidth="1dp">
+    app:strokeColor="?attr/color_terciario"
+    app:cardBackgroundColor="@color/white"
+    app:strokeWidth="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -20,19 +20,20 @@
             android:id="@+id/imgSentence"
             android:layout_width="0dp"
             android:layout_height="0dp"
-        android:scaleType="centerCrop"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            android:padding="4dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/imgResult"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:visibility="gone"
-            app:layout_constraintHeight_percent="0.6"
-            app:layout_constraintWidth_percent="0.6"
+            android:visibility="invisible"
+            app:layout_constraintHeight_percent="0.7"
+            app:layout_constraintWidth_percent="0.7"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

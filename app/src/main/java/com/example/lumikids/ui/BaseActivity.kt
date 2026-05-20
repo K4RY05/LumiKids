@@ -10,7 +10,7 @@ import com.example.lumikids.R
 import com.example.lumikids.utils.SessionManager
 import java.util.Calendar
 
-open class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : AppCompatActivity() {
 
     private lateinit var baseSessionManager: SessionManager
     private var appliedTheme: String = ""
@@ -28,14 +28,11 @@ open class BaseActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // ✅ Fullscreen en todas las Activities
         setFullScreen()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        // ✅ Re-aplicar fullscreen cuando la app recupera el foco
-        // (por ejemplo al cerrar un dialog o volver de otra app)
         if (hasFocus) setFullScreen()
     }
 

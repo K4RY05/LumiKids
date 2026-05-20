@@ -10,6 +10,10 @@ import com.example.lumikids.utils.GameAudioManager
 import com.example.lumikids.utils.GameTimer
 import com.example.lumikids.utils.ScoreManager
 import android.view.KeyEvent
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 
 abstract class MiniGame : BaseActivity() {
@@ -21,11 +25,12 @@ abstract class MiniGame : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
+        setupImmersiveMode()
 
         val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val safeMaxVolume = (maxVolume * 0.9f).toInt()
+        val safeMaxVolume = (maxVolume * 0.7f).toInt()
 
         if (audioService.getStreamVolume(AudioManager.STREAM_MUSIC) > safeMaxVolume) {
             audioService.setStreamVolume(AudioManager.STREAM_MUSIC, safeMaxVolume, 0)
@@ -71,6 +76,12 @@ abstract class MiniGame : BaseActivity() {
         gameAudio.stopNetworkAudio()
 
         gameTimer.pause()
+    }
+
+    private fun setupImmersiveMode() {
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
 
