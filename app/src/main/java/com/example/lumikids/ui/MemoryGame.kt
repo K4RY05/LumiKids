@@ -48,9 +48,6 @@ class MemoryGame : MiniGame() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
-            gameTimer.pause()
-            gameAudio.stopNetworkAudio()
-
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
@@ -58,6 +55,21 @@ class MemoryGame : MiniGame() {
                 onExit = { finish() }
             )
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        gameTimer.pause()
+
+        // DETIENE ambos tipos de audios cuando se pausa o se sale de la app
+        gameAudio.stopNetworkAudio()
+        gameAudio.stopLocalAudio()
+    }
+
+    override fun onDestroy() {
+        // LIMPIA todos los reproductores de audio al destruir la actividad
+        gameAudio.releaseAll()
+        super.onDestroy()
     }
 
     override fun loadGameData() {
@@ -85,7 +97,7 @@ class MemoryGame : MiniGame() {
                         boardCards = memoryCards.shuffled()
                         gameTimer.start()
                         return@withContext true
-                    }else {
+                    } else {
                         Log.e("MINIGAME_DEBUG", "Error en la respuesta de la API: ${call.code()} - ${call.message()}")
                     }
                     false
@@ -158,21 +170,26 @@ class MemoryGame : MiniGame() {
             firstSelectedCard = card
             firstSelectedView = view
         } else {
-            isBusy = true
+            isBusy = true // Bloquea clics inmediatamente para evaluar el par
             val isMatch = firstSelectedCard?.gameObject?.id == card.gameObject.id
 
             if (isMatch) {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
+                // Reproduce el audio personalizado del objeto o el sonido de victoria
                 card.gameObject.audioShortUrl?.let {
                     val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
                     gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
 
                 resetSelection()
-                isBusy = false
-                checkGameFinished()
+
+                lifecycleScope.launch {
+                    delay(1000)
+                    isBusy = false
+                    checkGameFinished()
+                }
             } else {
                 errors++
                 gameAudio.playEffect(R.raw.fail)

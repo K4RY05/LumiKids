@@ -22,12 +22,29 @@ class GameAudioManager(
 
 
     fun playEffect(resId: Int) {
-        MediaPlayer.create(context, resId)?.apply {
-            setOnCompletionListener { release() }
+        stopLocalAudio() // Detiene cualquier efecto anterior antes de iniciar uno nuevo
+        localMediaPlayer = MediaPlayer.create(context, resId)?.apply {
+            setOnCompletionListener {
+                it.release()
+                if (localMediaPlayer == this) localMediaPlayer = null
+            }
             start()
         }
     }
 
+    // NUEVO MÉTODO: Detiene el audio local (instrucciones, efectos de raw)
+    fun stopLocalAudio() {
+        try {
+            localMediaPlayer?.let {
+                if (it.isPlaying) it.stop()
+                it.release()
+            }
+        } catch (e: IllegalStateException) {
+            Log.e("GameAudioManager", "Estado inválido al detener audio local")
+        } finally {
+            localMediaPlayer = null
+        }
+    }
 
     fun playUrl(url: String) {
         stopNetworkAudio()
@@ -56,7 +73,6 @@ class GameAudioManager(
         }
     }
 
-
     // Inicia un bucle que reproduce un audio de internet cada X milisegundos
     fun startLoop(url: String, delayMs: Long = 8000L) {
         stopLoop() // Nos aseguramos de detener cualquier bucle anterior
@@ -69,7 +85,7 @@ class GameAudioManager(
         }
     }
 
-    // NUEVO: Inicia un bucle que reproduce un audio LOCAL (res/raw) cada X milisegundos
+    // Inicia un bucle que reproduce un audio LOCAL (res/raw) cada X milisegundos
     fun startLocalLoop(resId: Int, delayMs: Long = 8000L) {
         stopLoop() // Detenemos cualquier bucle anterior (sea de red o local)
 
@@ -104,7 +120,6 @@ class GameAudioManager(
     fun releaseAll() {
         stopLoop()
         stopNetworkAudio()
-        localMediaPlayer?.release()
-        localMediaPlayer = null
+        stopLocalAudio()
     }
 }
