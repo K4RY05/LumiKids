@@ -50,13 +50,10 @@ class MemoryGame : MiniGame() {
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
             gameTimer.pause()
             gameAudio.stopNetworkAudio()
-            gameAudio.stopLoop() // Detiene la instrucción al pausar
 
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
-                    // Reanuda la instrucción local cada 7 segundos
-                    gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
                 },
                 onExit = { finish() }
             )
@@ -100,7 +97,8 @@ class MemoryGame : MiniGame() {
 
             if (success) {
                 createDynamicBoard()
-                gameAudio.startLocalLoop(R.raw.intruc_memory, 7000L)
+                // Reproduce la instrucción una sola vez al cargar el tablero
+                gameAudio.playEffect(R.raw.intruc_memory)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -167,20 +165,10 @@ class MemoryGame : MiniGame() {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
-                gameAudio.stopLoop()
-
                 card.gameObject.audioShortUrl?.let {
                     val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
                     gameAudio.playUrl(audioUrl)
                 } ?: gameAudio.playEffect(R.raw.win)
-
-                lifecycleScope.launch {
-                    delay(3000)
-
-                    if (!boardCards.all { it.isMatched }) {
-                        gameAudio.startLocalLoop(R.raw.intruc_memory, 10000L)
-                    }
-                }
 
                 resetSelection()
                 isBusy = false
@@ -257,8 +245,6 @@ class MemoryGame : MiniGame() {
 
     private fun checkGameFinished() {
         if (boardCards.all { it.isMatched }) {
-            gameAudio.stopLoop()
-
             lifecycleScope.launch {
                 delay(1000)
                 showResults("Memorama")

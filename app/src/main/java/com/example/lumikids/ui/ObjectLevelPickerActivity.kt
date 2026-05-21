@@ -15,7 +15,7 @@ class ObjectLevelPickerActivity : BaseActivity() {
     // Estado
     private var selectedRounds: Int = 3
     private val minRounds = 1
-    private val maxRounds = 12
+    private val maxRounds = 8
 
     private lateinit var tvRoundCount: TextView
 

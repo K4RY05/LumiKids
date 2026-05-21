@@ -126,8 +126,7 @@ class PecsBoardActivity : BaseActivity() {
         "write" to listOf(
             ComplementData("letter",     "school/letter.jpg",     "school"),
             ComplementData("number",     "school/number.jpg",     "school"),
-            ComplementData("whiteboard", "school/whiteboard.jpg", "school"),
-            ComplementData("paper",      "school/paper.jpg",      "school")
+            ComplementData("whiteboard", "school/whiteboard.jpg", "school")
         ),
         "cut" to listOf(
             ComplementData("paper",    "school/paper.jpg",    "school"),

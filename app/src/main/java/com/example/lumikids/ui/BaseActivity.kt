@@ -11,12 +11,12 @@ import com.example.lumikids.R
 import com.example.lumikids.utils.SessionManager
 import java.util.Calendar
 
-open class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : AppCompatActivity() {
 
     private lateinit var baseSessionManager: SessionManager
     private var appliedTheme: String = ""
 
-     open fun requiredOrientation(): Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    open fun requiredOrientation(): Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enforceOrientation()

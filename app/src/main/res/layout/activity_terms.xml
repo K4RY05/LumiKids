@@ -139,7 +139,7 @@
             android:layout_marginTop="16dp"
             android:text="FINALIZAR"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:background="@drawable/bg_button"
             android:backgroundTint="@null"/>
 

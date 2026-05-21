@@ -1,4 +1,124 @@
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ut nisi nisl. Aliquam urna augue, facilisis eu erat at, efficitur luctus purus. Ut malesuada nisi quis enim ultrices rhoncus ut a elit. Maecenas laoreet fringilla elit eu rhoncus. Sed vestibulum nibh quis ligula pellentesque bibendum. Maecenas faucibus nunc blandit mi venenatis, a facilisis quam ullamcorper. Cras lobortis nisl massa, quis luctus metus rutrum ut. Nunc consectetur id nisi in finibus.
+1. NUESTROS SERVICIOS
+LumiKids es una aplicación móvil interactiva diseñada para apoyar a niños con Trastorno del Espectro Autista (TEA), mediante herramientas digitales orientadas al fortalecimiento de habilidades cognitivas, de comunicación y de organización diaria.
+La aplicación está dirigida principalmente a niños con Trastorno del Espectro Autista que presentan necesidades de apoyo en procesos de comunicación, aprendizaje, establecimiento de rutinas y desarrollo de habilidades cognitivas básicas, así como a sus padres, madres, tutores legales y profesionales que participen en su acompañamiento educativo.
+Los servicios proporcionados incluyen:
+• Sistema PECS digital con tarjetas visuales y voz sintetizada.
+• Minijuegos educativos diseñados para estimular la memoria, la atención y el aprendizaje.
+• Gestión de rutinas personalizadas.
+• Controles parentales para supervisar el uso de la aplicación.
+• Herramientas de seguimiento y personalización mediante inteligencia artificial.
+Los servicios ofrecidos están destinados exclusivamente a fines educativos y de apoyo. LumiKids no sustituye diagnósticos, tratamientos médicos, terapias psicológicas ni atención profesional especializada.
+LumiKids está diseñado como una herramienta complementaria que puede ser utilizada junto con estrategias educativas y terapéuticas implementadas por padres, tutores o profesionales especializados. Los resultados derivados del uso de la aplicación pueden variar según las características, necesidades y procesos individuales de cada usuario.
+La utilización de la aplicación deberá realizarse bajo supervisión de un adulto responsable cuando el usuario sea menor de edad o requiera apoyo para la interacción adecuada con la plataforma.
+
+2. REPRESENTACIONES DE LOS USUARIOS
+
+Al utilizar LumiKids, el usuario declara y garantiza que:
+
+1. La información proporcionada durante el registro es verdadera, actual y completa.
+2. Si el usuario es menor de edad, el acceso y uso de la aplicación se realizará bajo la supervisión y consentimiento de un padre, madre o tutor legal.
+3. El usuario no realizará actividades ilegales, fraudulentas o que puedan afectar el funcionamiento de la aplicación.
+4. Los padres, madres o tutores legales serán responsables del uso que los menores hagan de la plataforma.
 
 
-Duis nec eros dolor. Mauris metus urna, rutrum at tellus malesuada, rutrum mollis nibh. Fusce sit amet placerat leo. Aliquam erat volutpat. Mauris at nibh purus. Curabitur nec quam vehicula, tincidunt mauris eget, commodo elit. Donec consectetur, magna eu tincidunt egestas, magna libero accumsan tellus, nec elementum eros tellus sed odio. Sed ac arcu magna. Mauris lobortis, neque ut semper iaculis, turpis mi vulputate sapien, quis mollis lectus nisi et mi. Donec sed tortor eleifend, auctor turpis eu, hendrerit dolor. Nulla ac lectus quis lectus feugiat fringilla. Ut quis tincidunt nunc. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aenean a est eu velit sollicitudin bibendum. Praesent rutrum tempor quam, in elementum metus iaculis ac.
+3. REGISTRO DE USUARIO
+
+Para acceder a determinadas funciones de LumiKids, podrá ser necesario crear una cuenta de usuario.
+
+El usuario acepta:
+
+• Proporcionar información exacta y actualizada.
+• Mantener la confidencialidad de sus credenciales de acceso.
+• Notificar inmediatamente cualquier acceso no autorizado a su cuenta.
+• Asumir la responsabilidad de todas las actividades realizadas desde su cuenta.
+
+Los padres, madres o tutores legales serán responsables de las cuentas asociadas a menores de edad.
+
+
+4. ACTIVIDADES PROHIBIDAS
+
+Los usuarios se comprometen a no:
+
+• Manipular el funcionamiento interno de la aplicación.
+• Modificar, descompilar o alterar el código fuente de LumiKids.
+• Intentar vulnerar los mecanismos de seguridad de la plataforma.
+• Introducir virus, malware o cualquier otro software malicioso.
+• Compartir información falsa o engañosa.
+• Utilizar la plataforma con fines ilícitos.
+• Realizar ingeniería inversa del sistema.
+• Suplantar la identidad de otros usuarios.
+• Utilizar herramientas automatizadas para extraer información de la aplicación sin autorización.
+
+
+5. CONTRIBUCIONES GENERADAS POR EL USUARIO
+
+LumiKids no permite la publicación pública de contenido generado por los usuarios.
+
+No obstante, la aplicación puede permitir el almacenamiento de:
+
+• Configuraciones personalizadas.
+• Rutinas creadas por padres, madres o tutores.
+• Preferencias de aprendizaje.
+• Configuración de perfiles.
+
+El usuario conserva la propiedad de dicha información y otorga a LumiKids autorización para procesarla únicamente con fines operativos y de mejora del servicio.
+
+
+6. POLÍTICA DE PRIVACIDAD
+
+LumiKids reconoce la importancia de proteger la privacidad de sus usuarios, especialmente considerando que los usuarios finales pueden ser menores de edad.
+
+La aplicación podrá recopilar información como:
+
+• Nombre del usuario.
+• Correo electrónico.
+• Datos de configuración y preferencias.
+• Datos de uso y actividad dentro de la aplicación.
+• Información relacionada con el desempeño en actividades educativas.
+
+La información recopilada será utilizada únicamente para:
+
+• Personalizar la experiencia del usuario.
+• Mejorar las funcionalidades de la aplicación.
+• Mantener la seguridad del sistema.
+• Brindar soporte técnico.
+
+LumiKids no venderá información personal a terceros.
+
+
+7. RESOLUCIÓN DE DISPUTAS
+
+Cualquier controversia derivada del uso de LumiKids será resuelta inicialmente mediante comunicación directa entre el usuario y los responsables de la aplicación.
+
+En caso de no llegar a un acuerdo, las partes aceptan someterse a la jurisdicción de los tribunales competentes de la Ciudad de México, México, conforme a la legislación aplicable.
+
+
+8. DESCARGO DE RESPONSABILIDAD
+
+LumiKids es una herramienta de apoyo educativo y tecnológico.
+
+La aplicación no proporciona servicios médicos, psicológicos ni terapéuticos profesionales y no sustituye la orientación de especialistas.
+
+Los responsables de LumiKids no garantizan resultados específicos derivados del uso de la aplicación.
+
+11. LIMITACIÓN DE SEGURIDAD Y RESPONSABILIDAD TECNOLÓGICA
+LumiKids implementa medidas de seguridad y protección de la información con el objetivo de mantener la confidencialidad, integridad y disponibilidad de los datos almacenados y procesados por la aplicación.
+in embargo, el usuario reconoce y acepta que ningún sistema informático, aplicación móvil, servicio en línea o mecanismo de transmisión y almacenamiento de datos puede considerarse completamente seguro, libre de vulnerabilidades o imposible de ser comprometido por terceros.
+Por lo tanto, LumiKids no garantiza una seguridad absoluta ni la ausencia total de errores, fallas técnicas, accesos no autorizados, interrupciones del servicio, ataques informáticos, pérdida de información o cualquier otro evento derivado de factores tecnológicos fuera de nuestro control razonable.
+En consecuencia, los responsables de LumiKids no serán responsables por daños directos o indirectos derivados de incidentes de seguridad, accesos no autorizados, pérdida de datos, interrupciones del servicio o cualquier evento tecnológico que no sea resultado de negligencia comprobable por parte de los responsables de la aplicación.
+
+
+10. CONTÁCTENOS
+
+LumiKids
+
+Karina Pozos Cabrera y Carlos Alberto Villasana Martínez
+
+Av. Juan de Dios Bátiz s/n
+Gustavo A. Madero, Ciudad de México (CDMX), C.P. 07738
+México
+
+Correo electrónico:
+
+kpozosc1900@alumno.ipn.mx
+cvillasanam1900@alumno.ipn.mx

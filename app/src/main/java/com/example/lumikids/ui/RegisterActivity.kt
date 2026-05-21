@@ -1,5 +1,6 @@
 package com.example.lumikids.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
@@ -173,6 +174,9 @@ class RegisterActivity : AppCompatActivity() {
                         response.body()?.message ?: "Registro exitoso",
                         Toast.LENGTH_LONG
                     ).show()
+
+                    val intent = Intent(this@RegisterActivity, TermsActivity::class.java)
+                    startActivity(intent)
 
                     finish()
                 } else {
