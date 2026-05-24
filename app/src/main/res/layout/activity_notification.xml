@@ -126,6 +126,7 @@
                     android:background="@drawable/bg_input_white"
                     android:inputType="textCapSentences"
                     android:textColorHint="#BCBCBC"
+                    android:textColor="#000000"
                     android:paddingHorizontal="15dp"/>
 
                 <TextView
@@ -144,6 +145,7 @@
                     android:background="@drawable/bg_input_white"
                     android:gravity="top"
                     android:hint="Descripción"
+                    android:textColor="#000000"
                     android:padding="15dp"/>
 
                 <TextView

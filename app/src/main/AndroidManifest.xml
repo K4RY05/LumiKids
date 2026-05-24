@@ -4,12 +4,15 @@
 
     <!-- Permisos -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
 
     <application
         android:appCategory="game"
@@ -23,15 +26,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LumiKids.Blue">
 
-
         <property
             android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
             android:value="true" />
 
-        <!-- Receiver -->
         <receiver
             android:name=".utils.NotificationReceiver"
-            android:exported="false" />
+            android:exported="true" />
 
         <!-- Actividades -->
 
@@ -101,8 +102,7 @@
 
         <!-- Extras -->
         <activity
-            android:name=".ui.NotificationActivity"
-            />
+            android:name=".ui.NotificationActivity" />
 
         <activity
             android:name=".ui.PecsBoardActivity"
@@ -112,12 +112,17 @@
             android:name=".ui.ParentalControlActivity"
             android:screenOrientation="portrait" />
 
+
         <activity
             android:name=".ui.CountdownDialogActivity"
             android:theme="@style/Theme.Translucent"
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
-            android:turnScreenOn="true" />
+            android:turnScreenOn="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:screenOrientation="landscape"
+            android:exported="true" />
 
         <activity
             android:name=".ui.LockActivity"

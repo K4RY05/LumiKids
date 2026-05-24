@@ -9,9 +9,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     //const val BASE_URL= "http://10.122.146.40:3000/"
-    const val BASE_URL= "http://192.168.100.132:3000/"
+    //const val BASE_URL= "http://192.168.100.132:3000/"
 
-    //const val BASE_URL= "http://172.20.88.40:3000/"
+    const val BASE_URL= "http://10.24.128.40:3000/"
     const val BASE_URL_IMAGES = "${BASE_URL}images/"
     const val BASE_URL_SOUNDS = "${BASE_URL}sounds/"
 
