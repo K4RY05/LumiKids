@@ -1,12 +1,15 @@
 package com.example.lumikids.ui
 
-import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.widget.AppCompatButton
@@ -53,7 +56,6 @@ class EditProfileActivity : BaseActivity() {
         sessionManager = SessionManager(this)
         val id = sessionManager.getUserId()
 
-        // Si el ID es nulo o "null", redirigir al login
         if (id == null) {
             Toast.makeText(this, "Sesión no válida. Inicia sesión de nuevo.", Toast.LENGTH_LONG).show()
             finish()
@@ -144,7 +146,6 @@ class EditProfileActivity : BaseActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val user = response.body()!!
-                        // Asignación de datos desde UserProfileResponse (usa ID_user internamente)
                         etName.setText(user.name)
                         etEmail.setText(user.email)
                         originalName = user.name
@@ -166,29 +167,71 @@ class EditProfileActivity : BaseActivity() {
     }
 
     private fun showPasswordDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Verificación")
-        builder.setMessage("Ingresa tu contraseña para editar:")
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_password)
 
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        input.hint = "Contraseña actual"
+        // IMPORTANTE: Dimensiones MATCH_PARENT/MATCH_PARENT para que el fondo translúcido funcione
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
-        val layout = FrameLayout(this)
-        layout.setPadding(60, 20, 60, 0)
-        layout.addView(input)
-        builder.setView(layout)
+        // Referencias a las vistas dentro del diálogo con los IDs en inglés
+        val etPassword = dialog.findViewById<EditText>(R.id.etDialogPassword)
+        val btnVerificar = dialog.findViewById<Button>(R.id.btnVerifyDialog)
+        val btnCancelar = dialog.findViewById<ImageButton>(R.id.btnCancelDialog)
 
-        builder.setPositiveButton("Verificar") { _, _ ->
-            val password = input.text.toString().trim()
-            if (password.isNotEmpty()) verifyPassword(password)
+        // Mostrar teclado automáticamente
+        etPassword.requestFocus()
+        dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+
+        // Acción del botón Cancelar
+        btnCancelar.setOnClickListener {
+            dialog.dismiss()
+            fieldWaitingToUnlock = "" // Limpiamos el estado si el usuario cancela
         }
-        builder.setNegativeButton("Cancelar", null)
-        builder.show()
+
+        // Acción del botón Verificar
+        btnVerificar.setOnClickListener {
+            val password = etPassword.text.toString().trim()
+            if (password.isNotEmpty()) {
+                verifyPassword(password)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Por favor, ingresa tu contraseña", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showDeleteAccountDialog() {
+        // Usar el diseño personalizado y aplicar la transparencia de ventana
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_confirm_delete)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+
+        val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmDelete)
+        val btnCancel = dialog.findViewById<ImageButton>(R.id.btnCancelDelete)
+
+        // Acción del botón Cancelar (la flecha)
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // Acción del botón Eliminar (Confirmar)
+        btnConfirm.setOnClickListener {
+            dialog.dismiss() // Cerramos este diálogo de advertencia
+            fieldWaitingToUnlock = "delete_account" // Marcamos que queremos borrar la cuenta
+            showPasswordDialog() // Mostramos el diálogo de contraseña
+        }
+
+        dialog.show()
     }
 
     private fun verifyPassword(password: String) {
-        // Se usa el email original para verificar contra el endpoint de login
         val request = LoginRequest(originalEmail, password)
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -257,7 +300,6 @@ class EditProfileActivity : BaseActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Se envía el ID_user correctamente en el request de actualización
                 val request = UpdateProfileRequest(userId, newName, newEmail, verifiedPassword, null)
                 val response = RetrofitClient.instance.create(EditProfileApi::class.java).updateProfile(request)
 
@@ -287,18 +329,6 @@ class EditProfileActivity : BaseActivity() {
                 }
             }
         }
-    }
-
-    private fun showDeleteAccountDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Eliminar Cuenta")
-            .setMessage("¿Confirmas la eliminación permanente?")
-            .setPositiveButton("Eliminar") { _, _ ->
-                fieldWaitingToUnlock = "delete_account"
-                showPasswordDialog()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
     }
 
     private fun deleteAccount() {

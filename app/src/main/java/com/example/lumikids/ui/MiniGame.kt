@@ -28,17 +28,28 @@ abstract class MiniGame : BaseActivity() {
         enableEdgeToEdge()
         setupImmersiveMode()
 
-        val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val safeMaxVolume = (maxVolume * 0.7f).toInt()
-
-        if (audioService.getStreamVolume(AudioManager.STREAM_MUSIC) > safeMaxVolume) {
-            audioService.setStreamVolume(AudioManager.STREAM_MUSIC, safeMaxVolume, 0)
-        }
-
         theme = intent.getStringExtra("THEME") ?: "furniture"
 
         gameAudio = GameAudioManager(this, lifecycleScope)
+    }
+
+    private fun enforceVolumeLimit() {
+        try {
+            val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val safeMaxVolume = (maxVolume * 0.8f).toInt()
+
+            if (audioService.getStreamVolume(AudioManager.STREAM_MUSIC) > safeMaxVolume) {
+                audioService.setStreamVolume(AudioManager.STREAM_MUSIC, safeMaxVolume, 0)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enforceVolumeLimit()
     }
 
     protected fun showResults(gameTitle: String) {
@@ -58,23 +69,20 @@ abstract class MiniGame : BaseActivity() {
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
             val audioService = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val maxVolume = audioService.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            val safeMaxVolume = (maxVolume * 0.9f).toInt()
+            val safeMaxVolume = (maxVolume * 0.8f).toInt()
             val currentVolume = audioService.getStreamVolume(AudioManager.STREAM_MUSIC)
 
             if (currentVolume >= safeMaxVolume) {
                 return true
             }
         }
-
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onPause() {
         super.onPause()
-
         gameAudio.stopLoop()
         gameAudio.stopNetworkAudio()
-
         gameTimer.pause()
     }
 
@@ -83,8 +91,6 @@ abstract class MiniGame : BaseActivity() {
         windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
-
-
 
     abstract fun initViews()
     abstract fun loadGameData()

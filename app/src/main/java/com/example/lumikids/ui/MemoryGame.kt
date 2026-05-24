@@ -45,14 +45,32 @@ class MemoryGame : MiniGame() {
     }
 
     override fun initViews() {
-        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener {
+            // Detener audios inmediatamente antes de salir con la flecha
+            gameAudio.stopLocalAudio()
+            gameAudio.stopNetworkAudio()
+            finish()
+        }
 
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
+            // 1. Pausar temporizador
+            gameTimer.pause()
+
+            // 2. Detener cualquier instrucción o sonido reproduciéndose al abrir la pausa
+            gameAudio.stopLocalAudio()
+            gameAudio.stopNetworkAudio()
+
+            // 3. Mostrar el diálogo
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
                 },
-                onExit = { finish() }
+                onExit = {
+                    // Detener audios explícitamente si el usuario sale desde el menú de pausa
+                    gameAudio.stopLocalAudio()
+                    gameAudio.stopNetworkAudio()
+                    finish()
+                }
             )
         }
     }
@@ -60,14 +78,11 @@ class MemoryGame : MiniGame() {
     override fun onPause() {
         super.onPause()
         gameTimer.pause()
-
-        // DETIENE ambos tipos de audios cuando se pausa o se sale de la app
         gameAudio.stopNetworkAudio()
         gameAudio.stopLocalAudio()
     }
 
     override fun onDestroy() {
-        // LIMPIA todos los reproductores de audio al destruir la actividad
         gameAudio.releaseAll()
         super.onDestroy()
     }
@@ -109,7 +124,6 @@ class MemoryGame : MiniGame() {
 
             if (success) {
                 createDynamicBoard()
-                // Reproduce la instrucción una sola vez al cargar el tablero
                 gameAudio.playEffect(R.raw.intruc_memory)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
