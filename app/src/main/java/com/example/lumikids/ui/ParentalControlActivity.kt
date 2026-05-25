@@ -7,19 +7,26 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
+import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import com.example.lumikids.R
 import com.example.lumikids.utils.NotificationReceiver
 import java.util.*
@@ -34,10 +41,14 @@ class ParentalControlActivity : BaseActivity() {
     private var endHour     = 16
     private var endMinute   = 0
 
-    private var captchaCode: String = ""
+    private var captchaCode      = ""
     private var intentosFallidos = 0
-    private val MAX_INTENTOS = 5
-    private val BLOQUEO_MS = 5 * 60 * 1000L // 5 minutos
+    private val MAX_INTENTOS     = 5
+    private val BLOQUEO_MS       = 5 * 60 * 1000L
+
+    // ─────────────────────────────────────────────
+    // LIFECYCLE
+    // ─────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,11 +81,8 @@ class ParentalControlActivity : BaseActivity() {
 
         window.decorView.post {
             Log.d("CAPTCHA", "decorView.post ejecutado — activity lista")
-
-            // Verificar si está bloqueado antes de mostrar el captcha
             if (estaBloqueado()) {
-                val tiempoRestante = tiempoBloqueoRestante()
-                mostrarDialogoBloqueo(tiempoRestante)
+                mostrarDialogoBloqueo(tiempoBloqueoRestante())
             } else {
                 intentosFallidos = 0
                 showCaptchaDialog()
@@ -83,115 +91,234 @@ class ParentalControlActivity : BaseActivity() {
     }
 
     // ─────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────
+
+    private fun dpToPx(dp: Int): Int =
+        (dp * resources.displayMetrics.density).toInt()
+
+    private fun formatCountdown(ms: Long): String {
+        val minutos  = ms / 1000 / 60
+        val segundos = (ms / 1000) % 60
+        return if (minutos > 0) "%02d:%02d".format(minutos, segundos)
+        else "%02d".format(segundos)
+    }
+
+    private fun formatTime(hour: Int, minute: Int): String {
+        val period = if (hour < 12) "AM" else "PM"
+        val h12    = when { hour == 0 -> 12; hour > 12 -> hour - 12; else -> hour }
+        return String.format("%02d:%02d %s", h12, minute, period)
+    }
+
+    // ─────────────────────────────────────────────
     // BLOQUEO POR INTENTOS
     // ─────────────────────────────────────────────
 
     private fun estaBloqueado(): Boolean {
         val prefs = getSharedPreferences("captcha_bloqueo", MODE_PRIVATE)
-        val tiempoBloqueo = prefs.getLong("bloqueo_hasta", 0L)
-        return System.currentTimeMillis() < tiempoBloqueo
+        return System.currentTimeMillis() < prefs.getLong("bloqueo_hasta", 0L)
     }
 
     private fun tiempoBloqueoRestante(): Long {
         val prefs = getSharedPreferences("captcha_bloqueo", MODE_PRIVATE)
-        val tiempoBloqueo = prefs.getLong("bloqueo_hasta", 0L)
-        return tiempoBloqueo - System.currentTimeMillis()
+        return prefs.getLong("bloqueo_hasta", 0L) - System.currentTimeMillis()
     }
 
     private fun activarBloqueo() {
-        val tiempoHasta = System.currentTimeMillis() + BLOQUEO_MS
         getSharedPreferences("captcha_bloqueo", MODE_PRIVATE).edit()
-            .putLong("bloqueo_hasta", tiempoHasta)
+            .putLong("bloqueo_hasta", System.currentTimeMillis() + BLOQUEO_MS)
             .apply()
     }
-
 
     private fun mostrarDialogoBloqueo(tiempoRestanteMs: Long) {
         if (isFinishing || isDestroyed) return
 
-        // Obtener color_primario del tema actual
+        // Resolver color_primario
         val typedValue = android.util.TypedValue()
         theme.resolveAttribute(R.attr.color_primario, typedValue, true)
         val colorPrimario = typedValue.data
 
+        // Resolver color_fondo_pantalla
+        val typedValueFondo = android.util.TypedValue()
+        theme.resolveAttribute(R.attr.color_fondo_pantalla, typedValueFondo, true)
+        val colorFondo = typedValueFondo.data
+
         val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
         dialog.setCancelable(false)
 
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
-            setPadding(60, 60, 60, 60)
-            setBackgroundColor(Color.TRANSPARENT)
+        // ── ROOT ──────────────────────────────────────────────────────────────
+        val root = ConstraintLayout(this).apply {
+            id = View.generateViewId()
+            setBackgroundColor(Color.parseColor("#80000000"))
+            isClickable = true
+            isFocusable = true
         }
 
-        val container = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
-            setPadding(50, 50, 50, 50)
-            background = getDrawable(R.drawable.bg_pause_container)
+        // ── dialogContainer ───────────────────────────────────────────────────
+        val dialogContainer = ConstraintLayout(this).apply {
+            id = View.generateViewId()
+            setPadding(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24))
+            background = ContextCompat.getDrawable(
+                this@ParentalControlActivity,
+                R.drawable.bg_pause_container
+            )
         }
 
-        val tvTitulo = TextView(this).apply {
+        // ── btnCancelar ───────────────────────────────────────────────────────
+        val btnCancelar = ImageButton(this).apply {
+            id = View.generateViewId()
+            setImageDrawable(
+                ContextCompat.getDrawable(this@ParentalControlActivity, R.drawable.ic_left)
+            )
+            setBackgroundColor(colorFondo)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = "Cancelar y salir"
+            setOnClickListener { dialog.dismiss(); finish() }
+        }
+
+        // ── tvTitle ───────────────────────────────────────────────────────────
+        val tvTitle = TextView(this).apply {
+            id = View.generateViewId()
             text = "Acceso Bloqueado"
-            textSize = 30f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
             setTextColor(colorPrimario)
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 20)
+            textSize = resources.getDimension(R.dimen.pause_title_size) /
+                    resources.displayMetrics.scaledDensity
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.CENTER
         }
 
-        val tvMensaje = TextView(this).apply {
+        // ── clockContainer ────────────────────────────────────────────────────
+        val clockContainer = FrameLayout(this).apply {
+            id = View.generateViewId()
+        }
+
+        val progressBar = ProgressBar(
+            this, null, android.R.attr.progressBarStyleHorizontal
+        ).apply {
+            id = View.generateViewId()
+            isIndeterminate  = false
+            max              = 100
+            progress         = 100
+            progressDrawable = ContextCompat.getDrawable(
+                this@ParentalControlActivity,
+                R.drawable.circular_countdown_bar
+            )
+            rotation = -90f
+        }
+
+        val tvCountdown = TextView(this).apply {
+            id = View.generateViewId()
+            text = formatCountdown(tiempoRestanteMs)
+            setTextColor(colorPrimario)
+            textSize = 32f
+            setTypeface(typeface, Typeface.BOLD)
+        }
+
+        // ── tvMessage ─────────────────────────────────────────────────────────
+        val tvMessage = TextView(this).apply {
+            id = View.generateViewId()
             text = "Demasiados intentos fallidos."
+            setTextColor(Color.DKGRAY)
             textSize = 14f
-            setTextColor(colorPrimario)
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 10)
+            gravity = Gravity.CENTER
         }
 
-        val tvTimer = TextView(this).apply {
-            text = "Podrás intentarlo en: 05:00"
-            textSize = 26f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(colorPrimario)
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 20, 0, 30)
+        // ── Ensamblar clockContainer ──────────────────────────────────────────
+        val clockSizePx = dpToPx(140)
+        clockContainer.addView(
+            progressBar,
+            FrameLayout.LayoutParams(clockSizePx, clockSizePx)
+        )
+        clockContainer.addView(
+            tvCountdown,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            )
+        )
+
+        // ── Agregar hijos a dialogContainer ──────────────────────────────────
+        dialogContainer.addView(btnCancelar)
+        dialogContainer.addView(tvTitle)
+        dialogContainer.addView(clockContainer)
+        dialogContainer.addView(tvMessage)
+
+        // ── Constraints de dialogContainer ───────────────────────────────────
+        val btnSizePx   = dpToPx(60)
+        val marginStart = dpToPx(16)
+
+        ConstraintSet().apply {
+            clone(dialogContainer)
+
+            // btnCancelar: alineado vertical con tvTitle, al inicio
+            connect(btnCancelar.id, ConstraintSet.TOP,    tvTitle.id,              ConstraintSet.TOP)
+            connect(btnCancelar.id, ConstraintSet.BOTTOM, tvTitle.id,              ConstraintSet.BOTTOM)
+            connect(btnCancelar.id, ConstraintSet.START,  ConstraintSet.PARENT_ID, ConstraintSet.START)
+            connect(btnCancelar.id, ConstraintSet.END,    tvTitle.id,              ConstraintSet.START)
+            constrainWidth(btnCancelar.id,  btnSizePx)
+            constrainHeight(btnCancelar.id, btnSizePx)
+
+            // tvTitle: top del parent, a la derecha del botón
+            connect(tvTitle.id, ConstraintSet.TOP,   ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            connect(tvTitle.id, ConstraintSet.START, btnCancelar.id,          ConstraintSet.END, marginStart)
+            connect(tvTitle.id, ConstraintSet.END,   ConstraintSet.PARENT_ID, ConstraintSet.END)
+
+            // chain horizontal packed
+            setHorizontalChainStyle(btnCancelar.id, ConstraintSet.CHAIN_PACKED)
+
+            // clockContainer: debajo del título, centrado
+            connect(clockContainer.id, ConstraintSet.TOP,   tvTitle.id,              ConstraintSet.BOTTOM, dpToPx(24))
+            connect(clockContainer.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            connect(clockContainer.id, ConstraintSet.END,   ConstraintSet.PARENT_ID, ConstraintSet.END)
+            constrainWidth(clockContainer.id,  clockSizePx)
+            constrainHeight(clockContainer.id, clockSizePx)
+
+            // tvMessage: debajo del reloj, ancho 0 (match constraints)
+            connect(tvMessage.id, ConstraintSet.TOP,    clockContainer.id,       ConstraintSet.BOTTOM, dpToPx(16))
+            connect(tvMessage.id, ConstraintSet.START,  ConstraintSet.PARENT_ID, ConstraintSet.START)
+            connect(tvMessage.id, ConstraintSet.END,    ConstraintSet.PARENT_ID, ConstraintSet.END)
+            connect(tvMessage.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+            constrainWidth(tvMessage.id, 0)
+
+            applyTo(dialogContainer)
         }
 
-        val btnSalir = android.widget.Button(this).apply {
-            text = "SALIR"
-            setTextColor(getColor(R.color.white))
-            background = getDrawable(R.drawable.bg_popup)
-            setPadding(40, 20, 40, 20)
-            setOnClickListener {
-                dialog.dismiss()
-                finish()
-            }
+        // ── Agregar dialogContainer al root ──────────────────────────────────
+        root.addView(dialogContainer)
+
+        ConstraintSet().apply {
+            clone(root)
+            connect(dialogContainer.id, ConstraintSet.TOP,    ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            connect(dialogContainer.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+            connect(dialogContainer.id, ConstraintSet.START,  ConstraintSet.PARENT_ID, ConstraintSet.START)
+            connect(dialogContainer.id, ConstraintSet.END,    ConstraintSet.PARENT_ID, ConstraintSet.END)
+            constrainPercentWidth(dialogContainer.id, 0.75f)
+            constrainWidth(dialogContainer.id, 0)
+            applyTo(root)
         }
 
-        container.addView(tvTitulo)
-        container.addView(tvMensaje)
-        container.addView(tvTimer)
-        container.addView(btnSalir)
-        layout.addView(container)
-
-        dialog.setContentView(layout)
+        dialog.setContentView(root)
         dialog.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setDimAmount(0.7f)
+            setDimAmount(0f)
         }
 
         dialog.show()
 
+        // ── CountDownTimer ────────────────────────────────────────────────────
+        val totalMs = tiempoRestanteMs.toFloat()
+
         object : CountDownTimer(tiempoRestanteMs, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                val minutos  = millisUntilFinished / 1000 / 60
-                val segundos = (millisUntilFinished / 1000) % 60
-                tvTimer.text = "Podrás intentarlo en: %02d:%02d".format(minutos, segundos)
+                tvCountdown.text    = formatCountdown(millisUntilFinished)
+                progressBar.progress = ((millisUntilFinished / totalMs) * 100).toInt()
             }
 
             override fun onFinish() {
-                tvTimer.text = "¡Ya puedes intentarlo!"
+                tvCountdown.text     = "¡Listo!"
+                progressBar.progress = 0
                 dialog.dismiss()
                 intentosFallidos = 0
                 showCaptchaDialog()
@@ -221,7 +348,6 @@ class ParentalControlActivity : BaseActivity() {
         }
 
         dialog.setCancelable(false)
-
         dialog.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -311,7 +437,9 @@ class ParentalControlActivity : BaseActivity() {
 
         val noisePaint = Paint().apply { strokeWidth = 1.5f; isAntiAlias = true }
         repeat(12) {
-            noisePaint.color = Color.rgb(random.nextInt(180), random.nextInt(180), random.nextInt(180))
+            noisePaint.color = Color.rgb(
+                random.nextInt(180), random.nextInt(180), random.nextInt(180)
+            )
             canvas.drawLine(
                 random.nextFloat() * width, random.nextFloat() * height,
                 random.nextFloat() * width, random.nextFloat() * height,
@@ -321,7 +449,9 @@ class ParentalControlActivity : BaseActivity() {
 
         val dotPaint = Paint().apply { strokeWidth = 3f }
         repeat(80) {
-            dotPaint.color = Color.rgb(random.nextInt(200), random.nextInt(200), random.nextInt(200))
+            dotPaint.color = Color.rgb(
+                random.nextInt(200), random.nextInt(200), random.nextInt(200)
+            )
             canvas.drawPoint(random.nextFloat() * width, random.nextFloat() * height, dotPaint)
         }
 
@@ -334,7 +464,9 @@ class ParentalControlActivity : BaseActivity() {
 
         val letterWidth = width.toFloat() / text.length
         text.forEachIndexed { i, char ->
-            letterPaint.color = Color.rgb(random.nextInt(100), random.nextInt(100), random.nextInt(100))
+            letterPaint.color = Color.rgb(
+                random.nextInt(100), random.nextInt(100), random.nextInt(100)
+            )
             canvas.save()
             val x = letterWidth * i + letterWidth / 2
             val y = height / 2f + 20f + random.nextInt(20) - 10
@@ -345,7 +477,9 @@ class ParentalControlActivity : BaseActivity() {
 
         val overPaint = Paint().apply { strokeWidth = 2f; isAntiAlias = true }
         repeat(4) {
-            overPaint.color = Color.rgb(random.nextInt(150), random.nextInt(150), random.nextInt(150))
+            overPaint.color = Color.rgb(
+                random.nextInt(150), random.nextInt(150), random.nextInt(150)
+            )
             canvas.drawLine(
                 random.nextFloat() * width, random.nextFloat() * height,
                 random.nextFloat() * width, random.nextFloat() * height,
@@ -373,12 +507,6 @@ class ParentalControlActivity : BaseActivity() {
                 tvEndTime.text = formatTime(h, m)
             }
         }, hour, minute, false).show()
-    }
-
-    private fun formatTime(hour: Int, minute: Int): String {
-        val period = if (hour < 12) "AM" else "PM"
-        val h12    = when { hour == 0 -> 12; hour > 12 -> hour - 12; else -> hour }
-        return String.format("%02d:%02d %s", h12, minute, period)
     }
 
     // ─────────────────────────────────────────────
@@ -424,7 +552,8 @@ class ParentalControlActivity : BaseActivity() {
     private fun scheduleNotifications() {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            !alarmManager.canScheduleExactAlarms()) {
             scheduleNotificationsFallback()
             return
         }
