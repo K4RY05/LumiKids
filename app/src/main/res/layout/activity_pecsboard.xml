@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <!-- Barra de oración dinámica (NO fija) -->
+    <!-- Barra de oración dinámica -->
     <LinearLayout
         android:id="@+id/sentenceBar"
         android:layout_width="0dp"
@@ -33,7 +33,7 @@
         app:layout_constraintDimensionRatio="3.5:1"
         app:layout_constraintEnd_toStartOf="@id/sideButtons"
         app:layout_constraintStart_toEndOf="@id/btnBack"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <!-- Icono de Resultado -->
     <ImageView
@@ -48,9 +48,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Contenedor de Botones Laterales dinámico -->
+    <!-- Contenedor de Botones Laterales -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/sideButtons"
         android:layout_width="@dimen/pecs_control_button_size"
@@ -92,13 +92,13 @@
         android:id="@+id/rvOptions"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginStart="@dimen/pecs_control_margin"
         android:layout_marginTop="@dimen/pecs_vertical_gap"
+        android:layout_marginEnd="@dimen/pecs_control_margin"
         android:layout_marginBottom="@dimen/pecs_control_margin"
         app:layout_constraintTop_toBottomOf="@id/sentenceBar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/pecs_control_margin"
-        android:layout_marginEnd="@dimen/pecs_control_margin"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
