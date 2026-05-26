@@ -105,6 +105,17 @@
         <activity android:name=".ui.ParentalControlActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.CountdownDialogActivity"
+            android:theme="@style/Theme.Translucent"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:screenOrientation="landscape"
+            android:exported="true" />
+
         <!-- Splash -->
         <activity
             android:name=".ui.SplashActivity"
