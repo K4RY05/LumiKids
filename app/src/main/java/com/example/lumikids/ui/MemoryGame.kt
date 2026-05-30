@@ -46,29 +46,25 @@ class MemoryGame : MiniGame() {
 
     override fun initViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener {
-            // Detener audios inmediatamente antes de salir con la flecha
-            gameAudio.stopLocalAudio()
-            gameAudio.stopNetworkAudio()
+            gameAudio.releaseAll()
             finish()
         }
 
         findViewById<ImageView>(R.id.btnPause).setOnClickListener {
-            // 1. Pausar temporizador
             gameTimer.pause()
 
-            // 2. Detener cualquier instrucción o sonido reproduciéndose al abrir la pausa
             gameAudio.stopLocalAudio()
             gameAudio.stopNetworkAudio()
+            gameAudio.stopInactivityTimer()
 
-            // 3. Mostrar el diálogo
             PauseDialog(this).showDialog(
                 onResume = {
                     gameTimer.resume()
+                    // NUEVO: Reanudar el temporizador de inactividad al volver
+                    gameAudio.startInactivityTimer(R.raw.intruc_memory, 10000L)
                 },
                 onExit = {
-                    // Detener audios explícitamente si el usuario sale desde el menú de pausa
-                    gameAudio.stopLocalAudio()
-                    gameAudio.stopNetworkAudio()
+                    gameAudio.releaseAll()
                     finish()
                 }
             )
@@ -80,6 +76,7 @@ class MemoryGame : MiniGame() {
         gameTimer.pause()
         gameAudio.stopNetworkAudio()
         gameAudio.stopLocalAudio()
+        gameAudio.stopInactivityTimer() // NUEVO: Detener si la app va a segundo plano
     }
 
     override fun onDestroy() {
@@ -125,6 +122,7 @@ class MemoryGame : MiniGame() {
             if (success) {
                 createDynamicBoard()
                 gameAudio.playEffect(R.raw.intruc_memory)
+                gameAudio.startInactivityTimer(R.raw.intruc_memory, 7000L)
             } else {
                 Toast.makeText(this@MemoryGame, "Error al cargar datos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -175,6 +173,9 @@ class MemoryGame : MiniGame() {
     }
 
     private fun handleCardClick(view: ImageView, card: MemoryCard) {
+        gameAudio.stopLocalAudio()
+        gameAudio.resetInactivityTimer(7000L)
+
         if (isBusy || view.tag == true || card.isMatched) return
 
         flipCardUp(view, card.gameObject.imageUrl)
@@ -184,18 +185,21 @@ class MemoryGame : MiniGame() {
             firstSelectedCard = card
             firstSelectedView = view
         } else {
-            isBusy = true // Bloquea clics inmediatamente para evaluar el par
+            isBusy = true
             val isMatch = firstSelectedCard?.gameObject?.id == card.gameObject.id
 
             if (isMatch) {
                 firstSelectedCard?.isMatched = true
                 card.isMatched = true
 
-                // Reproduce el audio personalizado del objeto o el sonido de victoria
+                // NUEVO: Reproducir SIEMPRE el sonido de victoria (efecto local)
+                gameAudio.playEffect(R.raw.win)
+
+                // NUEVO: Y si el objeto tiene su propio audio (internet), reproducirlo también
                 card.gameObject.audioShortUrl?.let {
                     val audioUrl = RetrofitClient.BASE_URL_SOUNDS + it
                     gameAudio.playUrl(audioUrl)
-                } ?: gameAudio.playEffect(R.raw.win)
+                }
 
                 resetSelection()
 
@@ -276,6 +280,8 @@ class MemoryGame : MiniGame() {
 
     private fun checkGameFinished() {
         if (boardCards.all { it.isMatched }) {
+            gameAudio.stopInactivityTimer()
+
             lifecycleScope.launch {
                 delay(1000)
                 showResults("Memorama")
