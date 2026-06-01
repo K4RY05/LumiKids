@@ -15,11 +15,13 @@ class GameAudioManager(
     private val scope: CoroutineScope
 ) {
     private var localMediaPlayer: MediaPlayer? = null
-    // Reproductor para audios de internet
     private var networkMediaPlayer: MediaPlayer? = null
-    // Variable para controlar el bucle
+
     private var loopJob: Job? = null
 
+    private var inactivityJob: Job? = null
+    private var inactivityResId: Int? = null
+    private var inactivityUrl: String? = null
 
     fun playEffect(resId: Int) {
         stopLocalAudio() // Detiene cualquier efecto anterior antes de iniciar uno nuevo
@@ -32,7 +34,6 @@ class GameAudioManager(
         }
     }
 
-    // NUEVO MÉTODO: Detiene el audio local (instrucciones, efectos de raw)
     fun stopLocalAudio() {
         try {
             localMediaPlayer?.let {
@@ -73,9 +74,8 @@ class GameAudioManager(
         }
     }
 
-    // Inicia un bucle que reproduce un audio de internet cada X milisegundos
     fun startLoop(url: String, delayMs: Long = 8000L) {
-        stopLoop() // Nos aseguramos de detener cualquier bucle anterior
+        stopLoop()
 
         loopJob = scope.launch {
             while (isActive) {
@@ -85,9 +85,8 @@ class GameAudioManager(
         }
     }
 
-    // Inicia un bucle que reproduce un audio LOCAL (res/raw) cada X milisegundos
     fun startLocalLoop(resId: Int, delayMs: Long = 8000L) {
-        stopLoop() // Detenemos cualquier bucle anterior (sea de red o local)
+        stopLoop()
 
         loopJob = scope.launch {
             while (isActive) {
@@ -103,7 +102,38 @@ class GameAudioManager(
         loopJob = null
     }
 
-    // Detiene el audio de internet que esté sonando en este momento
+
+    fun startInactivityTimer(resId: Int, delayMs: Long = 10000L) {
+        inactivityResId = resId
+        inactivityUrl = null
+        resetInactivityTimer(delayMs)
+    }
+
+    fun startNetworkInactivityTimer(url: String, delayMs: Long = 10000L) {
+        inactivityUrl = url
+        inactivityResId = null
+        resetInactivityTimer(delayMs)
+    }
+
+    fun resetInactivityTimer(delayMs: Long = 10000L) {
+        inactivityJob?.cancel()
+
+        inactivityJob = scope.launch {
+            while (isActive) {
+                delay(delayMs)
+                inactivityResId?.let { playEffect(it) }
+                inactivityUrl?.let { playUrl(it) }
+            }
+        }
+    }
+
+    fun stopInactivityTimer() {
+        inactivityJob?.cancel()
+        inactivityJob = null
+        inactivityResId = null
+        inactivityUrl = null
+    }
+
     fun stopNetworkAudio() {
         try {
             networkMediaPlayer?.let {
@@ -119,6 +149,7 @@ class GameAudioManager(
 
     fun releaseAll() {
         stopLoop()
+        stopInactivityTimer()
         stopNetworkAudio()
         stopLocalAudio()
     }
